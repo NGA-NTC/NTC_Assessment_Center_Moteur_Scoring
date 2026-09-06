@@ -1,0 +1,9 @@
+export const NAVY = "#1B2A4A";
+export const GOLD = "#B8862B";
+export const GOLD2 = "#D9A94A";
+export const CREAM = "#F7F4EC";
+export const INK = "#2A2A28";
+export const MUTED = "#8A8578";
+export const LINE = "#E4DFD0";
+export const SANS = "'IBM Plex Sans', sans-serif";
+export const SERIF = "'Fraunces', serif";

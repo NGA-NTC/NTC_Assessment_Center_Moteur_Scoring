@@ -1,0 +1,140 @@
+{
+  "schemaVersion": "1.0",
+  "candidate": "Ravalison Sandrine",
+  "date": "2026-09-06",
+  "meta": {
+    "posteVise": "Leader communautaire",
+    "evaluateur": "RH — NTC",
+    "notes": "Profil de démonstration — à compléter pour le chargement via 'Charger…' dans la barre latérale."
+  },
+
+  "mcq": {
+    "Q1": "B", "Q2": "B", "Q3": "B", "Q4": "A", "Q5": "A",
+    "Q6": "B", "Q7": "C", "Q8": "A", "Q9": "B", "Q10": "B",
+    "Q11": "B", "Q12": "A", "Q13": "B", "Q14": "B", "Q15": "B",
+    "Q16": "Le formateur le voit brillant mais dispersé : il investit beaucoup mais part dans plusieurs directions. Le pair le voit fiable et discret : quand il s'engage, il tient. Lui se dit perfectionniste : il vise haut et hésite à livrer trop tôt. La synthèse la plus cohérente est donc un profil exigeant, très investi, mais qui doit apprendre à séquencer ses priorités et à livrer partiellement pour gagner en régularité.",
+    "Q17": "B", "Q18": "B", "Q19": "B", "Q20": "A", "Q21": "B",
+    "Q22": "C", "Q23": "B", "Q24": "B", "Q25": "B",
+    "Q26": "Plus le centre accepte d'apprenants par session, plus le ratio encadrant/apprenant baisse, plus l'attention individuelle diminue, plus le taux d'échec au test final monte, plus il faut de sessions de rattrapage, ce qui rappelle des ressources et peut annuler l'économie d'échelle initiale : la boucle s'auto-régule négativement.",
+    "Q27": "B", "Q28": "B", "Q29": "B", "Q30": "B", "Q31": "B",
+    "Q32": "Deux risques de second ordre : d'abord la capacité opérationnelle (qualité de service et délais si le succès déborde), ensuite la trésorerie (le succès peut exiger d'avancer de la trésorerie avant d'encaisser). Un troisième : ne pas réussir à recruter/former à temps pour soutenir le rythme.",
+
+    "V1": "B", "V2": "C", "V3": "B", "V4": "B", "V5": "B",
+    "V6": "B", "V7": "B", "V8": "A", "V9": "D", "V10": "C",
+    "V11": "B", "V12": "C", "V13": "C", "V14": "C", "V15": "C",
+    "V16": "C", "V17": "B", "V18": "C", "V19": "C", "V20": "C",
+    "V21": "B", "V22": "B", "V23": "B", "V24": "D", "V25": "A",
+    "V26": "B", "V27": "A", "V28": "A",
+
+    "D1": "D", "D2": "C", "D3": "D", "D4": "D", "D5": "A",
+    "D6": "D", "D7": "A", "D8": "C", "D9": "C", "D10": "A",
+    "D11": "B", "D12": "D", "D13": "B", "D14": "A", "D15": "C",
+    "D16": "C", "D17": "B", "D18": "B", "D19": "D", "D20": "B",
+    "D21": "C", "D22": "C", "D23": "B", "D24": "C", "D25": "C",
+    "D26": "C", "D27": "C", "D28": "A", "D29": "A", "D30": "C",
+
+    "L1": "D", "L2": "B", "L3": "B", "L4": "C", "L5": "B",
+    "L6": "B", "L7": "C", "L8": "B", "L9": "A", "L10": "B",
+    "L11": "C", "L12": "B", "L13": "B", "L14": "C", "L15": "C",
+    "L16": "B", "L17": "A", "L18": "A", "L19": "A", "L20": "B",
+    "L21": "C", "L22": "B", "L23": "B", "L24": "B", "L25": "B",
+    "L26": "B", "L27": "B", "L28": "B",
+
+    "S1": "B", "S2": "C", "S3": "B", "S4": "B", "S5": "B",
+    "S6": "B", "S7": "B", "S8": "D", "S9": "B", "S10": "B",
+    "S11": "A", "S12": "B", "S13": "B", "S14": "B", "S15": "B",
+    "S16": "A", "S17": "B", "S18": "B", "S19": "B", "S20": "C",
+    "S21": "B", "S22": "B", "S23": "C", "S24": "B", "S25": "B",
+    "S26": "D", "S27": "B", "S28": "B", "S29": "B", "S30": "B",
+    "S31": "B", "S32": "B",
+
+    "P1": "B", "P2": "A", "P3": "B", "P4": "B", "P5": "B",
+    "P6": "B", "P7": "B", "P8": "B", "P9": "B", "P10": "B",
+    "P11": "B", "P12": "A", "P13": "C", "P14": "B", "P15": "C",
+    "P16": "B", "P17": "B", "P18": "B", "P19": "B", "P20": "B",
+    "P21": "B", "P22": "B", "P23": "A", "P24": "B", "P25": "B",
+    "P26": "B", "P27": "B", "P28": "A"
+  },
+
+  "b7": {
+    "C1": {
+      "text": "Mes trois premiers chantiers : 1) clarifier la structure managériale intermédiaire (définir les rôles, 3 niveaux max, RACI) ; 2) fiabiliser le pilotage (KPI par structure, revue mensuelle) ; 3) sécuriser la croissance (capacité de recrutement et formation). Je les priorise dans cet ordre car sans cadre de rôles ni pilotage, toute recrue supplémentaire ajoute du désordre. Le chantier humain (stabiliser les managers intermédiaires) vient d'abord, puis l'outillage, puis l'expansion.",
+      "NST": 4, "PRO": 3, "PRI": 4, "GCH": 3, "VS": 3
+    },
+    "C2": {
+      "text": "Je commence par vérifier le périmètre réel de la perte (segmentation par client, durée de vie, marge) avant toute décision : 40% peut être concentré sur 3 contrats ou dilué sur 50. Puis je traite la fidélisation des clients restants, j'analyse le positionnement prix/valeur réel du concurrent, et je décide d'un ajustement de l'offre ou du discours — pas d'une simple baisse de prix. L'ordre : diagnostiquer, stabiliser le portefeuille, puis repositionner.",
+      "NST": 3, "PRO": 4, "PRI": 3, "GCH": 2, "VS": 2
+    },
+    "C3": {
+      "text": "Je ne cède pas à l'ultimatum ni ne le lis comme un simple conflit de personnalités. Je vérifie d'abord les faits : performance réelle du collaborateur concerné, impact objectif de sa tolérance. Ensuite j'expose les deux meilleurs éléments à l'importance de la décision et au calendrier réaliste — recadrer ou écarter en 30 jours peut briser la confiance si c'est perçu comme dicté par un ultimatum. Je m'engage sur un plan : entretien ferme et daté, puis suivi, et visibilité pour les deux collaborateurs sur ce plan.",
+      "NST": 2, "PRO": 3, "PRI": 3, "GCH": 3, "VS": 2
+    },
+    "C4": {
+      "text": "Je structure la décision par critères pondérés et non au ressenti : potentiel de marché réel (taille, concurrence, prix), faisabilité (talents, capacité à dupliquer le modèle), risque (cannibalisation, dilution de la marque). Puis je teste à coût faible : étude clients ou pilote limité avant tout engagement lourd. La question n'est pas ville A ou B, mais quelle option maximise la trajectoire à 3 ans sans disperser l'équipe dirigeante.",
+      "NST": 4, "PRO": 3, "PRI": 3, "GCH": 3, "VS": 4
+    },
+    "C5": {
+      "text": "Je sème l'urgence sans céder à la panique : je lance un chantier de prospective interne (6 mois) co-animé par les métiers concernés, avec un diagnostic honnête de l'exposition réelle au risque. En parallèle, je crée une cellule d'expérimentation sur 2-3 usages de la technologie, budgétée et mesurée, et je communique régulièrement sur le cap pour que l'inquiétude devienne mobilisatrice plutôt que paralysante.",
+      "NST": 4, "PRO": 3, "PRI": 3, "GCH": 4, "VS": 3
+    },
+    "C6": {
+      "text": "Je refuse le rapport de force binaire. Je prépare un diagnostic de la dépendance réelle des deux côtés (valeur du partenaire pour eux, coût de sortie pour nous) et j'explore des alternatives crédibles pour regagner du pouvoir de négociation. Je réponds dans le délai, mais avec une proposition multi-scénarios : conditions révisées en échange d'engagements (volume, apprentissages), plutôt qu'un simple accord ou refus. Je sécurise aussi la continuité en cas de rupture.",
+      "NST": 4, "PRO": 3, "PRI": 4, "GCH": 2, "VS": 3
+    },
+    "C7": {
+      "text": "Dans 90 jours je veux des signes concrets de stabilisation et d'écoute, pas une refonte totale. Priorité 1 : recueillir la parole (entretiens de départ déjà réalisés + 1-1 tous les membres) pour objectiver ce qui démotiva. Priorité 2 : actes rapides et visibles sur 2-3 irritants majeurs identifiés. Priorité 3 : recadrer le sens (mission, rituel d'équipe) et stabiliser le turnover sur les rôles clés. Je séquence humain → actes → sens.",
+      "NST": 3, "PRO": 3, "PRI": 4, "GCH": 3, "VS": 2
+    },
+    "C8": {
+      "text": "72h : je prends la main publiquement et vite — un premier message de reconnaissance du fait et d'ouverture, sans mauvaise communication, pendant que je vérifie les faits. Je mets en place un point de contact unique et une cellule de crise. Semaines suivantes : correction des causes réelles révélées par l'incident, transparence sur les mesures prises, puis reconstruction de la confiance avec les parties touchées avant de communiquer sur l'après.",
+      "NST": 3, "PRO": 4, "PRI": 4, "GCH": 3, "VS": 3
+    },
+    "C9": {
+      "text": "Le risque est la dispersion, donc je tranche par un critère de pertinence stratégique : quelle diversification s'appuie sur un avantage réel du noyau actuel (marque, compétences, clients) et protège le cœur ? J'applique la règle de ne faire au plus qu'une à deux initiatives nouvelles, avec un critère 'kill/keep' daté, et j'assume explicitation des choix : ce qu'on ne fera pas est aussi décidé que ce qu'on fera. Je nomme un responsable par initiative avec des ressources finies.",
+      "NST": 4, "PRO": 3, "PRI": 4, "GCH": 3, "VS": 4
+    }
+  },
+
+  "b8": {
+    "M1": {
+      "text": "7 jours : 1) sécuriser le client pilote en direct (appel, écoute, plan d'engagement) ; 2) réorganiser l'équipe — reprise des sujets critiques du collaborateur parti, transfert de ses dossiers, plan de communication ; 3) réarbitrage du budget sur les 6 semaines restantes. Mois qui suit : revue hebdo, jalons qualité renforcés, et reconstruction de la confiance du client avec des livrables rapides.",
+      "LDD": "fort", "GCH": "modere", "RES": "modere", "STA": "modere", "PRI": "fort", "DIP": "fort", "NST": "modere", "RIS": "leger", "CNF": "fort"
+    },
+    "M2": {
+      "text": "Avec le lanceur d'alerte : je le remercie, lui garantis la protection et clarifie que je ne peux pas promettre l'inaction. Avec le collaborateur concerné : entretien factuel, confrontation aux chiffres, possibilité d'expliquer avant toute décision, puis correction formelle et suivi. Équilibre entre loyauté du groupe et intégrité.",
+      "INT": "fort", "LOY": "modere", "JUS": "fort", "DIP": "modere", "MED": "modere", "COU": "fort", "AFF": "fort"
+    },
+    "M3": {
+      "text": "Processus : exposer sans filtre le compromis (financement vs droit de regard) à l'équipe, lister les critères de décision (autonomie, pérennité, valeur), trancher en 48h. Décision : le partenariat le moins lucrative mais préservant la souveraineté, sauf obtention d'une clause limitant clairement le droit de regard. Annonce : transparence sur le raisonnement, pas seulement sur la décision.",
+      "IS": "fort", "PRA": "modere", "RIG": "modere", "RIS": "leger", "NST": "fort", "DIP": "modere"
+    },
+    "M4": {
+      "text": "Échange à 48h : entretien sur les faits d'abord (l'erreur, la procédure connue), reconnaissance de la part de contexte qui a pu jouer, mais responsabilisation. Décisions pour la suite : selon l'attitude et l'historique — formation ou cadrage renforcé si récurrent, sanction claire si récidive et non-assomption. Je préserve la relation mais pas la sévérité du message.",
+      "JUS": "fort", "CTL": "modere", "SER": "modere", "DIR": "modere", "DIP": "modere", "RES": "modere"
+    },
+    "M5": {
+      "text": "Préparation : diagnostic honnête des causes (externes vs ma délégation insuffisante), chiffrage du retard, plan d'action correctif daté. Compte-rendu : je présente les faits et ma part de responsabilité explicitement, le plan, et ce que je demande comme soutien (priorisation, ressources). Je ne noie pas, je ne minimise pas.",
+      "INT": "fort", "RES": "modere", "AFF": "modere", "CA": "modere", "CNF": "modere"
+    },
+    "M6": {
+      "text": "Démarche : écoute individuelle de chacun, identification du désaccord réel (valeurs de traitement du client : fermeté vs souplesse), puis recherche d'une ligne commune explicite et documentée. Adoption : atelier commun pour co-écrire la ligne, ce qui évite de braquer — chacun y reconnaît une part de sa position.",
+      "MED": "fort", "CNS": "fort", "LDD": "modere", "DIP": "modere", "VS": "modere"
+    },
+    "M7": {
+      "text": "Préparation : clarifier mon niveau de besoin de ce soutien (en dépend-je vraiment ?), définir ce que je ne céderai pas (souveraineté, culture), et ce qui peut être négocié (jalons de reporting, calendrier). Position : accueil cordial, transparence sur l'exclusivité si confirmée, mais refus si elle limite mes options futures. Prêt à perdre le financement plutôt que l'autonomie.",
+      "IS": "fort", "NEG": "fort", "RIS": "leger", "AUT": "fort"
+    },
+    "M8": {
+      "text": "48 heures : message collectif clair et assumé (reconnaissance de l'échec, pas de bouc émissaire), puis entretiens 1-1 rapides pour remobiliser chacun et recueillir les idées. Mois qui suit : plan de reconquête court terme (résultats rapides à célébrer), rituels qui redonnent le moral, et révision des causes structurelles. Je montre l'exemple en restant stable.",
+      "TRA": "fort", "SER": "modere", "RES": "fort", "STA": "fort", "DIP": "modere", "NST": "modere"
+    },
+    "M9": {
+      "text": "Avec lui : transparence et respect — reconnaissance de sa trajectoire et son expertise, entretien pour comprendre sa situation, cadrage clair de mes nouvelles responsabilités sans humilité artificielle. Avec ma hiérarchie : je signale honnêtement la sensibilité relationnelle et demande un accompagnement. Je traite le sujet par la dignité des deux côtés.",
+      "LOY": "fort", "SER": "fort", "DIP": "fort", "CNF": "modere"
+    },
+    "M10": {
+      "text": "Semaines suivantes : je reconnais internement l'erreur à moi-même d'abord, je documente les indicateurs qui le confirment, puis j'en parle ouvertement et le plus tôt possible — pas pour étaler l'échec mais pour éviter qu'il s'approfondisse. Je propose le plan de bascule, j'assume la décision initiale sans m'accrocher, et je protège l'équipe de la tentation du blâme mutuel.",
+      "INT": "fort", "RES": "fort", "COU": "fort", "CNF": "modere", "CD": "fort"
+    }
+  }
+}

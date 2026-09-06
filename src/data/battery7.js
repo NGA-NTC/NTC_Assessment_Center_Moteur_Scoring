@@ -1,0 +1,18 @@
+export const B7_RUBRIC = {
+  NST: ["Réponse purement opérationnelle/tactique, aucun horizon au-delà de l'immédiat.", "Quelques éléments stratégiques mais noyés dans le détail opérationnel.", "Distinction claire entre enjeux stratégiques et exécution, horizon à moyen terme.", "Articule une trajectoire de long terme cohérente, connecte les choix immédiats à une vision d'ensemble."],
+  PRO: ["S'arrête aux symptômes visibles.", "Identifie une cause plausible mais s'arrête là.", "Explore plusieurs causes possibles avant de conclure.", "Distingue causes profondes et symptômes, hiérarchise les causes par impact."],
+  PRI: ["Liste des actions sans ordre ni logique de séquence.", "Un ordre est proposé mais sans justification claire.", "Priorisation justifiée par un critère explicite.", "Priorisation multi-critères, anticipe les dépendances entre actions."],
+  GCH: ["Ignore la dimension humaine du changement.", "Mentionne la résistance au changement sans plan pour l'adresser.", "Propose des leviers concrets pour accompagner les personnes concernées.", "Séquence le changement selon un rythme d'adoption réaliste."],
+  VS: ["Traite chaque élément du cas isolément.", "Relève un lien entre deux éléments du cas.", "Identifie plusieurs interdépendances et un effet retour possible.", "Anticipe des effets de second ordre non explicitement présents dans l'énoncé."],
+};
+export const B7_CASES = [
+  { id: "C1", text: "Vous prenez la direction d'une organisation de formation professionnelle de 500 personnes, en pleine croissance mais sans structure managériale intermédiaire solide. Quels sont vos trois premiers chantiers, et dans quel ordre ? Justifiez." },
+  { id: "C2", text: "Une organisation avec laquelle vous travaillez perd, en trois mois, 40 % de ses clients principaux au profit d'un concurrent moins cher mais de moindre qualité perçue. Que faites-vous, et pourquoi dans cet ordre ?" },
+  { id: "C3", text: "Vous dirigez une équipe de 15 personnes. Deux de vos meilleurs éléments menacent de partir si un troisième collaborateur, toléré depuis des années malgré des résultats médiocres, n'est pas recadré ou écarté. Comment abordez-vous la situation dans les 30 prochains jours ?" },
+  { id: "C4", text: "Votre organisation doit choisir entre ouvrir une nouvelle antenne dans une autre ville, ou approfondir son offre dans la ville actuelle. Potentiel comparable sur le papier. Comment structurez-vous votre décision ?" },
+  { id: "C5", text: "Une nouvelle technologie menace de rendre obsolète, d'ici 2-3 ans, une partie significative de votre modèle économique. Personne en interne n'est encore inquiet. Quelle est votre démarche sur les 6 prochains mois ?" },
+  { id: "C6", text: "Un partenaire majeur (50 % de votre activité) veut renégocier des conditions nettement moins favorables, sous peine de rupture. Deux semaines pour répondre. Comment structurez-vous votre réflexion et votre réponse ?" },
+  { id: "C7", text: "Vous héritez d'une équipe démotivée après un changement de direction précédent mal géré, turnover élevé sur 12 mois. 90 jours avant le prochain point d'étape avec votre hiérarchie. Que priorisez-vous ?" },
+  { id: "C8", text: "Un incident public ternit la réputation de votre organisation en 48h, couverture qui s'amplifie. Quelle est votre séquence d'action sur les premières 72h, puis sur les semaines suivantes ?" },
+  { id: "C9", text: "Votre organisation réussit au-delà des attentes, plusieurs pistes de diversification s'offrent simultanément. Le risque n'est plus l'échec mais la dispersion. Comment tranchez-vous ce qu'il faut faire, et surtout ne pas faire ?" },
+];
