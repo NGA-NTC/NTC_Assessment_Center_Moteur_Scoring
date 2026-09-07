@@ -391,16 +391,30 @@ export default function AdminResultats() {
           </button>
           <PageTitle
             title={selected.label}
-            right={<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <Button size="sm" onClick={() => printCandidateReport(selected)}>
-                <Printer size={14} /> Exporter PDF
-              </Button>
-              <Badge tone={selected.badgeTone}>{selected.badge}</Badge>
-              <RowMenu items={detailMenuItems(selected)} />
-            </div>}
-            subtitle={selected.kind === "acct"
-              ? `Inscrit le ${formatDate(acctMeta.createdAt)} · Dernière activité ${formatDate(acctMeta.updatedAt)}`
-              : (selected.data.file ? `Fichier ${selected.data.file}` : selected.meta)}
+            right={
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Button size="sm" onClick={() => printCandidateReport(selected)}>
+                  <Printer size={14} /> Exporter PDF
+                </Button>
+
+                <RowMenu items={detailMenuItems(selected)} />
+              </div>
+            }
+            subtitle={
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Badge tone={selected.badgeTone}>
+                  {selected.badge}
+                </Badge>
+
+                <span>
+                  {selected.kind === "acct"
+                    ? `Inscrit le ${formatDate(acctMeta.createdAt)} · Dernière activité ${formatDate(acctMeta.updatedAt)}`
+                    : (selected.data.file
+                        ? `Fichier ${selected.data.file}`
+                        : selected.meta)}
+                </span>
+              </div>
+            }
           />
 
           {selected.kind === "imp" && (
