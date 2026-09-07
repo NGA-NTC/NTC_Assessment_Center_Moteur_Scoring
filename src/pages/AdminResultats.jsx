@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, ChevronLeft, Database, Download, FileJson, LayoutGrid, List, Mail, Pencil, Printer, Trash2, UserPlus } from "lucide-react";
+import { Calendar, ChevronLeft, Database, Download, FileJson, LayoutGrid, List, Mail, Menu, Pencil, Printer, Trash2, UserPlus, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import {
   createAccount,
@@ -145,6 +145,7 @@ export default function AdminResultats() {
   const [accForm, setAccForm] = useState({ open: false, email: "", password: "", error: null, busy: false });
   const [hiddenStatic, setHiddenStatic] = useState([]);
   const [updateTarget, setUpdateTarget] = useState(null);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     listAccounts().then(setAccounts);
@@ -159,6 +160,15 @@ export default function AdminResultats() {
   };
 
   const handleLogout = () => { logout(); navigate("/login"); };
+
+  useEffect(() => {
+    if (!mobileSidebarOpen) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMobileSidebarOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileSidebarOpen]);
 
   const candidates = [
     ...accounts.map((a) => ({
@@ -215,6 +225,7 @@ export default function AdminResultats() {
     setSelection({ id: c.id });
     setView("results");
     setAccForm({ open: false, email: "", password: "", error: null, busy: false });
+    setMobileSidebarOpen(false);
   };
   const goBack = () => { setSelection(null); setView("results"); setImportMsg(null); };
 
@@ -302,22 +313,52 @@ export default function AdminResultats() {
 
   const acctMeta = selected?.data;
   const hasData = selected && selected.progress.answered > 0;
+  const sidebarProps = {
+    candidates: sidebarList,
+    onSelect: openCandidate,
+    selectedId: selection?.id || null,
+    onLogout: handleLogout,
+    query: sidebarQuery,
+    onQueryChange: setSidebarQuery,
+    filters: sidebarFilters,
+    onFilters: setSidebarFilters,
+    metiers: METIERS,
+    axes: AXIS_OPTIONS,
+  };
 
   return (
     <AppShell maxWidth={1000} sidebar={
-      <AdminSidebar
-        candidates={sidebarList}
-        onSelect={openCandidate}
-        selectedId={selection?.id || null}
-        onLogout={handleLogout}
-        query={sidebarQuery}
-        onQueryChange={setSidebarQuery}
-        filters={sidebarFilters}
-        onFilters={setSidebarFilters}
-        metiers={METIERS}
-        axes={AXIS_OPTIONS}
-      />
+      <div className="admin-sidebar-desktop">
+        <AdminSidebar {...sidebarProps} />
+      </div>
     }>
+      {mobileSidebarOpen && (
+        <>
+          <button type="button" aria-label="Fermer le menu administrateur" className="admin-sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
+          <aside id="admin-mobile-sidebar-drawer" className="admin-sidebar-drawer" role="dialog" aria-modal="true" aria-label="Navigation administrateur">
+            <div className="admin-sidebar-drawer__header">
+              <button type="button" className="admin-sidebar-drawer__close" onClick={() => setMobileSidebarOpen(false)}>
+                <X size={18} />
+                <span>Fermer</span>
+              </button>
+            </div>
+            <AdminSidebar {...sidebarProps} />
+          </aside>
+        </>
+      )}
+      <div className="admin-mobile-topbar">
+        <button
+          type="button"
+          className="admin-mobile-sidebar-toggle"
+          onClick={() => setMobileSidebarOpen(true)}
+          aria-label="Ouvrir le menu administrateur"
+          aria-controls="admin-mobile-sidebar-drawer"
+          aria-expanded={mobileSidebarOpen}
+        >
+          <Menu size={18} />
+          <span>Menu</span>
+        </button>
+      </div>
       {!selected ? (
         <>
           <PageTitle
