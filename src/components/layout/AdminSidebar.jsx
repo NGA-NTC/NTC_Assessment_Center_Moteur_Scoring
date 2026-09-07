@@ -4,7 +4,7 @@ import SearchField from "../ui/SearchField.jsx";
 import FilterDropdown from "../ui/FilterDropdown.jsx";
 import SidebarFooter from "./SidebarFooter.jsx";
 
-export default function AdminSidebar({ candidates = [], selectedId = null, onSelect, onLogout, query = "", onQueryChange, filters = { type: "all", progress: "all" }, onFilters }) {
+export default function AdminSidebar({ candidates = [], selectedId = null, onSelect, onLogout, query = "", onQueryChange, filters = { type: "all", progress: "all" }, onFilters, metiers = [], axes = [] }) {
   return (
     <div style={{ width: 280, flexShrink: 0, background: NAVY, color: "#fff", display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={{ padding: "20px 18px 12px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
@@ -17,7 +17,7 @@ export default function AdminSidebar({ candidates = [], selectedId = null, onSel
       </div>
 
       <div style={{ padding: "12px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
-        <FilterDropdown variant="dark" full filters={filters} onFilters={onFilters} />
+        <FilterDropdown variant="dark" full filters={filters} onFilters={onFilters} metiers={metiers} axes={axes} />
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "10px 10px" }}>

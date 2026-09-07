@@ -22,30 +22,37 @@ function computeRanges() {
 const RANGES = computeRanges();
 
 export function computeDimensionScores(responses) {
-  const raw = {}, count = {};
-  DIMS.forEach((d) => { raw[d.key] = 0; count[d.key] = 0; });
+  const rawB1 = {}, cnt1 = {}, rawW = {};
 
   B1_ITEMS.forEach((it) => {
     if (it.open) return;
     const sel = responses.mcq[it.id];
     if (!sel) return;
-    count[it.dim] += 1;
-    if (sel === it.c) raw[it.dim] += 1;
+    cnt1[it.dim] = (cnt1[it.dim] || 0) + 1;
+    if (sel === it.c) rawB1[it.dim] = (rawB1[it.dim] || 0) + 1;
   });
 
   WEIGHTED_ITEMS.forEach((it) => {
     const sel = responses.mcq[it.id];
     if (!sel || !it.w[sel]) return;
-    it.w[sel].forEach(([dim, val]) => { raw[dim] = (raw[dim] || 0) + val; });
+    it.w[sel].forEach(([dim, val]) => { rawW[dim] = (rawW[dim] || 0) + val; });
   });
 
   const scores = {};
   DIMS.forEach((d) => {
     if (d.battery === 1) {
-      scores[d.key] = count[d.key] > 0 ? Math.round((100 * raw[d.key]) / count[d.key]) : null;
+      const p1 = cnt1[d.key] > 0 ? Math.round((100 * (rawB1[d.key] || 0)) / cnt1[d.key]) : null;
+      if (d.key === "VS") { scores[d.key] = p1; return; }
+      if (rawW[d.key] != null) {
+        const r = RANGES[d.key];
+        const pw = r && r.max > r.min ? Math.round((100 * (rawW[d.key] - r.min)) / (r.max - r.min)) : null;
+        scores[d.key] = p1 != null && pw != null ? Math.round((p1 + pw) / 2) : (p1 != null ? p1 : pw);
+      } else {
+        scores[d.key] = p1;
+      }
     } else if (d.battery >= 2 && d.battery <= 6) {
       const r = RANGES[d.key];
-      scores[d.key] = r.max > r.min ? Math.round((100 * (raw[d.key] - r.min)) / (r.max - r.min)) : null;
+      scores[d.key] = r && r.max > r.min ? Math.round((100 * ((rawW[d.key] || 0) - r.min)) / (r.max - r.min)) : null;
     }
   });
 
@@ -137,6 +144,7 @@ export function progress(battery, responses) {
 }
 
 export function accountProgress(responses) {
+  if (!responses || typeof responses !== "object") return { answered: 0, total: 0, pct: 0 };
   let answered = 0, total = 0;
   BATTERIES.forEach((b) => { const p = progress(b, responses); answered += p.answered; total += p.total; });
   return { answered, total, pct: total ? Math.round((100 * answered) / total) : 0 };

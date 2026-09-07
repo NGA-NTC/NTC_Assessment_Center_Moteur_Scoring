@@ -21,11 +21,16 @@ Interface 100 % en français. Stack : **Vite + React 19 + JavaScript (JSX)** ave
 - **Recherche et filtres indépendants** :
   - par **type de réponse** : comptes créés sur la plateforme vs réponses **importées** ;
   - par **progression** : réponses **complètes** vs **incomplètes** ;
+  - par **correspondance métier** (les 5 métiers benchmark, score minimum ≥ 50/60/70/80/90 %) ;
+  - par **axe du radar** (les 8 axes, score minimum ≥ 50/60/70/80/90 %) ;
   - la recherche/filtres de la sidebar n'affectent pas ceux de la page (et inversement).
 - **Import JSON** par un bouton (sélecteur de fichier) de résultats externes, stockés localement.
+- **Menu d'options « ⋯ »** par candidat (liste, cartes et page de détail) : **mettre à jour** les réponses (ré-import d'un JSON par-dessus), **supprimer** (avec confirmation), et dans le détail aussi **exporter JSON** et **voir les réponses en mode test**.
 - **Détail d'un candidat** :
+  - bouton **Exporter PDF** en haut, sous le titre ;
   - résultats complets : **radar 8 axes**, correspondance aux **5 métiers**, forces, points de vigilance, **cohérence comportementale** ;
   - relecture des réponses **en mode test** (lecture seule, format identique à l'épreuve) ;
+  - **export des réponses et résultats** : **PDF** (rapport imprimable, via la boîte de dialogue d'impression du navigateur) et **JSON** (fichier ré-importable) ;
   - **création d'un compte** pour un candidat importé (email + mot de passe) afin qu'il puisse se connecter ultérieurement — ses réponses sont alors rattachées au compte.
 
 ---
@@ -49,6 +54,7 @@ Interface 100 % en français. Stack : **Vite + React 19 + JavaScript (JSX)** ave
 - **44 dimensions** réparties sur **8 axes** (Cognitif, Valeurs, Décision, Leadership, Social, Résilience, Stratégie + **Cohérence**).
 - B1 : score sur le nombre de bonnes réponses par dimension.
 - B2–B6 : items pondérés, normalisés sur les bornes min/max possibles (0–100).
+- B1 et B2–B6 sont **croisés** pour la dimension Capacité analytique (CA) : moyenne du score QCM cognitives et de la composante pondérée issues des batteries décisionnelles.
 - B7 : moyenne des notes par dimension (1→0, 4→100) ; la dimension Vision systémique (VS) est **croisée** entre B1 et B7 (moyenne des deux).
 - B8 : l'écart entre le profil déclaré et l'intensité observée en simulation est converti en **score de cohérence comportementale** (100 − écart moyen).
 - **5 métiers benchmark** avec pondération raisonnée : Leader communautaire, Mentor, Formateur, Lobbyiste, Dirigeant politique.
@@ -107,7 +113,7 @@ La persistance est gérée par `src/lib/storage.js`, qui utilise `window.storage
 
 Deux voies d'import côté admin :
 
-1. **Import statique** : poser un fichier `.json` dans `src/reponses/` — chargé au build par `import.meta.glob` (fichiers exemples fournis : `example-candidat.json`, `andrianina.json`).
+1. **Import statique** : poser un fichier `.json` dans `src/reponses/` **ou** à la racine dans `reponses/` — chargé au build par `import.meta.glob` (si un même fichier existe aux deux endroits, celui de `src/reponses/` est retenu). Fichiers exemples fournis : `example-candidat.json`, `andrianina.json`.
 2. **Import dynamique** : bouton « Importer un JSON » dans la page admin — le fichier est parsé et stocké dans `ntc_imported`.
 
 Formats acceptés (objet unique ou tableau) :
@@ -163,7 +169,7 @@ Structure attendue des réponses :
 │  │  ├─ layout/              # AppShell, Sidebar, AdminSidebar, AuthShell, …
 │  │  ├─ ui/                  # Button, Field, Badge, SearchField, FilterDropdown, …
 │  │  └─ question/            # McqBattery, RubricBattery, CoherenceBattery, ResponsesReview, …
-│  └─ reponses/               # exemples de réponses importables (.json)
+│  └─ reponses/               # exemples de réponses importables (.json) — la racine `reponses/` fonctionne aussi
 ```
 
 ---
