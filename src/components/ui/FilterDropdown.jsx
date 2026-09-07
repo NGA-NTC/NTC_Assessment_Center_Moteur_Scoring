@@ -70,23 +70,23 @@ export default function FilterDropdown({
   const dark = variant === "dark";
 
   return (
-    <div ref={ref} style={{ position: "relative", flexGrow: full ? 1 : 0 }}>
+    <div className="filter-dropdown" ref={ref} style={{ position: "relative", flexGrow: full ? 1 : 0 }}>
       <button type="button" onClick={() => setOpen((o) => !o)} style={{
         display: "inline-flex", alignItems: "center", gap: 8, width: full ? "100%" : "auto",
-        padding: "9px 12px", borderRadius: 8, fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap",
+        padding: "9px 12px", borderRadius: 8, fontFamily: "inherit", cursor: "pointer",
         fontSize: 13, fontWeight: 600,
         background: dark ? (open ? "rgba(255,255,255,0.12)" : "transparent") : "#fff",
         border: dark ? "1px solid rgba(255,255,255,0.22)" : `1px solid ${LINE}`,
         color: dark ? "#fff" : INK,
       }}>
         <SlidersHorizontal size={15} /> Filtres
-        {activeSummary && <span style={{ fontSize: 11, fontWeight: 500, color: dark ? "#B8C0D4" : MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 170 }}>{activeSummary}</span>}
+        {activeSummary && <span style={{ fontSize: 11, fontWeight: 500, color: dark ? "#B8C0D4" : MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "min(42vw, 170px)" }}>{activeSummary}</span>}
         <ChevronDown size={14} style={{ marginLeft: "auto", transform: open ? "rotate(180deg)" : "none", transition: "transform .15s", flexShrink: 0 }} />
       </button>
 
       {open && (
-        <div style={{
-          position: "absolute", left: 0, top: "calc(100% + 6px)", zIndex: 30, minWidth: 260,
+        <div className="filter-dropdown__panel" style={{
+          position: "absolute", left: 0, top: "calc(100% + 6px)", zIndex: 30, width: "min(92vw, 320px)", minWidth: 0,
           background: "#fff", color: INK, borderRadius: 10, padding: 8, boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
           maxHeight: "70vh", overflowY: "auto",
         }}>

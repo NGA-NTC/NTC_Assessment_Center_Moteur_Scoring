@@ -35,7 +35,7 @@ export default function RowMenu({ items }) {
         <MoreVertical size={17} />
       </button>
       {open && (
-        <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, minWidth: 200, background: "#fff", border: `1px solid ${LINE}`, borderRadius: 10, boxShadow: "0 6px 24px rgba(27,42,74,.12)", zIndex: 50, padding: 5, fontFamily: "inherit" }}>
+        <div style={{ position: "absolute", top: "100%", right: 0, marginTop: 4, width: "min(92vw, 220px)", background: "#fff", border: `1px solid ${LINE}`, borderRadius: 10, boxShadow: "0 6px 24px rgba(27,42,74,.12)", zIndex: 50, padding: 5, fontFamily: "inherit" }}>
           {items.map((it, i) => (
             <button
               key={i}
