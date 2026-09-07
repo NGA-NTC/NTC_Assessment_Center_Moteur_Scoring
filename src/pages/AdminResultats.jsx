@@ -324,10 +324,10 @@ export default function AdminResultats() {
             title="Candidats"
             subtitle={pageHasCriteria ? `${pageList.length} affiché${pageList.length > 1 ? "s" : ""} (vue filtrée) sur ${candidates.length}` : `${candidates.length} candidat${candidates.length > 1 ? "s" : ""}`}
           />
-          <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: importMsg ? 10 : 20 }}>
+          <div className="admin-toolbar" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: importMsg ? 10 : 20 }}>
             <FilterDropdown filters={pageFilters} onFilters={setPageFilters} metiers={METIERS} axes={AXIS_OPTIONS} />
             <SearchField value={pageQuery} onChange={setPageQuery} placeholder="Rechercher par nom ou email…" />
-            <div style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+            <div className="admin-toolbar__actions" style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
               <ViewToggle value={viewMode} onChange={setViewMode} />
               <ImportJsonButton onImport={handleImport}>Importer un JSON</ImportJsonButton>
             </div>
@@ -345,17 +345,20 @@ export default function AdminResultats() {
             <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
               {pageList.map((c) => (
                 <div key={c.id} role="button" tabIndex={0} onClick={() => openCandidate(c)} onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") openCandidate(c); }}
+                  className="admin-list-row"
                   style={{ display: "flex", alignItems: "center", gap: 14, width: "100%", padding: "12px 14px", borderRadius: 12, border: `1px solid ${LINE}`, background: "#fff", cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "border-color .15s, box-shadow .15s" }}>
                   <Avatar kind={c.kind} label={c.label} />
-                  <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="admin-list-row__main" style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.label}</div>
                     <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{c.meta}</div>
                   </div>
-                  <Badge tone={c.badgeTone}>{c.badge}</Badge>
-                  <ProgressCircle done={c.progress.answered} total={c.progress.total} color={NAVY}>
-                    <span style={{ fontSize: 9.5, color: NAVY }}>{c.progress.pct}%</span>
-                  </ProgressCircle>
-                  <RowMenu items={candidateMenuItems(c)} />
+                  <div className="admin-list-row__side" style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
+                    <Badge tone={c.badgeTone}>{c.badge}</Badge>
+                    <ProgressCircle done={c.progress.answered} total={c.progress.total} color={NAVY}>
+                      <span style={{ fontSize: 9.5, color: NAVY }}>{c.progress.pct}%</span>
+                    </ProgressCircle>
+                    <RowMenu items={candidateMenuItems(c)} />
+                  </div>
                 </div>
               ))}
             </div>
@@ -392,7 +395,7 @@ export default function AdminResultats() {
           <PageTitle
             title={selected.label}
             right={
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="candidate-header-actions" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Button size="sm" onClick={() => printCandidateReport(selected)}>
                   <Printer size={14} /> Exporter PDF
                 </Button>
@@ -401,7 +404,7 @@ export default function AdminResultats() {
               </div>
             }
             subtitle={
-              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div className="candidate-header-subtitle" style={{ display: "flex", alignItems: "center", gap: 8 }}>
                 <Badge tone={selected.badgeTone}>
                   {selected.badge}
                 </Badge>
@@ -473,7 +476,7 @@ export default function AdminResultats() {
         </>
       )}
       {updateTarget && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(20,26,40,.45)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setUpdateTarget(null)}>
+        <div className="update-modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(20,26,40,.45)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={() => setUpdateTarget(null)}>
           <div style={{ background: "#fff", borderRadius: 14, padding: "20px 22px", maxWidth: 440, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,.25)" }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
               <Pencil size={16} color={NAVY} />

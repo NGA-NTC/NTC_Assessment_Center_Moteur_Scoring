@@ -3,7 +3,7 @@ import { LINE, MUTED } from "../../lib/theme.js";
 
 export default function SearchField({ value, onChange, placeholder = "Rechercher…" }) {
   return (
-    <div style={{ position: "relative", flex: 1, minWidth: 180 }}>
+    <div style={{ position: "relative", flex: 1, minWidth: 0 }}>
       <Search size={15} style={{ position: "absolute", left: 11, top: 10, color: MUTED, pointerEvents: "none" }} />
       <input
         type="search"

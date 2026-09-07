@@ -6,7 +6,7 @@ import SidebarFooter from "./SidebarFooter.jsx";
 
 export default function AdminSidebar({ candidates = [], selectedId = null, onSelect, onLogout, query = "", onQueryChange, filters = { type: "all", progress: "all" }, onFilters, metiers = [], axes = [] }) {
   return (
-    <div style={{ width: 280, flexShrink: 0, background: NAVY, color: "#fff", display: "flex", flexDirection: "column", height: "100%" }}>
+    <div className="admin-sidebar app-sidebar" style={{ width: "100%", maxWidth: 280, flexShrink: 0, background: NAVY, color: "#fff", display: "flex", flexDirection: "column", height: "100%" }}>
       <div style={{ padding: "20px 18px 12px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
         <div style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 600, letterSpacing: 0.2 }}>NTC Assessment</div>
         <div style={{ fontSize: 11, color: "#B8C0D4", marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>Espace administrateur</div>

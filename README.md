@@ -146,6 +146,21 @@ Structure attendue des réponses :
 
 ---
 
+## Responsive (mobile / tablette)
+
+- Breakpoints appliqués :
+  - **Tablette** : `max-width: 1024px`
+  - **Mobile** : `max-width: 768px`
+- Ajustements UI (sans changement de logique) :
+  - `AppShell` passe en colonne sur petits écrans, avec sidebar pleine largeur et contenu principal fluide.
+  - Sidebar candidat/admin adaptées pour éviter les débordements horizontaux.
+  - `ResultsView` passe en grilles auto-fit (`minmax(280px, 1fr)`) pour radar, métiers, forces et vigilances.
+  - `IntensityToggle` et la relecture B8 se replient en pile sur mobile (libellé puis options).
+  - Barre d’outils admin, lignes de liste candidat, menus contextuels et panneau de filtres adaptés aux écrans tactiles étroits.
+  - Champ de recherche rendu fluide (`minWidth: 0`) pour cohabiter avec filtres/actions.
+
+---
+
 ## Structure du projet
 
 ```

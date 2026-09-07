@@ -35,7 +35,7 @@ export default function ResultsView({ responses }) {
 
   return (
     <div>
-      <div style={{ display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 20, marginBottom: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginBottom: 20 }}>
         <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "18px 10px" }}>
           <div style={{ fontFamily: "Fraunces, serif", fontSize: 16, fontWeight: 600, padding: "0 14px 10px", color: NAVY }}>Radar — 8 axes</div>
           {anyData ? (
@@ -58,7 +58,7 @@ export default function ResultsView({ responses }) {
         </div>
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20 }}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
         <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "18px 20px" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <Sparkles size={16} color={GOLD} />

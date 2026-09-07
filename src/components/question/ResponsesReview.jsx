@@ -84,9 +84,9 @@ function B8Review({ battery, responses }) {
           {it.watch.map((dimKey) => {
             const v = row[dimKey];
             return (
-              <div key={dimKey} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <div style={{ fontSize: 12, width: 150, flexShrink: 0 }}>{DIM[dimKey]?.name}</div>
-                <div style={{ display: "flex", gap: 4, flex: 1 }}>
+              <div key={dimKey} className="intensity-toggle" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <div className="intensity-toggle__label" style={{ fontSize: 12, width: 150, flexShrink: 0 }}>{DIM[dimKey]?.name}</div>
+                <div className="intensity-toggle__options" style={{ display: "flex", gap: 4, flex: 1 }}>
                   {B8_OPTS.map(([k, label]) => (
                     <div key={k} style={{ flex: 1, padding: "5px 0", borderRadius: 6, fontSize: 11, textAlign: "center", border: v === k ? `1.5px solid ${NAVY}` : `1px solid ${LINE}`, background: v === k ? NAVY : "#fff", color: v === k ? "#fff" : MUTED, fontWeight: v === k ? 600 : 400 }}>{label}</div>
                   ))}
