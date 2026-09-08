@@ -29,9 +29,15 @@ body,
   height: 100%;
 }
 
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
 body {
   margin: 0;
   background: var(--cream);
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 #root {
@@ -39,34 +45,79 @@ body {
   width: 100%;
 }
 
+img,
+svg {
+  max-width: 100%;
+}
+
+/* ---- Sidebar desktop : fixe, pleine hauteur, à gauche ---- */
 .app-shell__sidebar {
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
+  height: 100svh;
   flex-shrink: 0;
 }
 
-.admin-mobile-topbar,
-.admin-sidebar-backdrop,
-.admin-sidebar-drawer {
+.app-sidebar-desktop {
+  height: 100%;
+}
+
+.app-sidebar-desktop .app-sidebar {
+  height: 100%;
+}
+
+.app-sidebar__brand {
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app-sidebar__brand:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* ---- Tiroirs / topbar mobile (masqués sur desktop) ---- */
+.app-mobile-topbar,
+.app-sidebar-backdrop,
+.app-sidebar-drawer {
   display: none;
 }
 
+textarea:focus,
+input:focus,
+select:focus,
+button:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 1px;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #C9C2AC;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ================= Tablette / mobile (<= 1024) ================= */
 @media (max-width: 1024px) {
   .app-shell {
     flex-direction: column;
   }
 
   .app-shell__sidebar {
+    position: static;
+    height: auto;
     width: 100%;
-    max-height: 48svh;
-  }
-
-  .app-shell__sidebar > .app-sidebar {
-    width: 100% !important;
-    max-width: none !important;
-    height: 100% !important;
   }
 
   .app-shell__content {
     padding: 22px 18px !important;
+    width: 100%;
   }
 
   .admin-toolbar__actions {
@@ -78,16 +129,22 @@ body {
     align-items: flex-start !important;
   }
 
-  .admin-sidebar-desktop {
+  /* ---- Sidebar passe en tiroir (admin + candidat) ---- */
+  .app-sidebar-desktop {
     display: none;
   }
 
-  .admin-mobile-topbar {
+  .app-mobile-topbar {
     display: flex;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--cream);
     margin-bottom: 12px;
+    padding-top: env(safe-area-inset-top);
   }
 
-  .admin-mobile-sidebar-toggle {
+  .app-mobile-sidebar-toggle {
     min-height: 44px;
     border: 1px solid var(--line);
     border-radius: 10px;
@@ -103,7 +160,7 @@ body {
     cursor: pointer;
   }
 
-  .admin-sidebar-backdrop {
+  .app-sidebar-backdrop {
     position: fixed;
     inset: 0;
     border: none;
@@ -113,7 +170,7 @@ body {
     display: block;
   }
 
-  .admin-sidebar-drawer {
+  .app-sidebar-drawer {
     position: fixed;
     top: 0;
     left: 0;
@@ -125,16 +182,25 @@ body {
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
     display: flex;
     flex-direction: column;
+    padding-bottom: env(safe-area-inset-bottom);
+    transform: translateX(-100%);
+    animation: sidebar-slide-in 0.18s ease-out forwards;
   }
 
-  .admin-sidebar-drawer__header {
+  @keyframes sidebar-slide-in {
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  .app-sidebar-drawer__header {
     display: flex;
     justify-content: flex-end;
     padding: 10px 10px 0;
     background: var(--navy);
   }
 
-  .admin-sidebar-drawer__close {
+  .app-sidebar-drawer__close {
     min-height: 44px;
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 9px;
@@ -150,18 +216,15 @@ body {
     font-weight: 600;
   }
 
-  .admin-sidebar-drawer .admin-sidebar.app-sidebar {
+  .app-sidebar-drawer .app-sidebar {
     max-width: none !important;
     width: 100% !important;
     height: 100% !important;
   }
 }
 
+/* ================= Mobile (<= 768) ================= */
 @media (max-width: 768px) {
-  .app-shell__sidebar {
-    max-height: 52svh;
-  }
-
   .app-shell__content {
     padding: 16px 12px !important;
   }
@@ -173,6 +236,15 @@ body {
   .admin-toolbar__actions {
     justify-content: space-between;
     flex-wrap: wrap;
+  }
+
+  .filter-dropdown > button {
+    min-height: 44px;
+  }
+
+  .view-toggle button {
+    min-height: 40px;
+    padding: 9px 10px;
   }
 
   .admin-list-row {
@@ -187,6 +259,7 @@ body {
   .admin-list-row__side {
     width: 100%;
     justify-content: flex-end;
+    flex-wrap: wrap;
   }
 
   .candidate-header-actions {
@@ -215,28 +288,42 @@ body {
     padding: 14px !important;
   }
 
+  .update-modal-overlay > div {
+    max-height: calc(100dvh - 28px);
+    overflow-y: auto;
+  }
+
   .filter-dropdown__panel {
     left: auto !important;
     right: 0;
+    width: min(94vw, 320px);
   }
 }
 
-textarea:focus,
-input:focus,
-select:focus,
-button:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 1px;
+/* ================= Petits écrans (<= 480) ================= */
+@media (max-width: 480px) {
+  .app-shell__content {
+    padding: 14px 10px !important;
+  }
+
+  .app-mobile-topbar {
+    margin-bottom: 10px;
+  }
+
+  .candidate-header-subtitle {
+    font-size: 12px;
+  }
+
+  .page-title__title {
+    font-size: 21px !important;
+  }
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-::-webkit-scrollbar-thumb {
-  background: #C9C2AC;
-  border-radius: 4px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
+/* Toucher : éviter le zoom iOS sur les champs */
+@media (max-width: 768px) and (pointer: coarse) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }

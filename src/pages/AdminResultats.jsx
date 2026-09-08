@@ -62,7 +62,7 @@ function ViewToggle({ value, onChange }) {
     </button>
   );
   return (
-    <div style={{ display: "inline-flex", border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden", background: "#fff" }}>
+    <div className="view-toggle" style={{ display: "inline-flex", border: `1px solid ${LINE}`, borderRadius: 8, overflow: "hidden", background: "#fff" }}>
       {btn("list", <List size={14} />, "Liste")}
       {btn("card", <LayoutGrid size={14} />, "Cartes")}
     </div>
@@ -318,6 +318,7 @@ export default function AdminResultats() {
     onSelect: openCandidate,
     selectedId: selection?.id || null,
     onLogout: handleLogout,
+    onHome: goBack,
     query: sidebarQuery,
     onQueryChange: setSidebarQuery,
     filters: sidebarFilters,
@@ -328,16 +329,16 @@ export default function AdminResultats() {
 
   return (
     <AppShell maxWidth={1000} sidebar={
-      <div className="admin-sidebar-desktop">
+      <div className="app-sidebar-desktop">
         <AdminSidebar {...sidebarProps} />
       </div>
     }>
       {mobileSidebarOpen && (
         <>
-          <button type="button" aria-label="Fermer le menu administrateur" className="admin-sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
-          <aside id="admin-mobile-sidebar-drawer" className="admin-sidebar-drawer" role="dialog" aria-modal="true" aria-label="Navigation administrateur">
-            <div className="admin-sidebar-drawer__header">
-              <button type="button" className="admin-sidebar-drawer__close" onClick={() => setMobileSidebarOpen(false)}>
+          <button type="button" aria-label="Fermer le menu administrateur" className="app-sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
+          <aside id="app-mobile-sidebar-drawer" className="app-sidebar-drawer" role="dialog" aria-modal="true" aria-label="Navigation administrateur">
+            <div className="app-sidebar-drawer__header">
+              <button type="button" className="app-sidebar-drawer__close" onClick={() => setMobileSidebarOpen(false)}>
                 <X size={18} />
                 <span>Fermer</span>
               </button>
@@ -346,13 +347,13 @@ export default function AdminResultats() {
           </aside>
         </>
       )}
-      <div className="admin-mobile-topbar">
+      <div className="app-mobile-topbar">
         <button
           type="button"
-          className="admin-mobile-sidebar-toggle"
+          className="app-mobile-sidebar-toggle"
           onClick={() => setMobileSidebarOpen(true)}
           aria-label="Ouvrir le menu administrateur"
-          aria-controls="admin-mobile-sidebar-drawer"
+          aria-controls="app-mobile-sidebar-drawer"
           aria-expanded={mobileSidebarOpen}
         >
           <Menu size={18} />

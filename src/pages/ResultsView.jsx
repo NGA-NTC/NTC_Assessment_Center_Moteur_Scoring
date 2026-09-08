@@ -6,6 +6,17 @@ import { computeDimensionScores, computeCoherence, computeAxisScores, computeRol
 
 const NAVY = "#1B2A4A", GOLD = "#B8862B", GOLD2 = "#D9A94A", LINE = "#E4DFD0";
 
+const SHORT_AXIS = {
+  "Cognitif": "Cognitif",
+  "Valeurs": "Valeurs",
+  "Décision": "Décision",
+  "Leadership": "Leader.",
+  "Social": "Social",
+  "Résilience": "Résil.",
+  "Stratégie": "Stratégie",
+  "Cohérence": "Cohérente",
+};
+
 function RoleBar({ role }) {
   const coverageRatio = role.total ? role.covered / role.total : 0;
   return (
@@ -29,24 +40,36 @@ export default function ResultsView({ responses }) {
   const roleFit = useMemo(() => computeRoleFit(dimScores, axisScores), [dimScores, axisScores]);
   const report = useMemo(() => generateReport(dimScores), [dimScores]);
 
-  const radarData = AXES.map((ax) => ({ axis: ax, score: axisScores[ax] ?? 0 }));
+  const radarData = AXES.map((ax) => ({ axis: SHORT_AXIS[ax] || ax, full: ax, score: axisScores[ax] ?? 0 }));
   const anyData = report.answered > 0;
   const MUTED = "#8A8578";
 
   return (
     <div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20, marginBottom: 20 }}>
-        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "18px 10px" }}>
+        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "18px 10px", minWidth: 0 }}>
           <div style={{ fontFamily: "Fraunces, serif", fontSize: 16, fontWeight: 600, padding: "0 14px 10px", color: NAVY }}>Radar — 8 axes</div>
           {anyData ? (
-            <ResponsiveContainer width="100%" height={340}>
-              <RadarChart data={radarData} outerRadius="72%">
-                <PolarGrid stroke={LINE} />
-                <PolarAngleAxis dataKey="axis" tick={{ fontSize: 11, fill: "#2A2A28" }} />
-                <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
-                <Radar name="Profil" dataKey="score" stroke={NAVY} fill={NAVY} fillOpacity={0.32} strokeWidth={2} />
-              </RadarChart>
-            </ResponsiveContainer>
+            <>
+              <ResponsiveContainer width="100%" height={300}>
+                <RadarChart data={radarData} outerRadius="66%">
+                  <PolarGrid stroke={LINE} />
+                  <PolarAngleAxis dataKey="axis" tick={{ fontSize: 9.5, fill: "#2A2A28" }} />
+                  <PolarRadiusAxis domain={[0, 100]} tick={false} axisLine={false} />
+                  <Radar name="Profil" dataKey="score" stroke={NAVY} fill={NAVY} fillOpacity={0.32} strokeWidth={2} />
+                </RadarChart>
+              </ResponsiveContainer>
+              <div style={{ padding: "2px 12px 6px" }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))", gap: "3px 14px", fontSize: 11, color: MUTED }}>
+                  {radarData.map((d) => (
+                    <div key={d.full} style={{ display: "flex", justifyContent: "space-between", gap: 6 }}>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0, flex: 1 }}>{d.full}</span>
+                      <span style={{ fontWeight: 700, color: NAVY, flexShrink: 0 }}>{d.score != null ? d.score : "—"}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
           ) : (
             <div style={{ padding: 40, textAlign: "center", color: MUTED, fontSize: 13 }}>Aucune réponse enregistrée pour l'instant.</div>
           )}
@@ -59,7 +82,7 @@ export default function ResultsView({ responses }) {
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
-        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "18px 20px" }}>
+        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "18px 20px", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <Sparkles size={16} color={GOLD} />
             <div style={{ fontFamily: "Fraunces, serif", fontSize: 15.5, fontWeight: 600, color: NAVY }}>Forces</div>
@@ -75,7 +98,7 @@ export default function ResultsView({ responses }) {
             </div>
           ))}
         </div>
-        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "18px 20px" }}>
+        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "18px 20px", minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
             <AlertTriangle size={16} color="#B5652E" />
             <div style={{ fontFamily: "Fraunces, serif", fontSize: 15.5, fontWeight: 600, color: NAVY }}>Points de vigilance</div>

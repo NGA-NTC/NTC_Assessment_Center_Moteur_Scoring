@@ -5,15 +5,18 @@ import { GOLD2, NAVY, SERIF } from "../../lib/theme.js";
 import ProgressCircle from "../ui/ProgressCircle.jsx";
 import SidebarFooter from "./SidebarFooter.jsx";
 
-export default function Sidebar({ active, setActive, responses, userEmail, onLogout }) {
+export default function Sidebar({ active, setActive, responses, userEmail, onLogout, onHome }) {
   return (
-    <div className="app-sidebar" style={{ width: "100%", maxWidth: 260, flexShrink: 0, background: NAVY, color: "#fff", display: "flex", flexDirection: "column", height: "100%" }}>
-      <div style={{ padding: "22px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
+    <div className="app-sidebar" style={{ width: "100%", maxWidth: 260, flexShrink: 0, background: NAVY, color: "#fff", display: "flex", flexDirection: "column", height: "100%", minWidth: 0 }}>
+      <button type="button" onClick={onHome} className="app-sidebar__brand" style={{
+        width: "100%", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", color: "inherit",
+        fontFamily: "inherit", padding: "22px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.12)",
+      }}>
         <div style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 600, letterSpacing: 0.2 }}>NTC Assessment</div>
         <div style={{ fontSize: 11, color: "#B8C0D4", marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>Évaluation</div>
         <div style={{ fontSize: 12, color: GOLD2, marginTop: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userEmail}</div>
-      </div>
-      <div style={{ flex: 1, overflowY: "auto", padding: "12px 12px" }}>
+      </button>
+      <nav style={{ flex: 1, overflowY: "auto", padding: "12px 12px" }}>
         {BATTERIES.map((b) => {
           const p = progress(b, responses);
           const isActive = active === b.id;
@@ -24,13 +27,13 @@ export default function Sidebar({ active, setActive, responses, userEmail, onLog
                 {p.answered === p.total && p.total > 0 && <CheckCircle2 size={14} color={GOLD2} />}
               </ProgressCircle>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, color: "#fff" }}>B{b.id} · {b.name}</div>
+                <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>B{b.id} · {b.name}</div>
                 <div style={{ fontSize: 11, color: "#9AA6C0" }}>{p.answered}/{p.total}</div>
               </div>
             </button>
           );
         })}
-      </div>
+      </nav>
       <SidebarFooter onLogout={onLogout} />
     </div>
   );

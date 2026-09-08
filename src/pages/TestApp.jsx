@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Menu, X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
 import { BATTERIES } from "../data/index.js";
@@ -19,6 +19,7 @@ export default function TestApp() {
   const [active, setActive] = useState(1);
   const [responses, setResponses] = useState(emptyResponses());
   const [hydrated, setHydrated] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!currentUser) return;
@@ -37,11 +38,69 @@ export default function TestApp() {
     return () => clearTimeout(t);
   }, [responses, currentUser, hydrated]);
 
+  useEffect(() => {
+    if (!mobileSidebarOpen) return undefined;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setMobileSidebarOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [mobileSidebarOpen]);
+
   const handleLogout = () => { logout(); navigate("/connexion"); };
   const currentBattery = BATTERIES.find((b) => b.id === active);
 
+  const goBattery = (id) => {
+    setActive(id);
+    setMobileSidebarOpen(false);
+  };
+  const sidebar = (
+    <Sidebar
+      active={active}
+      setActive={setActive}
+      responses={responses}
+      userEmail={currentUser?.email}
+      onLogout={handleLogout}
+      onHome={() => goBattery(1)}
+    />
+  );
+
   return (
-    <AppShell maxWidth={900} sidebar={<Sidebar active={active} setActive={setActive} responses={responses} userEmail={currentUser?.email} onLogout={handleLogout} />}>
+    <AppShell maxWidth={900} sidebar={<div className="app-sidebar-desktop">{sidebar}</div>}>
+      {mobileSidebarOpen && (
+        <>
+          <button type="button" aria-label="Fermer le menu des batteries" className="app-sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
+          <aside id="app-mobile-sidebar-drawer" className="app-sidebar-drawer" role="dialog" aria-modal="true" aria-label="Navigation batteries">
+            <div className="app-sidebar-drawer__header">
+              <button type="button" className="app-sidebar-drawer__close" onClick={() => setMobileSidebarOpen(false)}>
+                <X size={18} />
+                <span>Fermer</span>
+              </button>
+            </div>
+            <Sidebar
+              active={active}
+              setActive={goBattery}
+              responses={responses}
+              userEmail={currentUser?.email}
+              onLogout={handleLogout}
+              onHome={() => goBattery(1)}
+            />
+          </aside>
+        </>
+      )}
+      <div className="app-mobile-topbar">
+        <button
+          type="button"
+          className="app-mobile-sidebar-toggle"
+          onClick={() => setMobileSidebarOpen(true)}
+          aria-label="Ouvrir le menu des batteries"
+          aria-controls="app-mobile-sidebar-drawer"
+          aria-expanded={mobileSidebarOpen}
+        >
+          <Menu size={18} />
+          <span>Batteries</span>
+        </button>
+      </div>
       <PageTitle title={`Batterie ${currentBattery.id}`} subtitle={currentBattery.name} />
       {currentBattery.type === "correct" || currentBattery.type === "weighted" ? (
         <McqBattery battery={currentBattery} responses={responses} setResponses={setResponses} />

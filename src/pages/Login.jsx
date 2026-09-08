@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Navigate, useNavigate, useLocation } from "react-router-dom";
+import { Navigate, useNavigate, useLocation, Link } from "react-router-dom";
 import { User, LogIn } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import AuthShell from "../components/layout/AuthShell.jsx";
@@ -52,7 +52,10 @@ export default function Login() {
           Identifiants définis dans le fichier <code style={{ color: GOLD }}>.env</code>
         </div> */}
       </FormCard>
-      <div style={{ textAlign: "center", marginTop: 18, fontSize: 11.5, color: MUTED }}>
+      <div style={{ textAlign: "center", marginTop: 14 }}>
+        <Link to="/connexion" style={{ fontSize: 11.5, color: MUTED, textDecoration: "underline" }}>Espace candidats — Passez l'évaluation</Link>
+      </div>
+      <div style={{ textAlign: "center", marginTop: 14, fontSize: 11.5, color: MUTED }}>
         © NTC Assessment Center — accès réservé
       </div>
     </AuthShell>

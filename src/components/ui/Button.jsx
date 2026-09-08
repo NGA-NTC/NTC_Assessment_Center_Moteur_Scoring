@@ -7,12 +7,13 @@ const variants = {
   outline: { background: "rgba(255,255,255,0.05)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" },
 };
 
-export default function Button({ children, variant = "primary", size = "md", full = false, style, ...props }) {
+export default function Button({ children, variant = "primary", size = "md", full = false, style, className, ...props }) {
   const pad = size === "sm" ? "9px 14px" : size === "lg" ? "12px 18px" : "10px 18px";
   const font = size === "sm" ? 12.5 : 13.5;
   return (
     <button
       {...props}
+      className={className ? `button ${className}` : "button"}
       style={{
         display: "inline-flex",
         alignItems: "center",
