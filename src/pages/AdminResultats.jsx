@@ -40,7 +40,6 @@ import ImportJsonButton from "../components/ui/ImportJsonButton.jsx";
 import RowMenu from "../components/ui/RowMenu.jsx";
 import Badge from "../components/ui/Badge.jsx";
 import ProgressCircle from "../components/ui/ProgressCircle.jsx";
-import ResponsesReview from "../components/question/ResponsesReview.jsx";
 import ResultsView from "./ResultsView.jsx";
 
 function formatDate(iso) {
@@ -114,19 +113,6 @@ const BASE_FILTERS = { type: "all", progress: "all", metier: "all", metierMin: 6
 const METIERS = ROLES.map((r) => ({ key: r.key, name: r.name }));
 const AXIS_OPTIONS = AXES.map((ax) => ({ key: ax, name: ax }));
 
-function ResultsBlock({ candidate, view }) {
-  return (
-    <>
-      <ResultsView responses={candidate.responses} />
-      {view === "responses" && (
-        <div style={{ marginTop: 14, borderTop: `1px solid ${LINE}`, paddingTop: 14 }}>
-          <ResponsesReview responses={candidate.responses} />
-        </div>
-      )}
-    </>
-  );
-}
-
 export default function AdminResultats() {
   const { logout } = useAuth();
   const navigate = useNavigate();
@@ -139,7 +125,6 @@ export default function AdminResultats() {
   const [pageFilters, setPageFilters] = useState({ ...BASE_FILTERS });
   const [viewMode, setViewMode] = useState("list");
   const [selection, setSelection] = useState(null);
-  const [view, setView] = useState("results");
   const [createdLinks, setCreatedLinks] = useState({});
   const [importMsg, setImportMsg] = useState(null);
   const [accForm, setAccForm] = useState({ open: false, email: "", password: "", error: null, busy: false });
@@ -223,11 +208,10 @@ export default function AdminResultats() {
 
   const openCandidate = (c) => {
     setSelection({ id: c.id });
-    setView("results");
     setAccForm({ open: false, email: "", password: "", error: null, busy: false });
     setMobileSidebarOpen(false);
   };
-  const goBack = () => { setSelection(null); setView("results"); setImportMsg(null); };
+  const goBack = () => { setSelection(null); setImportMsg(null); };
 
   const handleImport = async (text, name) => {
     if (text == null) { setImportMsg({ ok: false, text: "Impossible de lire le fichier sélectionné." }); return; }
@@ -306,7 +290,7 @@ export default function AdminResultats() {
   ];
   const detailMenuItems = (c) => [
     { label: "Exporter JSON", icon: <Download size={14} />, onClick: () => exportResponsesJson(c) },
-    { label: view === "responses" ? "Voir les résultats" : "Voir les réponses (mode test)", icon: <Database size={14} />, onClick: () => setView(view === "responses" ? "results" : "responses") },
+    { label: "Voir les réponses (mode test)", icon: <Database size={14} />, onClick: () => navigate("/admin/reponses/" + encodeURIComponent(c.id), { state: { candidate: c } }) },
     { label: "Mettre à jour…", icon: <Pencil size={14} />, onClick: () => setUpdateTarget(c) },
     { label: "Supprimer", icon: <Trash2 size={14} />, danger: true, onClick: () => handleDeleteCandidate(c) },
   ];
@@ -513,7 +497,7 @@ export default function AdminResultats() {
               {selected.kind === "acct" ? "Ce compte n'a encore fourni aucune réponse au test." : "Ce candidat importé ne contient aucune réponse exploitable au test."}
             </div>
           ) : (
-            <ResultsBlock candidate={selected} view={view} />
+            <ResultsView responses={selected.responses} />
           )}
         </>
       )}
