@@ -101,14 +101,16 @@ function B8Review({ battery, responses }) {
   });
 }
 
-export default function ResponsesReview({ responses }) {
+export default function ResponsesReview({ responses, batteryId }) {
   const { answered } = accountProgress(responses);
+  const batteries = batteryId ? BATTERIES.filter((b) => b.id === batteryId) : BATTERIES;
+  const hasResponses = answered > 0;
 
   return (
     <div>
       <InfoCallout>Relecture des réponses telles qu'affichées durant le test (lecture seule).</InfoCallout>
-      {answered === 0 && <div style={{ padding: 24, textAlign: "center", color: MUTED, fontSize: 13 }}>Aucune réponse enregistrée.</div>}
-      {answered > 0 && BATTERIES.map((b) => (
+      {!hasResponses && <div style={{ padding: 24, textAlign: "center", color: MUTED, fontSize: 13 }}>Aucune réponse enregistrée.</div>}
+      {hasResponses && batteries.map((b) => (
         <div key={b.id} style={{ marginBottom: 26 }}>
           <div style={{ fontFamily: SERIF, fontSize: 16.5, fontWeight: 600, color: NAVY, marginBottom: 10, display: "flex", gap: 8, alignItems: "baseline" }}>
             Batterie {b.id}

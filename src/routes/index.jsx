@@ -8,7 +8,7 @@ import Register from "../pages/Register.jsx";
 import UserLogin from "../pages/UserLogin.jsx";
 import TestApp from "../pages/TestApp.jsx";
 import AdminResultats from "../pages/AdminResultats.jsx";
-import AdminResponses from "../pages/AdminResponses.jsx";
+import ModeTest from "../pages/ModeTest.jsx";
 
 export default function AppRoutes() {
   return (
@@ -37,10 +37,10 @@ export default function AppRoutes() {
               }
             />
             <Route
-              path="/admin/reponses/:candidateId"
+              path="/admin/mode-test/:id"
               element={
                 <ProtectedRoute>
-                  <AdminResponses />
+                  <ModeTest />
                 </ProtectedRoute>
               }
             />

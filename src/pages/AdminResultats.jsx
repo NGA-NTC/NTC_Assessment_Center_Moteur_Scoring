@@ -18,13 +18,7 @@ import {
   parseCandidateImport,
 } from "../lib/storage.js";
 import { listImportedResults } from "../lib/imported.js";
-import {
-  accountProgress,
-  computeAxisScores,
-  computeCoherence,
-  computeDimensionScores,
-  computeRoleFit,
-} from "../lib/scoring.js";
+import { buildCandidates, formatDate } from "../lib/candidates.js";
 import { AXES, ROLES } from "../data/index.js";
 import { exportResponsesJson, printCandidateReport } from "../lib/export.js";
 import { INK, LINE, MUTED } from "../lib/theme.js";
@@ -41,11 +35,6 @@ import RowMenu from "../components/ui/RowMenu.jsx";
 import Badge from "../components/ui/Badge.jsx";
 import ProgressCircle from "../components/ui/ProgressCircle.jsx";
 import ResultsView from "./ResultsView.jsx";
-
-function formatDate(iso) {
-  if (!iso) return "—";
-  return new Date(iso).toLocaleDateString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
-}
 
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
@@ -98,20 +87,15 @@ function filterList(candidates, query, filters) {
   });
 }
 
-function computeCandidateScoring(responses) {
-  if (!responses || typeof responses !== "object") return { axes: {}, roles: [] };
-  const dims = computeDimensionScores(responses);
-  const coherence = computeCoherence(dims, responses.b8);
-  const axes = computeAxisScores(dims, coherence);
-  return { axes, roles: computeRoleFit(dims, axes) };
-}
-
-const EMPTY_RESPONSES = { mcq: {}, b7: {}, b8: {} };
-const safeResponses = (r) => (r && typeof r === "object" ? r : EMPTY_RESPONSES);
-
 const BASE_FILTERS = { type: "all", progress: "all", metier: "all", metierMin: 60, axis: "all", axisMin: 60 };
 const METIERS = ROLES.map((r) => ({ key: r.key, name: r.name }));
 const AXIS_OPTIONS = AXES.map((ax) => ({ key: ax, name: ax }));
+
+function ResultsBlock({ candidate }) {
+  return (
+    <ResultsView responses={candidate.responses} />
+  );
+}
 
 export default function AdminResultats() {
   const { logout } = useAuth();
@@ -155,50 +139,7 @@ export default function AdminResultats() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [mobileSidebarOpen]);
 
-  const candidates = [
-    ...accounts.map((a) => ({
-      kind: "acct",
-      id: "acct:" + a.email,
-      label: a.email,
-      badge: "Compte",
-      badgeTone: "compte",
-      meta: `Inscrit le ${formatDate(a.createdAt)}`,
-      responses: safeResponses(a.responses),
-      progress: accountProgress(a.responses),
-      sc: computeCandidateScoring(a.responses),
-      search: `${a.email} ${a.email}`,
-      data: a,
-    })),
-    ...staticImports.filter((f) => !hiddenStatic.includes(f.file)).map((f) => ({
-      kind: "imp",
-      id: "imp:static:" + f.file,
-      label: f.name,
-      badge: "Importé",
-      badgeTone: "import",
-      meta: `Fichier ${f.file}`,
-      responses: safeResponses(f.responses),
-      progress: accountProgress(f.responses),
-      sc: computeCandidateScoring(f.responses),
-      search: `${f.name} ${f.file}`,
-      data: f,
-      isStatic: true,
-      file: f.file,
-    })),
-    ...runtimeImports.map((im) => ({
-      kind: "imp",
-      id: "imp:" + im.id,
-      label: im.label,
-      badge: "Importé",
-      badgeTone: "import",
-      meta: im.email || `Importé le ${formatDate(im.importedAt || im.createdAt)}`,
-      responses: safeResponses(im.responses),
-      progress: accountProgress(im.responses),
-      sc: computeCandidateScoring(im.responses),
-      search: `${im.label} ${im.email || ""}`,
-      data: im,
-      linked: im.accountEmail || null,
-    })),
-  ];
+  const candidates = buildCandidates({ accounts, staticImports, runtimeImports, hiddenStatic });
 
   const sidebarList = filterList(candidates, sidebarQuery, sidebarFilters);
   const pageList = filterList(candidates, pageQuery, pageFilters);
@@ -290,7 +231,7 @@ export default function AdminResultats() {
   ];
   const detailMenuItems = (c) => [
     { label: "Exporter JSON", icon: <Download size={14} />, onClick: () => exportResponsesJson(c) },
-    { label: "Voir les réponses (mode test)", icon: <Database size={14} />, onClick: () => navigate("/admin/reponses/" + encodeURIComponent(c.id), { state: { candidate: c } }) },
+{ label: "Voir les réponses (mode test)", icon: <Database size={14} />, onClick: () => navigate(`/admin/mode-test/${encodeURIComponent(c.id)}`) },
     { label: "Mettre à jour…", icon: <Pencil size={14} />, onClick: () => setUpdateTarget(c) },
     { label: "Supprimer", icon: <Trash2 size={14} />, danger: true, onClick: () => handleDeleteCandidate(c) },
   ];
@@ -497,7 +438,7 @@ export default function AdminResultats() {
               {selected.kind === "acct" ? "Ce compte n'a encore fourni aucune réponse au test." : "Ce candidat importé ne contient aucune réponse exploitable au test."}
             </div>
           ) : (
-            <ResultsView responses={selected.responses} />
+<ResultsBlock candidate={selected} />
           )}
         </>
       )}
