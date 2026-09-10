@@ -17,6 +17,7 @@ export default function Register() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
   if (currentUser) {
@@ -26,12 +27,21 @@ export default function Register() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    setSuccess("");
     if (password !== confirm) { setError("Les deux mots de passe ne correspondent pas."); return; }
     setLoading(true);
     const res = await register(email, password);
     setLoading(false);
-    if (res.ok) navigate("/test", { replace: true });
-    else setError(res.error);
+    if (res.ok) {
+      setSuccess("Compte créé avec succès. Vous pouvez maintenant vous connecter.");
+      setEmail("");
+      setPassword("");
+      setConfirm("");
+    } else if (res.error?.includes("confirmation")) {
+      setSuccess(res.error);
+    } else {
+      setError(res.error);
+    }
   };
 
   return (
@@ -42,6 +52,7 @@ export default function Register() {
         <PasswordField label="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Au moins 4 caractères" autoComplete="new-password" />
         <PasswordField label="Confirmer le mot de passe" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirmez le mot de passe" autoComplete="new-password" />
         {error && <div style={{ fontSize: 12.5, color: "#B5652E", marginBottom: 12 }}>{error}</div>}
+        {success && <div style={{ fontSize: 12.5, color: "#2E6B3C", marginBottom: 12, background: "#E3F0E4", border: "1px solid #BFE0C4", borderRadius: 8, padding: "10px 14px" }}>{success}</div>}
         <Button full size="lg" type="submit" disabled={loading}>
           <UserPlus size={16} /> {loading ? "Création…" : "Créer mon compte"}
         </Button>

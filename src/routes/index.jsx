@@ -6,6 +6,9 @@ import UserRoute from "./UserRoute.jsx";
 import Login from "../pages/Login.jsx";
 import Register from "../pages/Register.jsx";
 import UserLogin from "../pages/UserLogin.jsx";
+import ForgotPassword from "../pages/ForgotPassword.jsx";
+import ResetPassword from "../pages/ResetPassword.jsx";
+import ChangePassword from "../pages/ChangePassword.jsx";
 import TestApp from "../pages/TestApp.jsx";
 import AdminResultats from "../pages/AdminResultats.jsx";
 import ModeTest from "../pages/ModeTest.jsx";
@@ -19,12 +22,22 @@ export default function AppRoutes() {
             <Route path="/" element={<Navigate to="/connexion" replace />} />
             <Route path="/connexion" element={<UserLogin />} />
             <Route path="/inscription" element={<Register />} />
+            <Route path="/mot-de-passe-oublie" element={<ForgotPassword />} />
+            <Route path="/reinitialiser-mot-de-passe" element={<ResetPassword />} />
             <Route path="/login" element={<Login />} />
             <Route
               path="/test"
               element={
                 <UserRoute>
                   <TestApp />
+                </UserRoute>
+              }
+            />
+            <Route
+              path="/modifier-mot-de-passe"
+              element={
+                <UserRoute>
+                  <ChangePassword />
                 </UserRoute>
               }
             />
