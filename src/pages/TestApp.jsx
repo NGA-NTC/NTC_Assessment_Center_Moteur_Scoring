@@ -9,12 +9,13 @@ import AppShell from "../components/layout/AppShell.jsx";
 import Sidebar from "../components/layout/Sidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
+import UserAvatar from "../components/layout/UserAvatar.jsx";
 import McqBattery from "../components/question/McqBattery.jsx";
 import RubricBattery from "../components/question/RubricBattery.jsx";
 import CoherenceBattery from "../components/question/CoherenceBattery.jsx";
 
 export default function TestApp() {
-  const { currentUser, logout } = useUserAuth();
+  const { user, logout, loading } = useUserAuth();
   const navigate = useNavigate();
   const [active, setActive] = useState(1);
   const [responses, setResponses] = useState(emptyResponses());
@@ -22,21 +23,21 @@ export default function TestApp() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!user) return;
     let cancelled = false;
-    loadAccountResponses(currentUser.email).then((saved) => {
+    loadAccountResponses(user.email).then((saved) => {
       if (cancelled) return;
       if (saved) setResponses(saved);
       setHydrated(true);
     });
     return () => { cancelled = true; };
-  }, [currentUser]);
+  }, [user]);
 
   useEffect(() => {
-    if (!currentUser || !hydrated) return;
-    const t = setTimeout(() => { saveAccountResponses(currentUser.email, responses); }, 400);
+    if (!user || !hydrated) return;
+    const t = setTimeout(() => { saveAccountResponses(user.email, responses); }, 400);
     return () => clearTimeout(t);
-  }, [responses, currentUser, hydrated]);
+  }, [responses, user, hydrated]);
 
   useEffect(() => {
     if (!mobileSidebarOpen) return undefined;
@@ -59,11 +60,21 @@ export default function TestApp() {
       active={active}
       setActive={setActive}
       responses={responses}
-      userEmail={currentUser?.email}
+      userEmail={user?.email}
       onLogout={handleLogout}
       onHome={() => goBattery(1)}
     />
   );
+
+  if (loading) {
+    return (
+      <AppShell maxWidth={900} sidebar={<div className="app-sidebar-desktop">{sidebar}</div>}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+          <div style={{ fontSize: 14, color: "#8A8578" }}>Chargement…</div>
+        </div>
+      </AppShell>
+    );
+  }
 
   return (
     <AppShell maxWidth={900} sidebar={<div className="app-sidebar-desktop">{sidebar}</div>}>
@@ -81,7 +92,7 @@ export default function TestApp() {
               active={active}
               setActive={goBattery}
               responses={responses}
-              userEmail={currentUser?.email}
+              userEmail={user?.email}
               onLogout={handleLogout}
               onHome={() => goBattery(1)}
             />
@@ -100,6 +111,7 @@ export default function TestApp() {
           <Menu size={18} />
           <span>Batteries</span>
         </button>
+        <UserAvatar onNavigate={(path) => window.location.href = path} />
       </div>
       <PageTitle title={`Batterie ${currentBattery.id}`} subtitle={currentBattery.name} />
       {currentBattery.type === "correct" || currentBattery.type === "weighted" ? (

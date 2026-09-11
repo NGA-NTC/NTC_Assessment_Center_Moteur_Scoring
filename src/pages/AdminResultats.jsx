@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Calendar, ChevronLeft, Database, Download, FileJson, LayoutGrid, List, Mail, Menu, Pencil, Printer, Trash2, UserPlus, X } from "lucide-react";
-import { useAuth } from "../context/AuthContext.jsx";
+import UserAvatar from "../components/layout/UserAvatar.jsx";
+import { useAdminAuth } from "../context/AdminAuthContext.jsx";
+import { useUserAuth } from "../context/UserAuthContext.jsx";
 import {
   createAccount,
   isValidEmail,
@@ -98,7 +99,8 @@ function ResultsBlock({ candidate }) {
 }
 
 export default function AdminResultats() {
-  const { logout } = useAuth();
+  const { logout, adminUser } = useAdminAuth();
+  const { isAdmin } = useUserAuth();
   const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
   const [staticImports, setStaticImports] = useState([]);
@@ -284,6 +286,7 @@ export default function AdminResultats() {
           <Menu size={18} />
           <span>Menu</span>
         </button>
+        <UserAvatar onNavigate={(path) => window.location.href = path} />
       </div>
       {!selected ? (
         <>

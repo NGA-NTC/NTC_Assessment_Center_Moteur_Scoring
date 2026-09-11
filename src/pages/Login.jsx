@@ -1,20 +1,20 @@
 import { useState } from "react";
 import { Navigate, useNavigate, useLocation, Link } from "react-router-dom";
 import { User, LogIn } from "lucide-react";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 import AuthShell from "../components/layout/AuthShell.jsx";
 import BrandHeader from "../components/ui/BrandHeader.jsx";
 import FormCard from "../components/ui/FormCard.jsx";
 import Field from "../components/ui/Field.jsx";
 import PasswordField from "../components/ui/PasswordField.jsx";
 import Button from "../components/ui/Button.jsx";
-import { MUTED } from "../lib/theme.js";
+import { MUTED, NAVY } from "../lib/theme.js";
 
 export default function Login() {
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, loading: authLoading } = useAdminAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -23,34 +23,43 @@ export default function Login() {
     return <Navigate to="/admin" replace />;
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
-    setTimeout(() => {
-      if (login(username.trim(), password)) {
-        const from = location.state?.from?.pathname || "/admin";
-        navigate(from, { replace: true });
-      } else {
-        setError("Identifiant ou mot de passe incorrect.");
-        setLoading(false);
-      }
-    }, 300);
+    const res = await login(email, password);
+    setLoading(false);
+    if (res.ok) {
+      const from = location.state?.from?.pathname || "/admin";
+      navigate(from, { replace: true });
+    } else {
+      setError(res.error);
+    }
   };
+
+  if (authLoading) {
+    return (
+      <AuthShell>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+          <div style={{ fontSize: 14, color: MUTED }}>Chargement…</div>
+        </div>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell>
       <BrandHeader subtitle="Accès administrateur — Résultats" />
       <FormCard onSubmit={handleSubmit}>
-        <Field label="Identifiant" icon={<User size={16} color={MUTED} />} type="text" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Votre identifiant" autoFocus autoComplete="username" />
+        <Field label="Email" icon={<User size={16} color={MUTED} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" autoFocus autoComplete="email" />
         <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Votre mot de passe" autoComplete="current-password" />
         {error && <div style={{ fontSize: 12.5, color: "#B5652E", marginBottom: 12 }}>{error}</div>}
-        <Button full size="lg" type="submit" disabled={loading}>
+        <Button full size="lg" type="submit" disabled={loading || authLoading}>
           <LogIn size={16} /> {loading ? "Connexion…" : "Se connecter"}
         </Button>
-        {/* <div style={{ textAlign: "center", marginTop: 14, fontSize: 10.5, color: MUTED }}>
-          Identifiants définis dans le fichier <code style={{ color: GOLD }}>.env</code>
-        </div> */}
+        <div style={{ textAlign: "center", marginTop: 14, fontSize: 11.5, color: MUTED }}>
+          Identifiants gérés via Supabase Auth (rôle admin requis)
+        </div>
       </FormCard>
       <div style={{ textAlign: "center", marginTop: 14 }}>
         <Link to="/connexion" style={{ fontSize: 11.5, color: MUTED, textDecoration: "underline" }}>Espace candidats — Passez l'évaluation</Link>

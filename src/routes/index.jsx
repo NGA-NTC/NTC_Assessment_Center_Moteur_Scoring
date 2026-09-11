@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider } from "../context/AuthContext.jsx";
 import { UserAuthProvider } from "../context/UserAuthContext.jsx";
+import { AdminAuthProvider } from "../context/AdminAuthContext.jsx";
 import ProtectedRoute from "./ProtectedRoute.jsx";
 import UserRoute from "./UserRoute.jsx";
 import Login from "../pages/Login.jsx";
@@ -9,14 +9,16 @@ import UserLogin from "../pages/UserLogin.jsx";
 import ForgotPassword from "../pages/ForgotPassword.jsx";
 import ResetPassword from "../pages/ResetPassword.jsx";
 import ChangePassword from "../pages/ChangePassword.jsx";
+import Profile from "../pages/Profile.jsx";
 import TestApp from "../pages/TestApp.jsx";
 import AdminResultats from "../pages/AdminResultats.jsx";
+import AdminUsers from "../pages/AdminUsers.jsx";
 import ModeTest from "../pages/ModeTest.jsx";
 
 export default function AppRoutes() {
   return (
     <UserAuthProvider>
-      <AuthProvider>
+      <AdminAuthProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Navigate to="/connexion" replace />} />
@@ -42,10 +44,26 @@ export default function AppRoutes() {
               }
             />
             <Route
+              path="/compte"
+              element={
+                <UserRoute>
+                  <Profile />
+                </UserRoute>
+              }
+            />
+            <Route
               path="/admin"
               element={
                 <ProtectedRoute>
                   <AdminResultats />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/utilisateurs"
+              element={
+                <ProtectedRoute>
+                  <AdminUsers />
                 </ProtectedRoute>
               }
             />
@@ -60,7 +78,7 @@ export default function AppRoutes() {
             <Route path="*" element={<Navigate to="/connexion" replace />} />
           </Routes>
         </BrowserRouter>
-      </AuthProvider>
+      </AdminAuthProvider>
     </UserAuthProvider>
   );
 }

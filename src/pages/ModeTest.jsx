@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, ChevronRight, Menu, X } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../context/AuthContext.jsx";
+import { useAdminAuth } from "../context/AdminAuthContext.jsx";
+import UserAvatar from "../components/layout/UserAvatar.jsx";
 import { BATTERIES } from "../data/index.js";
 import { listAccounts, listImported, listHiddenStaticFiles } from "../lib/storage.js";
 import { listImportedResults } from "../lib/imported.js";
@@ -16,7 +17,7 @@ import ResponsesReview from "../components/question/ResponsesReview.jsx";
 export default function ModeTest() {
   const { id } = useParams();
   const decodedId = id ? decodeURIComponent(id) : "";
-  const { logout } = useAuth();
+  const { logout } = useAdminAuth();
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState(null);
   const [ready, setReady] = useState(false);
@@ -110,9 +111,7 @@ export default function ModeTest() {
           <Menu size={18} />
           <span>Batteries</span>
         </button>
-        <Button variant="ghost" size="sm" onClick={() => navigate("/admin")} style={{ marginLeft: "auto" }}>
-          <ArrowLeft size={14} /> Retour aux résultats
-        </Button>
+        <UserAvatar onNavigate={(path) => window.location.href = path} />
       </div>
       <PageTitle
         title={`Batterie ${currentBattery.id}`}
