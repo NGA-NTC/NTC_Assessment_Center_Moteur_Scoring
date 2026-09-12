@@ -15,7 +15,7 @@ export function AdminAuthProvider({ children }) {
         .from("user_roles")
         .select("role_id")
         .eq("user_id", session.user.id)
-        .eq("role_id", "admin")
+        .in("role_id", ["admin", "super_admin"])
         .single();
       return !error && !!data;
     } catch {

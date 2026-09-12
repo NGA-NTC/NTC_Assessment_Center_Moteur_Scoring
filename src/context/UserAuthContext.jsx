@@ -143,7 +143,7 @@ export function UserAuthProvider({ children }) {
   const hasRole = useCallback((roleId) => roles.some((r) => r.id === roleId), [roles]);
   const hasPermission = useCallback((permId) => permissions.some((p) => p.id === permId), [permissions]);
 
-  const isAdmin = useMemo(() => hasRole("admin"), [hasRole, roles]);
+  const isAdmin = useMemo(() => hasRole("admin") || hasRole("super_admin"), [hasRole, roles]);
 
   const value = useMemo(() => ({
     user,

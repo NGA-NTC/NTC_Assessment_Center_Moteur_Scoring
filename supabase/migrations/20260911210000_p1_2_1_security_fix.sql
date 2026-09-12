@@ -211,6 +211,11 @@ begin
     raise exception 'Utilisateur cible introuvable.';
   end if;
 
+  -- Supprimer le rôle candidate s'il existe
+  delete from public.user_roles
+  where user_id = target_user_id and role_id = 'candidate';
+
+  -- Assigner le rôle super_admin
   insert into public.user_roles (user_id, role_id, assigned_by)
   values (target_user_id, 'super_admin', target_user_id)
   on conflict (user_id, role_id) do update set role_id = 'super_admin';
