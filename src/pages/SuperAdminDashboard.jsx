@@ -78,20 +78,26 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [usersRes, rolesRes] = await Promise.all([
+        const [usersRes, rolesRes, pagesRes, featuresRes, rpRes] = await Promise.all([
           supabase.rpc("admin_get_users"),
           supabase.from("roles").select("id, name"),
+          supabase.from("pages").select("id", { count: "exact", head: true }),
+          supabase.from("features").select("id", { count: "exact", head: true }),
+          supabase.from("role_permissions").select("id", { count: "exact", head: true }),
         ]);
 
         const usersCount = usersRes.data?.length || 0;
         const rolesCount = rolesRes.data?.length || 0;
+        const pagesCount = pagesRes.count || 0;
+        const featuresCount = featuresRes.count || 0;
+        const accessCount = rpRes.count || 0;
 
         setStats({
           users: usersCount,
           roles: rolesCount,
-          access: 0,
-          pages: 0,
-          features: 0,
+          access: accessCount,
+          pages: pagesCount,
+          features: featuresCount,
           results: 0,
         });
 

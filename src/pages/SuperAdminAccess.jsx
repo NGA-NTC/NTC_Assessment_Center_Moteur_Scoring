@@ -38,6 +38,7 @@ export default function SuperAdminAccess() {
       });
       setRolePermissions(rpMap);
 
+      // Only set initial selectedRoleId if none selected yet
       if (rolesRes.data && rolesRes.data.length > 0 && !selectedRoleId) {
         setSelectedRoleId(rolesRes.data[0].id);
       }
@@ -47,7 +48,7 @@ export default function SuperAdminAccess() {
     } finally {
       setLoading(false);
     }
-  }, [selectedRoleId]);
+  }, []); // Remove selectedRoleId dependency to avoid infinite loop
 
   useEffect(() => {
     fetchData();
