@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import UserAvatar from "../components/layout/UserAvatar.jsx";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
+import { Menu, List, LayoutGrid, FileJson, Pencil, Trash2, Download, Database, ChevronLeft, Printer, UserPlus, Mail, Calendar, X } from "lucide-react";
 import {
   createAccount,
   isValidEmail,
@@ -117,6 +118,11 @@ export default function AdminResultats() {
   const [hiddenStatic, setHiddenStatic] = useState([]);
   const [updateTarget, setUpdateTarget] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const handleNavigate = (path) => {
+    // eslint-disable-next-line react-hooks/immutability
+    window.location.href = path;
+  };
 
   useEffect(() => {
     listAccounts().then(setAccounts);
@@ -246,6 +252,7 @@ export default function AdminResultats() {
     selectedId: selection?.id || null,
     onLogout: handleLogout,
     onHome: goBack,
+    onNavigate: handleNavigate,
     query: sidebarQuery,
     onQueryChange: setSidebarQuery,
     filters: sidebarFilters,

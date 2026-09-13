@@ -2,9 +2,9 @@ import { FileJson } from "lucide-react";
 import { GOLD, NAVY, SERIF } from "../../lib/theme.js";
 import SearchField from "../ui/SearchField.jsx";
 import FilterDropdown from "../ui/FilterDropdown.jsx";
-import SidebarFooter from "./SidebarFooter.jsx";
+import UserAvatar from "./UserAvatar.jsx";
 
-export default function AdminSidebar({ candidates = [], selectedId = null, onSelect, onLogout, query = "", onQueryChange, filters = { type: "all", progress: "all" }, onFilters, metiers = [], axes = [], onHome }) {
+export default function AdminSidebar({ candidates = [], selectedId = null, onSelect, query = "", onQueryChange, filters = { type: "all", progress: "all" }, onFilters, metiers = [], axes = [], onHome, onNavigate }) {
   return (
     <div className="admin-sidebar app-sidebar" style={{ width: "100%", maxWidth: 280, flexShrink: 0, background: NAVY, color: "#fff", display: "flex", flexDirection: "column", height: "100%" }}>
       <button type="button" onClick={onHome} className="app-sidebar__brand" style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", color: "inherit", fontFamily: "inherit", padding: "20px 18px 12px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
@@ -48,7 +48,9 @@ export default function AdminSidebar({ candidates = [], selectedId = null, onSel
         })}
       </div>
 
-      <SidebarFooter onLogout={onLogout} />
+      <div style={{ padding: "8px 10px", borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+        <UserAvatar variant="sidebar" onNavigate={onNavigate} />
+      </div>
     </div>
   );
 }

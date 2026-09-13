@@ -1,10 +1,17 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { ChevronDown, LogOut, User, Settings, Shield } from "lucide-react";
 import { useUserAuth } from "../../context/UserAuthContext.jsx";
 import { NAVY, GOLD, MUTED, LINE, CREAM, INK } from "../../lib/theme.js";
 
-export default function UserAvatar({ onNavigate }) {
-  const { user, profile, isAdmin, logout } = useUserAuth();
+function getRoleDisplayName(roles) {
+  if (!roles || roles.length === 0) return "Utilisateur";
+  const priority = ["super_admin", "admin", "candidate"];
+  const sorted = [...roles].sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id));
+  return sorted[0]?.name || sorted[0]?.id || "Utilisateur";
+}
+
+export default function UserAvatar({ onNavigate, variant = "responsive" }) {
+  const { user, profile, roles, isAdmin, logout } = useUserAuth();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
 
@@ -18,8 +25,15 @@ export default function UserAvatar({ onNavigate }) {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const initials = (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "") || user?.email?.[0]?.toUpperCase() || "U";
-  const displayName = [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || user?.email || "Utilisateur";
+  const initials = useMemo(() => 
+    (profile?.first_name?.[0] || "") + (profile?.last_name?.[0] || "") || user?.email?.[0]?.toUpperCase() || "U",
+    [profile, user]
+  );
+  const displayName = useMemo(() => 
+    [profile?.first_name, profile?.last_name].filter(Boolean).join(" ") || user?.email || "Utilisateur",
+    [profile, user]
+  );
+  const roleDisplayName = useMemo(() => getRoleDisplayName(roles), [roles]);
 
   const handleLogout = async () => {
     setOpen(false);
@@ -42,43 +56,54 @@ export default function UserAvatar({ onNavigate }) {
     onNavigate?.("/admin");
   };
 
+  const isSidebar = variant === "sidebar";
+
+  const buttonStyle = useMemo(() => ({
+    display: "flex", alignItems: "center", gap: 10, padding: isSidebar ? "10px 12px" : "6px 10px",
+    background: isSidebar ? "transparent" : "#fff", border: isSidebar ? "none" : `1px solid ${LINE}`, borderRadius: isSidebar ? 8 : 10,
+    cursor: "pointer", fontFamily: "inherit", fontSize: isSidebar ? 13 : 13, color: isSidebar ? "#fff" : INK,
+    width: isSidebar ? "100%" : "auto", textAlign: isSidebar ? "left" : "inherit",
+  }), [isSidebar]);
+
+  const avatarBg = useMemo(() => isAdmin ? `linear-gradient(135deg, ${NAVY}, ${GOLD})` : NAVY, [isAdmin]);
+
+  const dropdownStyle = useMemo(() => ({
+    position: "absolute", top: isSidebar ? "auto" : "110%", bottom: isSidebar ? "110%" : "auto", right: 0, zIndex: 100, minWidth: 220,
+    background: "#fff", border: `1px solid ${LINE}`, borderRadius: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.12)", overflow: "hidden"
+  }), [isSidebar]);
+
   return (
     <div ref={menuRef} style={{ position: "relative" }}>
       <button
         type="button"
         onClick={() => setOpen(!open)}
-        style={{
-          display: "flex", alignItems: "center", gap: 10, padding: "6px 10px",
-          background: "#fff", border: `1px solid ${LINE}`, borderRadius: 10,
-          cursor: "pointer", fontFamily: "inherit", fontSize: 13, color: INK,
-        }}
+        style={buttonStyle}
         aria-expanded={open}
         aria-haspopup="true"
       >
         <div style={{
-          width: 32, height: 32, borderRadius: "50%",
-          background: isAdmin ? `linear-gradient(135deg, ${NAVY}, ${GOLD})` : NAVY,
+          width: isSidebar ? 36 : 32, height: isSidebar ? 36 : 32, borderRadius: "50%",
+          background: avatarBg,
           color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
-          fontWeight: 700, fontSize: 12,
+          fontWeight: 700, fontSize: isSidebar ? 13 : 12,
         }}>
           {initials}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-          <span style={{ fontWeight: 600, fontSize: 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ display: "flex", flexDirection: "column", minWidth: 0, flex: isSidebar ? 1 : 0 }}>
+          <span style={{ fontWeight: 600, fontSize: isSidebar ? 13 : 12.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: isSidebar ? "#fff" : INK }}>
             {displayName}
           </span>
-          <span style={{ fontSize: 10.5, color: MUTED }}>{isAdmin ? "Administrateur" : "Candidat"}</span>
+          <span style={{ fontSize: isSidebar ? 11.5 : 10.5, color: isSidebar ? "rgba(255,255,255,0.7)" : MUTED }}>
+            {roleDisplayName}
+          </span>
         </div>
-        <ChevronDown size={14} color={MUTED} />
+        <ChevronDown size={isSidebar ? 16 : 14} color={isSidebar ? "rgba(255,255,255,0.7)" : MUTED} />
       </button>
 
       {open && (
         <>
           <div style={{ position: "fixed", inset: 0, zIndex: 99 }} onClick={() => setOpen(false)} />
-          <div style={{
-            position: "absolute", top: "110%", right: 0, zIndex: 100, minWidth: 220,
-            background: "#fff", border: `1px solid ${LINE}`, borderRadius: 10, boxShadow: "0 10px 30px rgba(0,0,0,0.12)", overflow: "hidden"
-          }}>
+          <div style={dropdownStyle}>
             <div style={{ padding: "10px 12px", borderBottom: `1px solid ${LINE}`, background: CREAM }}>
               <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5 }}>Compte</div>
             </div>
