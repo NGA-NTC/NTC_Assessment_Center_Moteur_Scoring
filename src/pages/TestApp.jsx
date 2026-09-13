@@ -7,6 +7,8 @@ import { emptyResponses } from "../lib/scoring.js";
 import { loadAccountResponses, saveAccountResponses } from "../lib/storage.js";
 import AppShell from "../components/layout/AppShell.jsx";
 import Sidebar from "../components/layout/Sidebar.jsx";
+import SuperAdminSidebar from "../components/layout/SuperAdminSidebar.jsx";
+import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import UserAvatar from "../components/layout/UserAvatar.jsx";
@@ -68,7 +70,8 @@ export default function TestApp() {
     setActive(id);
     setMobileSidebarOpen(false);
   };
-  const sidebar = (
+
+  const candidateSidebar = (
     <Sidebar
       active={active}
       setActive={setActive}
@@ -78,6 +81,20 @@ export default function TestApp() {
       onHome={() => goBattery(1)}
     />
   );
+
+  const sidebar = useMemo(() => {
+    if (isSuperAdmin) return <SuperAdminSidebar />;
+    if (isAdmin) {
+      return (
+        <AdminSidebar
+          onNavigate={(path) => window.location.href = path}
+          onHome={() => goBattery(1)}
+          onLogout={handleLogout}
+        />
+      );
+    }
+    return candidateSidebar;
+  }, [isSuperAdmin, isAdmin, handleLogout, goBattery, candidateSidebar]);
 
   if (loading) {
     return (
@@ -101,14 +118,24 @@ export default function TestApp() {
                 <span>Fermer</span>
               </button>
             </div>
-            <Sidebar
-              active={active}
-              setActive={goBattery}
-              responses={responses}
-              userEmail={user?.email}
-              onLogout={handleLogout}
-              onHome={() => goBattery(1)}
-            />
+            {isSuperAdmin ? (
+              <SuperAdminSidebar />
+            ) : isAdmin ? (
+              <AdminSidebar
+                onNavigate={(path) => window.location.href = path}
+                onHome={() => goBattery(1)}
+                onLogout={handleLogout}
+              />
+            ) : (
+              <Sidebar
+                active={active}
+                setActive={goBattery}
+                responses={responses}
+                userEmail={user?.email}
+                onLogout={handleLogout}
+                onHome={() => goBattery(1)}
+              />
+            )}
           </aside>
         </>
       )}
