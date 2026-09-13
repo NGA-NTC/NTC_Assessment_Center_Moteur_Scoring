@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate, useLocation, Link } from "react-router-dom";
 import { User, LogIn } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
+import { useUserAuth } from "../context/UserAuthContext.jsx";
 import AuthShell from "../components/layout/AuthShell.jsx";
 import BrandHeader from "../components/ui/BrandHeader.jsx";
 import FormCard from "../components/ui/FormCard.jsx";
@@ -12,15 +13,27 @@ import { MUTED, NAVY } from "../lib/theme.js";
 
 export default function Login() {
   const { isAuthenticated, login, loading: authLoading } = useAdminAuth();
+  const { hasRole, loading: userLoading } = useUserAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const returnUrlRef = useRef(location.state?.from?.pathname);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      setIsSuperAdmin(hasRole("super_admin"));
+    }
+  }, [isAuthenticated, hasRole]);
+
+  const getDefaultRedirect = () => isSuperAdmin ? "/super-admin" : "/admin";
 
   if (isAuthenticated) {
-    return <Navigate to="/admin" replace />;
+    const to = returnUrlRef.current || getDefaultRedirect();
+    return <Navigate to={to} replace />;
   }
 
   const handleSubmit = async (e) => {
@@ -30,14 +43,14 @@ export default function Login() {
     const res = await login(email, password);
     setLoading(false);
     if (res.ok) {
-      const from = location.state?.from?.pathname || "/admin";
-      navigate(from, { replace: true });
+      // Don't navigate here - let the early return above handle it with correct isSuperAdmin
+      // The returnUrlRef.current preserves the "return to" URL
     } else {
       setError(res.error);
     }
   };
 
-  if (authLoading) {
+  if (authLoading || userLoading) {
     return (
       <AuthShell>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
@@ -49,7 +62,7 @@ export default function Login() {
 
   return (
     <AuthShell>
-      <BrandHeader subtitle="Accès administrateur — Résultats" />
+      <BrandHeader subtitle="Accès administrateur" />
       <FormCard onSubmit={handleSubmit}>
         <Field label="Email" icon={<User size={16} color={MUTED} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" autoFocus autoComplete="email" />
         <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Votre mot de passe" autoComplete="current-password" />

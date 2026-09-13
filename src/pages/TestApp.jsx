@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { ChevronRight, Menu, X } from "lucide-react";
+import { useState, useEffect, useMemo } from "react";
+import { ChevronRight, Menu, X, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
 import { BATTERIES } from "../data/index.js";
@@ -15,12 +15,25 @@ import RubricBattery from "../components/question/RubricBattery.jsx";
 import CoherenceBattery from "../components/question/CoherenceBattery.jsx";
 
 export default function TestApp() {
-  const { user, logout, loading } = useUserAuth();
+  const { user, logout, loading, hasRole } = useUserAuth();
   const navigate = useNavigate();
   const [active, setActive] = useState(1);
   const [responses, setResponses] = useState(emptyResponses());
   const [hydrated, setHydrated] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+
+  const isSuperAdmin = hasRole("super_admin");
+  const isAdmin = hasRole("admin");
+
+  const returnPath = useMemo(() => {
+    if (isSuperAdmin) return "/super-admin";
+    if (isAdmin) return "/admin";
+    return null;
+  }, [isSuperAdmin, isAdmin]);
+
+  const goReturn = () => {
+    if (returnPath) navigate(returnPath);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -113,7 +126,15 @@ export default function TestApp() {
         </button>
         <UserAvatar onNavigate={(path) => window.location.href = path} />
       </div>
-      <PageTitle title={`Batterie ${currentBattery.id}`} subtitle={currentBattery.name} />
+      <PageTitle 
+        title={`Batterie ${currentBattery.id}`} 
+        subtitle={currentBattery.name}
+        right={returnPath && (
+          <Button variant="outline" size="sm" onClick={goReturn}>
+            <ArrowLeft size={14} /> Retour à l'espace {isSuperAdmin ? "Super Admin" : "Admin"}
+          </Button>
+        )}
+      />
       {currentBattery.type === "correct" || currentBattery.type === "weighted" ? (
         <McqBattery battery={currentBattery} responses={responses} setResponses={setResponses} />
       ) : currentBattery.type === "rubric" ? (

@@ -1,12 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Navigate } from "react-router-dom";
-import { Save, CheckCircle2, AlertCircle, Shield, Mail, MapPin, Link, Lock, User } from "lucide-react";
+import { Save, CheckCircle2, AlertCircle, Shield, Mail, MapPin, Link, Lock, User, FileJson } from "lucide-react";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
 import AppShell from "../components/layout/AppShell.jsx";
+import SuperAdminSidebar from "../components/layout/SuperAdminSidebar.jsx";
+import UserAvatar from "../components/layout/UserAvatar.jsx";
+import Sidebar from "../components/layout/Sidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Field from "../components/ui/Field.jsx";
 import Button from "../components/ui/Button.jsx";
-import UserAvatar from "../components/layout/UserAvatar.jsx";
 import { NAVY, GOLD, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
 
 const SECTIONS = [
@@ -16,7 +18,7 @@ const SECTIONS = [
 ];
 
 export default function Profile() {
-  const { user, profile, isAdmin, updateProfile, loading: authLoading } = useUserAuth();
+  const { user, profile, isAdmin, updateProfile, loading: authLoading, hasRole } = useUserAuth();
   const [activeSection, setActiveSection] = useState("personal");
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
@@ -29,6 +31,33 @@ export default function Profile() {
     linkedin_url: profile?.linkedin_url || "",
     bio: profile?.bio || "",
   });
+
+  const isSuperAdmin = hasRole("super_admin");
+  const isAdminRole = hasRole("admin");
+  const isCandidate = hasRole("candidate");
+
+  const sidebar = useMemo(() => {
+    if (isSuperAdmin) return <SuperAdminSidebar />;
+    if (isAdminRole) {
+      return (
+        <div className="admin-sidebar app-sidebar" style={{ width: "100%", maxWidth: 280, flexShrink: 0, background: NAVY, color: "#fff", display: "flex", flexDirection: "column", height: "100%" }}>
+          <button type="button" className="app-sidebar__brand" style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", color: "inherit", fontFamily: "inherit", padding: "20px 18px 12px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
+            <div style={{ fontFamily: "Georgia, serif", fontSize: 19, fontWeight: 600, letterSpacing: 0.2 }}>NTC Assessment</div>
+            <div style={{ fontSize: 11, color: "#B8C0D4", marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>Espace administrateur</div>
+          </button>
+          <div style={{ flex: 1 }} />
+          <div style={{ padding: "8px 10px", borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+            <UserAvatar variant="sidebar" onNavigate={(path) => window.location.href = path} />
+          </div>
+        </div>
+      );
+    }
+    if (isCandidate) {
+      const handleLogout = () => { window.location.href = "/connexion"; };
+      return <Sidebar onLogout={handleLogout} onHome={() => {}} userEmail={user?.email} responses={{}} active={1} setActive={() => {}} />;
+    }
+    return null;
+  }, [isSuperAdmin, isAdminRole, isCandidate, user]);
 
   useEffect(() => {
     if (profile) {
@@ -96,41 +125,45 @@ export default function Profile() {
     </div>
   );
 
-  const renderAccount = () => (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ background: CREAM, border: `1px solid ${LINE}`, borderRadius: 10, padding: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <Mail size={18} color={MUTED} />
-          <div>
-            <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase" }}>Email (Supabase Auth)</div>
-            <div style={{ fontWeight: 600, fontSize: 13 }}>{user?.email}</div>
-          </div>
-        </div>
-        <div style={{ fontSize: 12, color: MUTED }}>
-          L'email est géré par Supabase Auth. Pour le modifier, utilisez la fonctionnalité de changement d'email dans les paramètres de sécurité Supabase.
-        </div>
-      </div>
-      <div style={{ background: CREAM, border: `1px solid ${LINE}`, borderRadius: 10, padding: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <Shield size={18} color={isAdmin ? GOLD : MUTED} />
-          <div>
-            <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase" }}>Rôle</div>
-            <div style={{ fontWeight: 600, fontSize: 13, color: isAdmin ? GOLD : INK }}>
-              {isAdmin ? "Administrateur" : "Candidat"}
+  const renderAccount = () => {
+    const roleDisplay = isSuperAdmin ? "Super Administrateur" : isAdminRole ? "Administrateur" : "Candidat";
+    const roleColor = isSuperAdmin ? GOLD : isAdminRole ? GOLD : INK;
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <div style={{ background: CREAM, border: `1px solid ${LINE}`, borderRadius: 10, padding: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
+            <Mail size={18} color={MUTED} />
+            <div>
+              <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase" }}>Email (Supabase Auth)</div>
+              <div style={{ fontWeight: 600, fontSize: 13 }}>{user?.email}</div>
             </div>
           </div>
+          <div style={{ fontSize: 12, color: MUTED }}>
+            L'email est géré par Supabase Auth. Pour le modifier, utilisez la fonctionnalité de changement d'email dans les paramètres de sécurité Supabase.
+          </div>
         </div>
-        {isAdmin ? (
-          <div style={{ fontSize: 12, color: MUTED }}>Vous avez accès à l'espace administrateur.</div>
-        ) : (
-          <div style={{ fontSize: 12, color: MUTED }}>Rôle attribué automatiquement à la création du compte.</div>
-        )}
+        <div style={{ background: CREAM, border: `1px solid ${LINE}`, borderRadius: 10, padding: "16px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <Shield size={18} color={roleColor} />
+            <div>
+              <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase" }}>Rôle</div>
+              <div style={{ fontWeight: 600, fontSize: 13, color: roleColor }}>
+                {roleDisplay}
+              </div>
+            </div>
+          </div>
+          {(isSuperAdmin || isAdminRole) ? (
+            <div style={{ fontSize: 12, color: MUTED }}>Vous avez accès à l'espace administrateur.</div>
+          ) : (
+            <div style={{ fontSize: 12, color: MUTED }}>Rôle attribué automatiquement à la création du compte.</div>
+          )}
+        </div>
+        <Button variant="outline" size="sm" onClick={() => goTo("/modifier-mot-de-passe")} style={{ maxWidth: 280 }}>
+          <Lock size={16} /> Modifier le mot de passe
+        </Button>
       </div>
-      <Button variant="outline" size="sm" onClick={() => goTo("/modifier-mot-de-passe")} style={{ maxWidth: 280 }}>
-        <Lock size={16} /> Modifier le mot de passe
-      </Button>
-    </div>
-  );
+    );
+  };
 
   const renderSection = () => {
     switch (activeSection) {
@@ -141,9 +174,11 @@ export default function Profile() {
     }
   };
 
+  const roleDisplay = isSuperAdmin ? "Super Administrateur" : isAdminRole ? "Administrateur" : "Candidat";
+
   return (
-    <AppShell maxWidth={720} sidebar={<UserAvatar onNavigate={(path) => window.location.href = path} />}>
-      <PageTitle title="Mon compte" subtitle={isAdmin ? "Administrateur" : "Candidat"} />
+    <AppShell maxWidth={720} sidebar={sidebar}>
+      <PageTitle title="Mon compte" subtitle={roleDisplay} />
       {message && (
         <div style={{
           marginBottom: 20, padding: "12px 16px", borderRadius: 8, fontSize: 13,

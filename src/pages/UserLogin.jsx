@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Navigate, useNavigate, useLocation, Link } from "react-router-dom";
-import { Mail, LogIn, Lock } from "lucide-react";
+import { Mail, LogIn } from "lucide-react";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
 import AuthShell from "../components/layout/AuthShell.jsx";
 import BrandHeader from "../components/ui/BrandHeader.jsx";
@@ -11,16 +11,30 @@ import Button from "../components/ui/Button.jsx";
 import { MUTED, NAVY } from "../lib/theme.js";
 
 export default function UserLogin() {
-  const { currentUser, login } = useUserAuth();
+  const { user, login, loading: authLoading, hasRole } = useUserAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const returnUrlRef = useRef(location.state?.from?.pathname);
 
-  if (currentUser) {
-    return <Navigate to="/test" replace />;
+  useEffect(() => {
+    if (user) {
+      setIsSuperAdmin(hasRole("super_admin"));
+    }
+  }, [user, hasRole]);
+
+  const getDefaultRedirect = () => {
+    if (isSuperAdmin) return "/super-admin";
+    return "/test";
+  };
+
+  if (user) {
+    const to = returnUrlRef.current || getDefaultRedirect();
+    return <Navigate to={to} replace />;
   }
 
   const handleSubmit = async (e) => {
@@ -30,12 +44,21 @@ export default function UserLogin() {
     const res = await login(email, password);
     setLoading(false);
     if (res.ok) {
-      const from = location.state?.from?.pathname || "/test";
-      navigate(from, { replace: true });
+      // Don't navigate here - let the early return above handle it with correct isSuperAdmin
     } else {
       setError(res.error);
     }
   };
+
+  if (authLoading) {
+    return (
+      <AuthShell>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+          <div style={{ fontSize: 14, color: MUTED }}>Chargement…</div>
+        </div>
+      </AuthShell>
+    );
+  }
 
   return (
     <AuthShell>
@@ -54,7 +77,7 @@ export default function UserLogin() {
           <Link to="/mot-de-passe-oublie" style={{ fontSize: 11.5, color: MUTED, textDecoration: "underline" }}>Mot de passe oublié ?</Link>
         </div>
         <div style={{ textAlign: "center", marginTop: 14 }}>
-          <Link to="/login" style={{ fontSize: 11.5, color: MUTED, textDecoration: "underline" }}>Espace administrateur (résultats)</Link>
+          <Link to="/login" style={{ fontSize: 11.5, color: MUTED, textDecoration: "underline" }}>Espace administrateur</Link>
         </div>
       </FormCard>
     </AuthShell>

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import UserAvatar from "../components/layout/UserAvatar.jsx";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
-import { Menu, List, LayoutGrid, FileJson, Pencil, Trash2, Download, Database, ChevronLeft, Printer, UserPlus, Mail, Calendar, X } from "lucide-react";
+import { Menu, List, LayoutGrid, FileJson, Pencil, Trash2, Download, Database, ChevronLeft, Printer, UserPlus, Mail, Calendar, X, ArrowLeft } from "lucide-react";
 import {
   createAccount,
   isValidEmail,
@@ -101,8 +101,9 @@ function ResultsBlock({ candidate }) {
 
 export default function AdminResultats() {
   const { logout, adminUser } = useAdminAuth();
-  const { isAdmin } = useUserAuth();
+  const { isAdmin, hasRole } = useUserAuth();
   const navigate = useNavigate();
+  const isSuperAdmin = hasRole("super_admin");
   const [accounts, setAccounts] = useState([]);
   const [staticImports, setStaticImports] = useState([]);
   const [runtimeImports, setRuntimeImports] = useState([]);
@@ -305,6 +306,11 @@ export default function AdminResultats() {
             <FilterDropdown filters={pageFilters} onFilters={setPageFilters} metiers={METIERS} axes={AXIS_OPTIONS} />
             <SearchField value={pageQuery} onChange={setPageQuery} placeholder="Rechercher par nom ou email…" />
             <div className="admin-toolbar__actions" style={{ marginLeft: "auto", display: "flex", gap: 8, alignItems: "center" }}>
+              {isSuperAdmin && (
+                <Button variant="outline" size="sm" onClick={() => handleNavigate("/super-admin")}>
+                  <ArrowLeft size={14} /> Retour à l'espace Super Admin
+                </Button>
+              )}
               <ViewToggle value={viewMode} onChange={setViewMode} />
               <ImportJsonButton onImport={handleImport}>Importer un JSON</ImportJsonButton>
             </div>
