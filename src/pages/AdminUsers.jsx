@@ -7,10 +7,10 @@ import AppShell from "../components/layout/AppShell.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
-import { NAVY, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
+import { NAVY, MUTED, LINE, CREAM, INK, GOLD } from "../lib/theme.js";
 import AdminUserDetail from "./AdminUserDetail.jsx";
 
-const ROLE_LABELS = { candidate: "Candidat", admin: "Administrateur" };
+const ROLE_LABELS = { candidate: "Candidat", admin: "Administrateur", super_admin: "Super Administrateur" };
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
 
@@ -28,10 +28,7 @@ export default function AdminUsers() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from("user_with_roles")
-        .select("*")
-        .order("created_at", { ascending: false });
+      const { data, error } = await supabase.rpc("admin_get_users");
       if (error) throw error;
       setUsers(data || []);
     } catch (e) {
@@ -66,15 +63,19 @@ export default function AdminUsers() {
     if (!window.confirm(`Envoyer un email de réinitialisation de mot de passe à ${email} ?`)) return;
     try {
       const redirectTo = `${window.location.origin}/reinitialiser-mot-de-passe`;
-      const { error } = await supabase.auth.admin.generateLink({
-        type: "recovery",
-        email,
-        options: { redirectTo },
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reset-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
+        },
+        body: JSON.stringify({ target_user_id: userId }),
       });
-      if (error) throw error;
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || "Erreur lors de l'envoi");
       setMessage({ type: "success", text: "Email de réinitialisation envoyé." });
     } catch (e) {
-      setMessage({ type: "error", text: "Erreur lors de l'envoi de l'email." });
+      setMessage({ type: "error", text: e instanceof Error ? e.message : "Erreur lors de l'envoi de l'email." });
     }
   };
 
@@ -165,6 +166,7 @@ export default function AdminUsers() {
               <option value="all">Tous les rôles</option>
               <option value="candidate">Candidat</option>
               <option value="admin">Administrateur</option>
+              <option value="super_admin">Super Administrateur</option>
             </select>
           </div>
         </div>
@@ -196,7 +198,7 @@ export default function AdminUsers() {
               }}
             >
               <div style={{ width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
-                background: u.role_ids?.includes("admin") ? "linear-gradient(135deg, #1B2A4A, #B8862B)" : NAVY,
+                background: (u.role_ids?.includes("admin") || u.role_ids?.includes("super_admin")) ? "linear-gradient(135deg, #1B2A4A, #B8862B)" : NAVY,
                 color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
                 fontWeight: 700, fontSize: 14 }}>
                 {(u.first_name?.[0] || "") + (u.last_name?.[0] || "") || u.email?.[0]?.toUpperCase() || "U"}
@@ -215,8 +217,8 @@ export default function AdminUsers() {
                 </span>
                 {u.role_ids?.map((r) => (
                   <span key={r} style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20,
-                    background: r === "admin" ? "#EDE9DC" : "#F3F4F6",
-                    color: r === "admin" ? "#7A5A15" : "#374151", fontWeight: 600 }}>
+                    background: r === "admin" ? "#EDE9DC" : r === "super_admin" ? "#EDE9DC" : "#F3F4F6",
+                    color: r === "admin" ? "#7A5A15" : r === "super_admin" ? "#7A5A15" : "#374151", fontWeight: 600 }}>
                     {ROLE_LABELS[r] || r}
                   </span>
                 ))}

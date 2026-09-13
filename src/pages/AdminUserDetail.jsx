@@ -5,10 +5,11 @@ import { supabase } from "../lib/supabaseClient.js";
 import { NAVY, GOLD, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
 import Button from "../components/ui/Button.jsx";
 
-const ROLE_LABELS = { candidate: "Candidat", admin: "Administrateur" };
+const ROLE_LABELS = { candidate: "Candidat", admin: "Administrateur", super_admin: "Super Administrateur" };
 const ROLE_DESC = {
   candidate: "Accès aux assessments, gestion de son profil",
   admin: "Accès complet à l'administration, gestion des utilisateurs",
+  super_admin: "Accès total : gestion admins, permissions, bootstrap super_admin",
 };
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
@@ -91,14 +92,14 @@ export default function AdminUserDetail({
 
           <div style={{ marginBottom: 16, padding: "12px", background: CREAM, borderRadius: 8, border: `1px solid ${LINE}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <Shield size={16} color={user.role_ids?.includes("admin") ? GOLD : MUTED} />
+              <Shield size={16} color={user.role_ids?.includes("admin") || user.role_ids?.includes("super_admin") ? GOLD : MUTED} />
               <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase" }}>Rôle(s)</div>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
               {roles.map((r) => (
                 <span key={r} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20,
-                  background: r === "admin" ? "#EDE9DC" : "#F3F4F6",
-                  color: r === "admin" ? "#7A5A15" : "#374151", fontWeight: 600 }}>
+                  background: r === "admin" || r === "super_admin" ? "#EDE9DC" : "#F3F4F6",
+                  color: r === "admin" || r === "super_admin" ? "#7A5A15" : "#374151", fontWeight: 600 }}>
                   {ROLE_LABELS[r] || r}
                 </span>
               ))}
@@ -109,12 +110,13 @@ export default function AdminUserDetail({
             <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${LINE}` }}>
               <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Attribuer / retirer des rôles</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {["candidate", "admin"].map((r) => (
+                {["candidate", "admin", "super_admin"].map((r) => (
                   <label key={r} style={{ display: "flex", alignItems: "center", gap: 8, cursor: "pointer", fontSize: 13 }}>
                     <input
                       type="checkbox"
                       checked={roles.includes(r)}
                       onChange={() => handleRoleToggle(r)}
+                      disabled={r === "super_admin" && !roles.includes("super_admin")}
                       style={{ width: 16, height: 16, accentColor: NAVY }}
                     />
                     <span style={{ fontWeight: roles.includes(r) ? 600 : 400 }}>{ROLE_LABELS[r]}</span>
