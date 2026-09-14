@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import UserAvatar from "../components/layout/UserAvatar.jsx";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
-import { Menu, List, LayoutGrid, FileJson, Pencil, Trash2, Download, Database, ChevronLeft, Printer, UserPlus, Mail, Calendar, X, ArrowLeft } from "lucide-react";
+import { Menu, List, LayoutGrid, FileJson, Pencil, Trash2, Download, Database, ChevronLeft, Printer, UserPlus, Mail, Calendar, X, ArrowLeft, Check } from "lucide-react";
 import {
   createAccount,
   isValidEmail,
@@ -21,8 +21,9 @@ import {
 } from "../lib/storage.js";
 import { listImportedResults } from "../lib/imported.js";
 import { buildCandidates, formatDate } from "../lib/candidates.js";
-import { AXES, ROLES } from "../data/index.js";
-import { exportResponsesJson, printCandidateReport } from "../lib/export.js";
+import { AXES, ROLES, DIMS, DIM, BATTERIES } from "../data/index.js";
+import { exportResponsesJson } from "../lib/export.js";
+import { computeDimensionScores, computeCoherence, computeAxisScores, computeRoleFit, generateReport, accountProgress } from "../lib/scoring.js";
 import { INK, LINE, MUTED } from "../lib/theme.js";
 import AppShell from "../components/layout/AppShell.jsx";
 import AdminSidebar from "../components/layout/AdminSidebar.jsx";
@@ -99,6 +100,64 @@ function ResultsBlock({ candidate }) {
   );
 }
 
+const INTENSITY_FR = { leger: "Léger", modere: "Modéré", fort: "Fort", none: "Non observé" };
+
+function esc(s) {
+  const str = String(s == null ? "" : s);
+  return str
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, '"');
+}
+
+function mcqAnswersHtml(battery, responses) {
+  return battery.items.map((it) => {
+    const sel = responses.mcq[it.id];
+    const answer = !sel ? "<span class=\"na\">Non répondue</span>"
+      : it.open ? esc(sel)
+        : `${esc(it.o[sel] || "")} <span class="opt">(${sel})</span>`;
+    return `<li><div class="qid">${esc(it.id)} · ${esc(DIM[it.dim]?.name || "")}</div>` +
+      `<div class="qtext">${esc(it.text)}</div><div class="qans">Réponse : ${answer}</div></li>`;
+  }).join("");
+}
+
+function rubricAnswersHtml(battery, responses) {
+  return battery.items.map((it) => {
+    const data = responses.b7[it.id];
+    if (!data) return `<li><div class="qid">${esc(it.id)} · Cas</div><div class="qans">Non répondue</div></li>`;
+    const scores = Object.entries(data).filter(([k]) => k !== "text").map(([k, v]) =>
+      v != null ? `<span class="chip">${DIM[k]?.name || k} : ${v}</span>` : "").join("");
+    return `<li><div class="qid">${esc(it.id)} · Cas</div>` +
+      `<div class="qtext">${esc(it.text)}</div>` +
+      (data.text ? `<div class="qans"><strong>Réponse écrite :</strong><br/>${esc(data.text)}</div>` : "") +
+      (scores ? `<div class="chips">${scores}</div>` : "") + "</li>";
+  }).join("");
+}
+
+function coherenceAnswersHtml(battery, responses) {
+  return battery.items.map((it) => {
+    const data = responses.b8[it.id];
+    if (!data) return `<li><div class="qid">${esc(it.id)} · Simulation</div><div class="qans">Non répondue</div></li>`;
+    const chips = it.watch.map((dim) => data[dim] && data[dim] !== "none"
+      ? `<span class="chip">${DIM[dim]?.name || dim} : ${INTENSITY_FR[data[dim]] || data[dim]}</span>` : "").join("");
+    return `<li><div class="qid">${esc(it.id)} · Simulation</div>` +
+      `<div class="qtext">${esc(it.text)}</div>` +
+      (data.text ? `<div class="qans"><strong>Réponse écrite :</strong><br/>${esc(data.text)}</div>` : "") +
+      (chips ? `<div class="chips">${chips}</div>` : "") + "</li>";
+  }).join("");
+}
+
+function responsesHtml(responses) {
+  return BATTERIES.map((b) => {
+    let body;
+    if (b.type === "correct" || b.type === "weighted") body = mcqAnswersHtml(b, responses);
+    else if (b.type === "rubric") body = rubricAnswersHtml(b, responses);
+    else body = coherenceAnswersHtml(b, responses);
+    return `<h3>B${b.id} — ${esc(b.name)}</h3><ol class="answers">${body}</ol>`;
+  }).join("");
+}
+
 export default function AdminResultats() {
   const { logout, adminUser } = useAdminAuth();
   const { isAdmin, hasRole } = useUserAuth();
@@ -119,6 +178,17 @@ export default function AdminResultats() {
   const [hiddenStatic, setHiddenStatic] = useState([]);
   const [updateTarget, setUpdateTarget] = useState(null);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [pdfExportModal, setPdfExportModal] = useState({ open: false, countdown: 10 });
+  const timerRef = useRef(null);
+  const selectedRef = useRef(null);
+  const [pdfExportSections, setPdfExportSections] = useState({
+    axes: true,
+    jobs: true,
+    strengths: true,
+    vigilance: true,
+    dimensions: true,
+    responses: true,
+  });
 
   const handleNavigate = (path) => {
     // eslint-disable-next-line react-hooks/immutability
@@ -148,6 +218,163 @@ export default function AdminResultats() {
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [mobileSidebarOpen]);
 
+  const anySectionSelected = Object.values(pdfExportSections).some((v) => v);
+
+  const openPdfExportModal = () => {
+    setPdfExportSections({
+      axes: true,
+      jobs: true,
+      strengths: true,
+      vigilance: true,
+      dimensions: true,
+      responses: true,
+    });
+    setPdfExportModal({ open: true, countdown: 10 });
+  };
+
+  const closePdfExportModal = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    setPdfExportModal({ open: false, countdown: 10 });
+  };
+
+  const printCandidateReportWithSections = (candidate, sections) => {
+    const responses = candidate.responses;
+    const dimScores = computeDimensionScores(responses);
+    const coherence = computeCoherence(dimScores, responses.b8);
+    const axisScores = computeAxisScores(dimScores, coherence);
+    const roleFit = computeRoleFit(dimScores, axisScores);
+    const report = generateReport(dimScores);
+    const prog = accountProgress(responses);
+    const className = candidate.kind === "acct" ? "Compte" : "Importé";
+
+    const axisRows = AXES.map((ax) =>
+      `<tr><td>${ax}</td><td class="num">${axisScores[ax] != null ? axisScores[ax] : "—"}</td></tr>`).join("");
+
+    const dimRows = DIMS
+      .map((d) => `<tr><td>${esc(d.name)}</td><td>${esc(d.axis)}</td><td class="num">${dimScores[d.key] != null ? dimScores[d.key] : "—"}</td></tr>`)
+      .sort((a, b) => a.localeCompare(b)).join("");
+
+    const roleRows = roleFit.map((r) =>
+      `<tr><td>${esc(r.name)}</td><td class="num">${r.fit != null ? r.fit + " %" : "—"}</td></tr>`).join("");
+
+    let html = `<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"/>
+<title>Rapport — ${esc(candidate.label)}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: "Segoe UI", Arial, sans-serif; color: #2A2A28; margin: 32px 44px; font-size: 13px; }
+  h1 { font-size: 21px; color: #1B2A4A; margin: 0 0 4px; }
+  h2 { font-size: 16px; color: #1B2A4A; border-bottom: 2px solid #B8862B; padding-bottom: 4px; margin: 26px 0 12px; }
+  h3 { font-size: 13.5px; color: #1B2A4A; margin: 18px 0 8px; }
+  .meta { color: #8A8578; font-size: 12px; margin-bottom: 18px; }
+  table { width: 100%; border-collapse: collapse; margin: 6px 0 10px; }
+  td, th { border: 1px solid #E4DFD0; padding: 5px 9px; text-align: left; }
+  th { background: #F7F4EC; color: #1B2A4A; }
+  td.num { text-align: right; font-weight: 600; }
+  .na { color: #8A8578; }
+  .box { border: 1px solid #E4DFD0; border-radius: 8px; padding: 10px 14px; margin: 8px 0; }
+  ul { margin: 4px 0 8px 18px; padding: 0; }
+  ol.answers { margin: 0; padding-left: 18px; }
+  ol.answers li { margin-bottom: 10px; }
+  .qid { font-weight: 700; color: #1B2A4A; }
+  .qtext { color: #2A2A28; margin: 2px 0; }
+  .qans { color: #6E6A5E; margin-top: 2px; white-space: pre-wrap; }
+  .chips { margin-top: 4px; }
+  .chip { display: inline-block; border: 1px solid #B8862B; color: #7A5A15; border-radius: 10px; padding: 1px 8px; margin: 2px 4px 2px 0; font-size: 11.5px; }
+  .cols { display: table; width: 100%; }
+  .cols > div { display: table-cell; width: 50%; vertical-align: top; padding-right: 12px; }
+  @media print { body { margin: 12mm; } }
+</style></head><body>
+  <h1>NTC Assessment Center — Rapport d'évaluation</h1>
+  <div class="meta">
+    <strong>${esc(candidate.label)}</strong> · ${className}<br/>
+    Exporté le ${new Date().toLocaleDateString("fr-FR")} — Progression : ${prog.answered}/${prog.total} réponses (${prog.pct} %)
+  </div>`;
+
+    if (sections.axes) {
+      html += `
+  <h2>Résultats par axe</h2>
+  <table><tr><th>Axe</th><th>Score</th></tr>${axisRows}</table>
+  ${coherence != null ? `<div class="box"><strong>Cohérence comportementale : ${coherence} %</strong> — écart entre le profil déclaré et le comportement observé en simulation intégrée.</div>` : ""}`;
+    }
+
+    if (sections.jobs) {
+      html += `
+  <h2>Correspondance aux 5 métiers</h2>
+  <table><tr><th>Métier</th><th>Adéquation</th></tr>${roleRows}</table>
+  <div class="meta">Modèle de pondération raisonné — indicatif, non statistiquement validé.</div>`;
+    }
+
+    if (sections.strengths || sections.vigilance) {
+      html += `<div class="cols">`;
+      if (sections.strengths) {
+        html += `
+    <div>
+      <h2>Forces</h2>
+      <ul>${report.strengths.map((d) => `<li><strong>${esc(d.name)}</strong> — ${d.score}</li>`).join("")}</ul>
+    </div>`;
+      }
+      if (sections.vigilance) {
+        html += `
+    <div>
+      <h2>Points de vigilance</h2>
+      <ul>${report.watch.map((d) => `<li><strong>${esc(d.name)}</strong> — ${d.score}</li>`).join("")}</ul>
+    </div>`;
+      }
+      html += `</div>`;
+    }
+
+    if (sections.dimensions) {
+      html += `
+  <h2>Détail des dimensions (44)</h2>
+  <table><tr><th>Dimension</th><th>Axe</th><th>Score</th></tr>${dimRows}</table>`;
+    }
+
+    if (sections.responses) {
+      html += `
+  <h2>Réponses détaillées</h2>
+  ${responsesHtml(responses)}`;
+    }
+
+    html += `</body></html>`;
+
+    const win = window.open("", "_blank");
+    if (!win) {
+      alert("Autorisez les fenêtres contextuelles puis réessayez pour exporter le PDF.");
+      return;
+    }
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    setTimeout(() => {
+      win.print();
+    }, 400);
+  };
+
+  const handlePdfExportOk = useCallback(() => {
+    if (!anySectionSelected) return;
+    closePdfExportModal();
+    printCandidateReportWithSections(selectedRef.current, pdfExportSections);
+  }, [anySectionSelected, closePdfExportModal, pdfExportSections]);
+
+  useEffect(() => {
+    if (!pdfExportModal.open) return;
+    const timer = setInterval(() => {
+      setPdfExportModal((prev) => {
+        if (prev.countdown <= 1) {
+          if (anySectionSelected) {
+            handlePdfExportOk();
+          }
+          return { ...prev, countdown: 0 };
+        }
+        return { ...prev, countdown: prev.countdown - 1 };
+      });
+    }, 1000);
+    timerRef.current = timer;
+    return () => clearInterval(timer);
+  }, [pdfExportModal.open, anySectionSelected, handlePdfExportOk]);
+
   const candidates = buildCandidates({ accounts, staticImports, runtimeImports, hiddenStatic });
 
   const sidebarList = filterList(candidates, sidebarQuery, sidebarFilters);
@@ -155,6 +382,10 @@ export default function AdminResultats() {
   const pageHasCriteria = Boolean(pageQuery.trim() || pageFilters.type !== "all" || pageFilters.progress !== "all" || pageFilters.metier !== "all" || pageFilters.axis !== "all");
   const selected = selection ? candidates.find((c) => c.id === selection.id) || null : null;
   const linkedEmail = selected ? selected.linked || createdLinks[selected.id] || null : null;
+
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
 
   const openCandidate = (c) => {
     setSelection({ id: c.id });
@@ -261,6 +492,15 @@ export default function AdminResultats() {
     metiers: METIERS,
     axes: AXIS_OPTIONS,
   };
+
+  const SECTIONS = [
+    { key: "axes", label: "Résultats par axe", description: "Scores des 8 axes (Radar)" },
+    { key: "jobs", label: "Correspondance aux 5 métiers", description: "Adéquation aux 5 métiers" },
+    { key: "strengths", label: "Forces", description: "Points forts identifiés" },
+    { key: "vigilance", label: "Points de vigilance", description: "Points de vigilance identifiés" },
+    { key: "dimensions", label: "Détail des dimensions", description: "Scores des 44 dimensions" },
+    { key: "responses", label: "Réponses détaillées", description: "Réponses aux batteries de tests" },
+  ];
 
   return (
     <AppShell maxWidth={1000} sidebar={
@@ -379,7 +619,7 @@ export default function AdminResultats() {
             title={selected.label}
             right={
               <div className="candidate-header-actions" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <Button size="sm" onClick={() => printCandidateReport(selected)}>
+                <Button size="sm" onClick={openPdfExportModal}>
                   <Printer size={14} /> Exporter PDF
                 </Button>
 
@@ -471,6 +711,49 @@ export default function AdminResultats() {
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <ImportJsonButton onImport={(text, name) => applyUpdateResults(updateTarget, text, name)}>Choisir un fichier JSON…</ImportJsonButton>
               <Button variant="ghost" size="sm" onClick={() => setUpdateTarget(null)}>Annuler</Button>
+            </div>
+          </div>
+        </div>
+      )}
+      {pdfExportModal.open && (
+        <div className="pdf-export-modal-overlay" style={{ position: "fixed", inset: 0, background: "rgba(20,26,40,.45)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={closePdfExportModal}>
+          <div style={{ background: "#fff", borderRadius: 14, padding: "24px", maxWidth: 440, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,.25)" }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: NAVY }}>Exporter le rapport PDF</div>
+              <button type="button" onClick={closePdfExportModal} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: MUTED, padding: 0, lineHeight: 1 }}>×</button>
+            </div>
+            <p style={{ fontSize: 13, color: MUTED, marginBottom: 20 }}>Sélectionnez les sections à inclure dans le rapport.</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 20 }}>
+              {SECTIONS.map((section) => (
+                <label key={section.key} style={{ display: "flex", alignItems: "center", gap: 12, padding: "12px 14px", border: `1px solid ${LINE}`, borderRadius: 10, cursor: "pointer", background: pdfExportSections[section.key] ? "#FEFBF3" : "#fff", transition: "all .15s" }}>
+                  <input
+                    type="checkbox"
+                    checked={pdfExportSections[section.key]}
+                    onChange={() => setPdfExportSections((prev) => ({ ...prev, [section.key]: !prev[section.key] }))}
+                    style={{ width: 20, height: 20, accentColor: NAVY, flexShrink: 0 }}
+                  />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 600, color: INK }}>{section.label}</div>
+                    <div style={{ fontSize: 11.5, color: MUTED, marginTop: 2 }}>{section.description}</div>
+                  </div>
+                </label>
+              ))}
+            </div>
+            {!anySectionSelected && (
+              <div style={{ marginBottom: 16, padding: "10px 14px", borderRadius: 8, background: "#FEF3E2", border: `1px solid #F5C6C3`, color: "#B5652E", fontSize: 13 }}>
+                Sélectionnez au moins une section pour générer le rapport.
+              </div>
+            )}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 8 }}>
+              <div style={{ fontSize: 13, color: MUTED }}>
+                {pdfExportModal.countdown > 0 && `Export automatique dans ${pdfExportModal.countdown} s`}
+              </div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button variant="ghost" size="sm" onClick={closePdfExportModal}>Annuler</Button>
+                <Button size="sm" onClick={handlePdfExportOk} disabled={!anySectionSelected}>
+                  <Check size={14} /> OK
+                </Button>
+              </div>
             </div>
           </div>
         </div>
