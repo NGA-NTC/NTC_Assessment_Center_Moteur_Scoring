@@ -22,7 +22,7 @@ import {
 import { listImportedResults } from "../lib/imported.js";
 import { buildCandidates, formatDate } from "../lib/candidates.js";
 import { AXES, ROLES, DIMS, DIM, BATTERIES } from "../data/index.js";
-import { exportResponsesJson } from "../lib/export.js";
+import { exportResponsesJson, generatePdfFilename } from "../lib/export.js";
 import { computeDimensionScores, computeCoherence, computeAxisScores, computeRoleFit, generateReport, accountProgress } from "../lib/scoring.js";
 import { INK, LINE, MUTED } from "../lib/theme.js";
 import AppShell from "../components/layout/AppShell.jsx";
@@ -259,7 +259,7 @@ export default function AdminResultats() {
 
     let html = `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"/>
-<title>Rapport — ${esc(candidate.label)}</title>
+<title>${esc(generatePdfFilename(candidate).replace(/\.pdf$/, ""))}</title>
 <style>
   * { box-sizing: border-box; }
   body { font-family: "Segoe UI", Arial, sans-serif; color: #2A2A28; margin: 32px 44px; font-size: 13px; }

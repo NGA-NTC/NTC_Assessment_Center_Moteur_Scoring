@@ -11,14 +11,31 @@ import {
 const INTENSITY_FR = { leger: "Léger", modere: "Modéré", fort: "Fort", none: "Non observé" };
 
 function esc(s) {
-  return String(s == null ? "" : s)
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const str = String(s == null ? "" : s);
+  return str
+    .replace(/&/g, "&")
+    .replace(/</g, "<")
+    .replace(/>/g, ">")
+    .replace(/"/g, '"');
 }
 
 function slug(s) {
   const base = String(s || "candidat").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   return base || "candidat";
+}
+
+export function generatePdfFilename(candidate) {
+  const label = candidate?.label || "Rapport";
+  const cleanLabel = String(label)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[/\\]/g, "_")
+    .replace(/[^a-zA-Z0-9_.-]/g, "_")
+    .replace(/_{2,}/g, "_")
+    .replace(/^_+|_+$/g, "");
+  const date = new Date().toISOString().split("T")[0];
+  return `NTC_Assessment_${cleanLabel || "Rapport"}_${date}.pdf`;
 }
 
 export function exportResponsesJson(candidate) {
@@ -107,9 +124,10 @@ export function printCandidateReport(candidate) {
   const roleRows = roleFit.map((r) =>
     `<tr><td>${esc(r.name)}</td><td class="num">${r.fit != null ? r.fit + " %" : "—"}</td></tr>`).join("");
 
+  const pdfFilename = generatePdfFilename(candidate);
   const html = `<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"/>
-<title>Rapport — ${esc(candidate.label)}</title>
+<title>${esc(pdfFilename.replace(/\.pdf$/, ""))}</title>
 <style>
   * { box-sizing: border-box; }
   body { font-family: "Segoe UI", Arial, sans-serif; color: #2A2A28; margin: 32px 44px; font-size: 13px; }
