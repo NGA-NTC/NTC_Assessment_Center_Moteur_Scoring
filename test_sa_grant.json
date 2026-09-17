@@ -1,0 +1,1 @@
+{"p_target_role_id": "admin", "p_permission_id": "rbac.role_permissions", "p_capabilities": {"use": true, "manage": true, "grant": true, "delegate": true}, "p_scope_type": "global", "p_scope_value": null}

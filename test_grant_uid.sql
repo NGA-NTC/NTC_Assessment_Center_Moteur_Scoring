@@ -1,0 +1,2 @@
+SET LOCAL request.jwt.claims = '{"sub": "test-uid", "role": "authenticated"}';
+SELECT public.grant_role_permission('admin', 'users.edit', '{"use": true, "manage": false, "grant": false, "delegate": false}'::jsonb, 'global', NULL);

@@ -59,16 +59,19 @@ export function UserAuthProvider({ children }) {
   useEffect(() => {
     let mounted = true;
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const initAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       if (!mounted) return;
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchProfile(session.user.id);
-        fetchRoles(session.user.id);
+        await fetchProfile(session.user.id);
+        await fetchRoles(session.user.id);
       }
-      setLoading(false);
-    });
+      if (mounted) setLoading(false);
+    };
+
+    initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
@@ -82,7 +85,7 @@ export function UserAuthProvider({ children }) {
         setRoles([]);
         setPermissions([]);
       }
-      setLoading(false);
+      if (mounted) setLoading(false);
     });
 
     return () => {

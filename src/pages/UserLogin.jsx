@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Navigate, useNavigate, useLocation, Link } from "react-router-dom";
+import { useState } from "react";
+import { Navigate, useLocation, Link } from "react-router-dom";
 import { Mail, LogIn } from "lucide-react";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
 import AuthShell from "../components/layout/AuthShell.jsx";
@@ -12,28 +12,27 @@ import { MUTED, NAVY } from "../lib/theme.js";
 
 export default function UserLogin() {
   const { user, login, loading: authLoading, hasRole } = useUserAuth();
-  const navigate = useNavigate();
   const location = useLocation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const returnUrlRef = useRef(location.state?.from?.pathname);
 
-  useEffect(() => {
-    if (user) {
-      setIsSuperAdmin(hasRole("super_admin"));
-    }
-  }, [user, hasRole]);
+  const returnPath = location.state?.from?.pathname;
+  const getDefaultRedirect = () => hasRole("super_admin") ? "/super-admin" : "/test";
 
-  const getDefaultRedirect = () => {
-    if (isSuperAdmin) return "/super-admin";
-    return "/test";
-  };
+  if (authLoading) {
+    return (
+      <AuthShell>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
+          <div style={{ fontSize: 14, color: MUTED }}>Chargement de votre espace…</div>
+        </div>
+      </AuthShell>
+    );
+  }
 
   if (user) {
-    const to = returnUrlRef.current || getDefaultRedirect();
+    const to = returnPath || getDefaultRedirect();
     return <Navigate to={to} replace />;
   }
 
@@ -44,21 +43,11 @@ export default function UserLogin() {
     const res = await login(email, password);
     setLoading(false);
     if (res.ok) {
-      // Don't navigate here - let the early return above handle it with correct isSuperAdmin
+      // Don't navigate here - let the early return above handle it with correct hasRole
     } else {
       setError(res.error);
     }
   };
-
-  if (authLoading) {
-    return (
-      <AuthShell>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-          <div style={{ fontSize: 14, color: MUTED }}>Chargement…</div>
-        </div>
-      </AuthShell>
-    );
-  }
 
   return (
     <AuthShell>

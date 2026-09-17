@@ -78,6 +78,22 @@ Interface 100 % en français. Stack : **Vite + React 19 + JavaScript (JSX)** ave
 
 ---
 
+## Documentation
+
+La documentation complète du projet se trouve dans le dossier [`documentation/`](./documentation/README.md).
+
+Elle est organisée ainsi :
+
+- **Architecture** : aperçu global, frontend, backend, base de données, authentification, autorisation, délégation, sécurité
+- **Guides** : installation, développement, déploiement, conventions
+- **Référence** : routes, base de données, RPC, API, configuration
+- **Historique** : migrations, déploiements, changements de code, demandes
+- **Décisions** : ADR (Architecture Decision Records)
+- **Versions** : suivi des versions
+- **Roadmap** : prochaines étapes
+
+---
+
 ## Configuration
 
 ### Authentification administrateur
@@ -108,6 +124,8 @@ La persistance est gérée par `src/lib/storage.js`, qui utilise `window.storage
 | `ntc_user_session` (session) | Session candidat |
 
 > **Aucune donnée n'est envoyée à un serveur.** L'application fonctionne entièrement dans le navigateur.
+
+---
 
 ## Import de résultats
 
@@ -140,7 +158,7 @@ Structure attendue des réponses :
 - **react-router-dom** ^7.18.3 (routing + guards)
 - **recharts** ^3.10.1 (radar)
 - **lucide-react** ^1.41.0 (icônes)
-- ESLint ^10.9.0 (eslint-plugin-react-hooks, eslint-plugin-react-refresh)
+- **ESLint** ^10.9.0 (eslint-plugin-react-hooks, eslint-plugin-react-refresh)
 - Polices : Fraunces (titres) + IBM Plex Sans (texte) via Google Fonts
 - Design system maison : `src/lib/theme.js` (palette NAVY / GOLD / CREAM…), composants `ui/`, `layout/`, `question/`
 
@@ -156,7 +174,6 @@ Structure attendue des réponses :
   - Sidebar candidat/admin adaptées pour éviter les débordements horizontaux.
   - `ResultsView` passe en grilles auto-fit (`minmax(280px, 1fr)`) pour radar, métiers, forces et vigilances.
   - `IntensityToggle` et la relecture B8 se replient en pile sur mobile (libellé puis options).
-  - Barre d’outils admin, lignes de liste candidat, menus contextuels et panneau de filtres adaptés aux écrans tactiles étroits.
   - Champ de recherche rendu fluide (`minWidth: 0`) pour cohabiter avec filtres/actions.
 
 ---
@@ -215,3 +232,9 @@ Commandes utiles :
 - Application **100 % côté client** : l'authentification admin est réalisée dans le bundle, les comptes candidats et leurs mots de passe sont stockés en clair au niveau du navigateur. Ce choix convient **à un prototype / usage local**, pas à un déploiement public sans backend.
 - Le modèle de pondération des 5 métiers est raisonné et **non validé statistiquement**.
 - Au build, un avertissement « chunk > 500 kB » (dû à `recharts`) est attendu et sans impact fonctionnel.
+
+---
+
+## Documentation
+
+Voir la documentation complète dans [`documentation/README.md`](./documentation/README.md).

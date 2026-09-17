@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Loader2, Shield, Save, AlertCircle } from "lucide-react";
 import { supabase } from "../lib/supabaseClient.js";
 import PageTitle from "../components/ui/PageTitle.jsx";
@@ -14,6 +14,7 @@ export default function SuperAdminAccess() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState(null);
   const [selectedRoleId, setSelectedRoleId] = useState(null);
+  const initialSelectionDone = useRef(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -39,7 +40,8 @@ export default function SuperAdminAccess() {
       setRolePermissions(rpMap);
 
       // Only set initial selectedRoleId if none selected yet
-      if (rolesRes.data && rolesRes.data.length > 0 && !selectedRoleId) {
+      if (!initialSelectionDone.current && rolesRes.data && rolesRes.data.length > 0 && !selectedRoleId) {
+        initialSelectionDone.current = true;
         setSelectedRoleId(rolesRes.data[0].id);
       }
     } catch (e) {
@@ -48,7 +50,7 @@ export default function SuperAdminAccess() {
     } finally {
       setLoading(false);
     }
-  }, []); // Remove selectedRoleId dependency to avoid infinite loop
+  }, [selectedRoleId]);
 
   useEffect(() => {
     fetchData();

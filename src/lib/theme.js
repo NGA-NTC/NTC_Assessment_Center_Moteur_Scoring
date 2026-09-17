@@ -5,5 +5,5 @@ export const CREAM = "#F7F4EC";
 export const INK = "#2A2A28";
 export const MUTED = "#8A8578";
 export const LINE = "#E4DFD0";
-export const SANS = "'IBM Plex Sans', sans-serif";
+export const SANS = "'Inter', sans-serif";
 export const SERIF = "'Fraunces', serif";
