@@ -84,17 +84,44 @@ export default function SuperAdminAccess() {
       const toAdd = currentArray.filter(id => !existingIds.has(id));
       const toRemove = Array.from(existingIds).filter(id => !currentPerms.has(id));
 
-      if (toRemove.length > 0) {
-        await supabase.from("role_permissions").delete().eq("role_id", selectedRoleId).in("permission_id", toRemove);
+      // Use RPCs for all mutations instead of direct table access
+      // Process removals first
+      for (const permId of toRemove) {
+        const { error } = await supabase.rpc('revoke_role_permission', {
+          p_target_role_id: selectedRoleId,
+          p_permission_id: permId,
+          p_capabilities: ['USE', 'MANAGE', 'GRANT', 'DELEGATE'],
+          p_scope_type: 'global',
+          p_scope_value: null
+        });
+        if (error) throw new Error(`Erreur retrait ${permId}: ${error.message}`);
       }
-      if (toAdd.length > 0) {
-        await supabase.from("role_permissions").insert(toAdd.map(pid => ({ role_id: selectedRoleId, permission_id: pid })));
+
+      // Process additions
+      for (const permId of toAdd) {
+        const { error } = await supabase.rpc('grant_role_permission', {
+          p_target_role_id: selectedRoleId,
+          p_permission_id: permId,
+          p_capabilities: { use: true, manage: false, grant: false, delegate: false },
+          p_scope_type: 'global',
+          p_scope_value: null
+        });
+        if (error) throw new Error(`Erreur attribution ${permId}: ${error.message}`);
       }
+
+      // Refresh from database to ensure consistency
+      const { data: refreshed } = await supabase.from("role_permissions").select("permission_id").eq("role_id", selectedRoleId);
+      const refreshedIds = new Set((refreshed || []).map(r => r.permission_id));
+      setRolePermissions(prev => {
+        const newMap = { ...prev };
+        newMap[selectedRoleId] = refreshedIds;
+        return newMap;
+      });
 
       setMessage({ type: "success", text: "Accès mis à jour." });
     } catch (e) {
       console.error("Erreur sauvegarde accès:", e);
-      setMessage({ type: "error", text: "Erreur lors de la sauvegarde." });
+      setMessage({ type: "error", text: e.message || "Erreur lors de la sauvegarde." });
     } finally {
       setSaving(false);
     }
