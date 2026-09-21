@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit, Trash2, Loader2, FileText, Save } from "lucide-react";
-import { supabase } from "../lib/supabaseClient.js";
+import {
+  listPages,
+  createPage,
+  updatePage,
+  deletePage,
+} from "../services/pages/index.js";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
@@ -34,20 +39,14 @@ export default function SuperAdminPages() {
   const fetchPages = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.from("pages").select("*").order("id");
-      if (error) {
-        if (error.code === "42P01") {
-          setPages(DEFAULT_PAGES);
-        } else {
-          throw error;
-        }
-      } else {
-        setPages(data || DEFAULT_PAGES);
-      }
+      const data = await listPages();
+      setPages(data ?? DEFAULT_PAGES);
     } catch (e) {
       console.error("Erreur chargement pages:", e);
       setPages(DEFAULT_PAGES);
-      setMessage({ type: "error", text: "Impossible de charger les pages depuis la base, affichage des pages par défaut." });
+      if (e?.code !== "42P01") {
+        setMessage({ type: "error", text: "Impossible de charger les pages depuis la base, affichage des pages par défaut." });
+      }
     } finally {
       setLoading(false);
     }
@@ -59,12 +58,10 @@ export default function SuperAdminPages() {
     e.preventDefault();
     try {
       if (editingPage) {
-        const { error } = await supabase.from("pages").update({ name: formData.name, path: formData.path, description: formData.description, icon: formData.icon }).eq("id", editingPage.id);
-        if (error) throw error;
+        await updatePage(editingPage.id, { name: formData.name, path: formData.path, description: formData.description, icon: formData.icon });
         setMessage({ type: "success", text: "Page mise à jour." });
       } else {
-        const { error } = await supabase.from("pages").insert({ id: formData.id, name: formData.name, path: formData.path, description: formData.description, icon: formData.icon });
-        if (error) throw error;
+        await createPage({ id: formData.id, name: formData.name, path: formData.path, description: formData.description, icon: formData.icon });
         setMessage({ type: "success", text: "Page créée." });
       }
       setShowModal(false);
@@ -83,11 +80,10 @@ export default function SuperAdminPages() {
     }
     if (!window.confirm(`Supprimer la page "${page.name}" ? Cette action est irréversible.`)) return;
     try {
-      const { error } = await supabase.from("pages").delete().eq("id", page.id);
-      if (error) throw error;
+      await deletePage(page.id);
       setMessage({ type: "success", text: "Page supprimée." });
       fetchPages();
-    } catch (e) {
+    } catch {
       setMessage({ type: "error", text: "Erreur lors de la suppression." });
     }
   };

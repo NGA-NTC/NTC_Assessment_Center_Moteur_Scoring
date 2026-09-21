@@ -1,0 +1,53 @@
+{
+  "connexion": {
+    "title": "Login — Access the assessment"
+  },
+  "inscription": {
+    "title": "Sign up — Take the assessment"
+  },
+  "motDePasseOublie": {
+    "title": "Forgot password"
+  },
+  "reinitialiserMotDePasse": {
+    "title": "Reset password"
+  },
+  "loginAdmin": {
+    "title": "Administrator access"
+  },
+  "test": {
+    "title": "Take the assessment"
+  },
+  "modifierMotDePasse": {
+    "title": "Change password"
+  },
+  "compte": {
+    "title": "My account"
+  },
+  "resultats": {
+    "title": "Candidates"
+  },
+  "utilisateurs": {
+    "title": "User administration"
+  },
+  "modeTest": {
+    "title": "Test mode"
+  },
+  "tableauDeBord": {
+    "title": "Super Admin Dashboard"
+  },
+  "comptes": {
+    "title": "Accounts"
+  },
+  "roles": {
+    "title": "Roles"
+  },
+  "accessControl": {
+    "title": "Access"
+  },
+  "pages": {
+    "title": "Pages"
+  },
+  "fonctionnalites": {
+    "title": "Features"
+  }
+}

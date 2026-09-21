@@ -9,7 +9,12 @@ documentation/
 ├── README.md                    # Ce fichier
 ├── architecture/                # Architecture du système
 │   ├── overview.md              # Vue d'ensemble
-│   ├── frontend.md              # Architecture frontend
+│   ├── frontend.md              # Architecture frontend (état implémenté)
+│   ├── frontend-architecture.md # Architecture frontend — CIBLE (refactorisation)
+│   ├── routing-architecture.md  # Routing — CIBLE (route_key/path/component/config/authorization)
+│   ├── component-architecture.md# Composants — CIBLE (atoms/molecules/organisms, sidebar dynamique)
+│   ├── state-and-data-flow.md   # État & flux de données — CIBLE (contextes/hooks/services)
+│   ├── i18n-architecture.md     # i18n — CIBLE (fr/en)
 │   ├── backend.md               # Architecture backend (Supabase)
 │   ├── database.md              # Base de données
 │   ├── authentication.md        # Authentification
@@ -32,16 +37,20 @@ documentation/
 │   ├── migrations.md
 │   ├── deployments.md
 │   ├── code-changes.md
-│   └── requests.md
+│   ├── requests.md
+│   └── phases/                  # Documents de phase archivés (ex. P1.3.4-B-S2 : décisions, spec, audits)
 ├── decisions/                   # Architecture Decision Records (ADR)
 │   ├── README.md
 │   ├── ADR-001-frontend-untrusted.md
 │   ├── ADR-002-role-access-audience-permission.md
-│   └── ADR-003-delegation-model.md
+│   ├── ADR-003-delegation-model.md
+│   ├── ADR-frontend-modular-architecture.md
+│   └── ADR-dynamic-routing.md
 ├── versions/                    # Suivi des versions
 │   └── versions.md
 └── roadmap/                     # Feuille de route
-    └── roadmap.md
+    ├── roadmap.md
+    └── frontend-refactor.md     # Plan de refactorisation frontend
 ```
 
 ## États des fonctionnalités

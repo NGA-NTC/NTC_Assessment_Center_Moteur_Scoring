@@ -1,9 +1,18 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Search, Loader2, UserPlus, Shield, Edit } from "lucide-react";
-import { supabase } from "../lib/supabaseClient.js";
+import { Search, Loader2, UserPlus, Shield } from "lucide-react";
+import {
+  listUsers,
+  createUserAccount,
+  updateUserActive,
+  assignRole,
+  removeRole,
+} from "../services/auth/users/index.js";
+import { listAssignableRoles } from "../services/rbac/assignableRoles/index.js";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
+import { useEffectiveAuthority } from "../hooks/auth/useEffectiveAuthority.js";
+import { userActions } from "../services/auth/users/actionAccess.js";
 import { NAVY, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
 import AdminUserDetail from "./AdminUserDetail.jsx";
 import Card from "../components/ui/Card.jsx";
@@ -13,7 +22,13 @@ const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspen
 const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
 
 export default function SuperAdminAccounts() {
+  const { can } = useEffectiveAuthority();
+  const canCreateUser = userActions.canCreateUser(can);
+  const canEditUser = userActions.canEditUser(can);
+  const canChangeRole = userActions.canChangeRole(can);
+  const canPromoteAdmin = userActions.canPromoteAdmin(can);
   const [users, setUsers] = useState([]);
+  const [assignableRoleIds, setAssignableRoleIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -26,9 +41,9 @@ export default function SuperAdminAccounts() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc("admin_get_users");
-      if (error) throw error;
-      setUsers(data || []);
+      const [userData, assignable] = await Promise.all([listUsers(), listAssignableRoles()]);
+      setUsers(userData);
+      setAssignableRoleIds((assignable ?? []).map((r) => r.assignable_role_id));
     } catch (e) {
       console.error("Erreur chargement utilisateurs:", e);
       setMessage({ type: "error", text: "Impossible de charger les utilisateurs." });
@@ -37,7 +52,10 @@ export default function SuperAdminAccounts() {
     }
   }, []);
 
-  useEffect(() => { fetchUsers(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => { fetchUsers(); }, 0);
+    return () => clearTimeout(t);
+  }, [fetchUsers]);
 
   const filteredUsers = useMemo(() => {
     let result = users;
@@ -56,23 +74,17 @@ export default function SuperAdminAccounts() {
 
   const handleCreateUser = async (e) => {
     e.preventDefault();
+    if (!canCreateUser) return;
     try {
-      const { data, error } = await supabase.auth.admin.createUser({
+      await createUserAccount({
         email: createForm.email,
         password: createForm.password,
-        email_confirm: true,
-        user_metadata: { first_name: createForm.first_name, last_name: createForm.last_name },
+        firstName: createForm.first_name,
+        lastName: createForm.last_name,
+        role: createForm.role,
+        status: createForm.status,
       });
-      if (error) throw error;
-      
-      if (createForm.role) {
-        await supabase.from("user_roles").insert({ user_id: data.user.id, role_id: createForm.role });
-      }
-      
-      if (createForm.status === "inactive") {
-        await supabase.auth.admin.updateUserById(data.user.id, { ban_duration: "87600h" });
-      }
-      
+
       setMessage({ type: "success", text: "Utilisateur créé avec succès." });
       setShowCreateModal(false);
       setCreateForm({ email: "", password: "", first_name: "", last_name: "", role: "candidate", status: "active" });
@@ -82,34 +94,12 @@ export default function SuperAdminAccounts() {
     }
   };
 
-  const handleResetPassword = async (userId, email) => {
-    if (!window.confirm(`Envoyer un email de réinitialisation de mot de passe à ${email} ?`)) return;
-    try {
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reset-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-        body: JSON.stringify({ target_user_id: userId }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Erreur lors de l'envoi");
-      setMessage({ type: "success", text: "Email de réinitialisation envoyé." });
-    } catch {
-      setMessage({ type: "error", text: "Erreur lors de l'envoi de l'email." });
-    }
-  };
-
   const handleToggleStatus = async (user) => {
+    if (!canEditUser) return;
     const newStatus = user.status === "active" ? "inactive" : "active";
     if (!window.confirm(`${newStatus === "inactive" ? "Suspendre" : "Réactiver"} cet utilisateur ?`)) return;
     try {
-      if (newStatus === "inactive") {
-        await supabase.auth.admin.updateUserById(user.id, { ban_duration: "87600h" });
-      } else {
-        await supabase.auth.admin.updateUserById(user.id, { ban_duration: "none" });
-      }
+      await updateUserActive(user.id, newStatus !== "inactive");
       setMessage({ type: "success", text: `Utilisateur ${newStatus === "inactive" ? "suspendu" : "réactivé"}.` });
       fetchUsers();
     } catch {
@@ -117,16 +107,18 @@ export default function SuperAdminAccounts() {
     }
   };
 
-  const handleRoleChange = async (userId, newRoleId) => {
+  const handleRoleChange = async (userId, roleId, add) => {
+    if (!canChangeRole) return;
     try {
-      await supabase.from("user_roles").delete().eq("user_id", userId);
-      if (newRoleId) {
-        await supabase.from("user_roles").insert({ user_id: userId, role_id: newRoleId });
+      if (add) {
+        await assignRole(userId, roleId);
+      } else {
+        await removeRole(userId, roleId);
       }
-      setMessage({ type: "success", text: "Rôle mis à jour." });
+      setMessage({ type: "success", text: `Rôle ${add ? "ajouté" : "retiré"}.` });
       fetchUsers();
-    } catch {
-      setMessage({ type: "error", text: "Erreur lors de la mise à jour du rôle." });
+    } catch (e) {
+      setMessage({ type: "error", text: e.message || "Erreur lors de la mise à jour du rôle." });
     }
   };
 
@@ -136,9 +128,11 @@ export default function SuperAdminAccounts() {
         title="Comptes"
         subtitle={loading ? "Chargement…" : `${filteredUsers.length} utilisateur${filteredUsers.length > 1 ? "s" : ""}`}
         action={
-          <Button onClick={() => setShowCreateModal(true)}>
-            <UserPlus size={16} /> Nouvel utilisateur
-          </Button>
+          canCreateUser && (
+            <Button onClick={() => setShowCreateModal(true)}>
+              <UserPlus size={16} /> Nouvel utilisateur
+            </Button>
+          )
         }
       />
 
@@ -218,8 +212,8 @@ export default function SuperAdminAccounts() {
                       </div>
                     </td>
                     <td style={{ padding: "12px 16px" }}>
-                      <span style={{ 
-                        fontSize: 11, padding: "3px 10px", borderRadius: 999, 
+                      <span style={{
+                        fontSize: 11, padding: "3px 10px", borderRadius: 999,
                         background: STATUS_TONES[user.status] === "success" ? "#E3F0E4" : STATUS_TONES[user.status] === "warning" ? "#FEF3E2" : "#FAE8E6",
                         color: STATUS_TONES[user.status] === "success" ? "#2E6B3C" : STATUS_TONES[user.status] === "warning" ? "#B5652E" : "#8A2B22",
                       }}>
@@ -231,15 +225,16 @@ export default function SuperAdminAccounts() {
                     </td>
                     <td style={{ padding: "12px 16px" }}>
                       <div style={{ display: "flex", gap: 8 }}>
-                        <Button size="sm" variant="outline" onClick={() => handleResetPassword(user.id, user.email)} disabled={loading}>
-                          <Edit size={14} /> MDP
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => handleToggleStatus(user)} disabled={loading}>
-                          {user.status === "active" ? "Suspendre" : "Réactiver"}
-                        </Button>
-                        <Button size="sm" variant="outline" onClick={() => setSelectedUser(user)}>
-                          <Shield size={14} /> Rôle
-                        </Button>
+                        {canEditUser && (
+                          <Button size="sm" variant="outline" onClick={() => handleToggleStatus(user)} disabled={loading}>
+                            {user.status === "active" ? "Suspendre" : "Réactiver"}
+                          </Button>
+                        )}
+                        {canChangeRole && (
+                          <Button size="sm" variant="outline" onClick={() => setSelectedUser(user)}>
+                            <Shield size={14} /> Rôle
+                          </Button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -254,10 +249,10 @@ export default function SuperAdminAccounts() {
         <AdminUserDetail
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
-          onResetPassword={handleResetPassword}
           onToggleStatus={handleToggleStatus}
           onRoleChange={handleRoleChange}
-          canManageRoles={true}
+          canManageRoles={canChangeRole}
+          assignableRoles={assignableRoleIds}
         />
       )}
 
@@ -270,18 +265,17 @@ export default function SuperAdminAccounts() {
             </div>
             <form onSubmit={handleCreateUser}>
               <div style={{ display: "grid", gap: 16 }}>
-                <Field label="Email" type="email" value={createForm.email} onChange={(e) => setCreateForm(f => ({ ...f, email: e.target.value }))} required />
-                <Field label="Mot de passe" type="password" value={createForm.password} onChange={(e) => setCreateForm(f => ({ ...f, password: e.target.value }))} required />
+                <Field label="Email" type="email" value={createForm.email} onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))} required />
+                <Field label="Mot de passe" type="password" value={createForm.password} onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))} required />
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
-                  <Field label="Prénom" value={createForm.first_name} onChange={(e) => setCreateForm(f => ({ ...f, first_name: e.target.value }))} />
-                  <Field label="Nom" value={createForm.last_name} onChange={(e) => setCreateForm(f => ({ ...f, last_name: e.target.value }))} />
+                  <Field label="Prénom" value={createForm.first_name} onChange={(e) => setCreateForm((f) => ({ ...f, first_name: e.target.value }))} />
+                  <Field label="Nom" value={createForm.last_name} onChange={(e) => setCreateForm((f) => ({ ...f, last_name: e.target.value }))} />
                 </div>
-                <Field label="Rôle" type="select" value={createForm.role} onChange={(e) => setCreateForm(f => ({ ...f, role: e.target.value }))}>
+                <Field label="Rôle initial" type="select" value={createForm.role} onChange={(e) => setCreateForm((f) => ({ ...f, role: e.target.value }))}>
                   <option value="candidate">Candidat</option>
-                  <option value="admin">Administrateur</option>
-                  <option value="super_admin">Super Administrateur</option>
+                  {canPromoteAdmin && assignableRoleIds.includes("admin") && <option value="admin">Administrateur</option>}
                 </Field>
-                <Field label="Statut" type="select" value={createForm.status} onChange={(e) => setCreateForm(f => ({ ...f, status: e.target.value }))}>
+                <Field label="Statut" type="select" value={createForm.status} onChange={(e) => setCreateForm((f) => ({ ...f, status: e.target.value }))}>
                   <option value="active">Actif</option>
                   <option value="inactive">Inactif</option>
                 </Field>

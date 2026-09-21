@@ -1,13 +1,21 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Search, Loader2, MoreHorizontal, CheckCircle2, AlertCircle } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
-import { useUserAuth } from "../context/UserAuthContext.jsx";
-import { supabase } from "../lib/supabaseClient.js";
+import { useEffectiveAuthority } from "../hooks/auth/useEffectiveAuthority.js";
+import {
+  listUsers,
+  assignRole,
+  removeRole,
+  updateUserActive,
+} from "../services/auth/users/index.js";
+import { listAssignableRoles } from "../services/rbac/assignableRoles/index.js";
+import { userActions } from "../services/auth/users/actionAccess.js";
 import AppShell from "../components/layout/AppShell.jsx";
+import AppSidebar from "../components/layout/AppSidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
-import { NAVY, MUTED, LINE, CREAM, INK, GOLD } from "../lib/theme.js";
+import { NAVY, MUTED, LINE, INK } from "../lib/theme.js";
 import AdminUserDetail from "./AdminUserDetail.jsx";
 
 const ROLE_LABELS = { candidate: "Candidat", admin: "Administrateur", super_admin: "Super Administrateur" };
@@ -15,9 +23,10 @@ const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspen
 const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
 
 export default function AdminUsers() {
-  const { adminUser, loading: adminLoading } = useAdminAuth();
-  const { hasPermission } = useUserAuth();
+  const { loading: adminLoading } = useAdminAuth();
+  const { loading: authorityLoading, can } = useEffectiveAuthority();
   const [users, setUsers] = useState([]);
+  const [assignableRoleIds, setAssignableRoleIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -28,9 +37,9 @@ export default function AdminUsers() {
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.rpc("admin_get_users");
-      if (error) throw error;
-      setUsers(data || []);
+      const [userData, assignable] = await Promise.all([listUsers(), listAssignableRoles()]);
+      setUsers(userData);
+      setAssignableRoleIds((assignable ?? []).map((r) => r.assignable_role_id));
     } catch (e) {
       console.error("Erreur chargement utilisateurs:", e);
       setMessage({ type: "error", text: "Impossible de charger les utilisateurs." });
@@ -39,7 +48,12 @@ export default function AdminUsers() {
     }
   }, []);
 
-  useEffect(() => { fetchUsers(); }, [fetchUsers]);
+  useEffect(() => {
+    if (!authorityLoading && userActions.canViewUsers(can)) {
+      const t = setTimeout(() => { fetchUsers(); }, 0);
+      return () => clearTimeout(t);
+    }
+  }, [fetchUsers, authorityLoading, can]);
 
   const filteredUsers = useMemo(() => {
     let result = users;
@@ -56,62 +70,37 @@ export default function AdminUsers() {
     return result;
   }, [users, search, statusFilter, roleFilter]);
 
-  const handleView = (user) => setSelectedUser(user);
-  const handleCloseDetail = () => setSelectedUser(null);
-
-  const handleResetPassword = async (userId, email) => {
-    if (!window.confirm(`Envoyer un email de réinitialisation de mot de passe à ${email} ?`)) return;
-    try {
-      const redirectTo = `${window.location.origin}/reinitialiser-mot-de-passe`;
-      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/admin-reset-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-        },
-        body: JSON.stringify({ target_user_id: userId }),
-      });
-      const result = await res.json();
-      if (!res.ok) throw new Error(result.error || "Erreur lors de l'envoi");
-      setMessage({ type: "success", text: "Email de réinitialisation envoyé." });
-    } catch (e) {
-      setMessage({ type: "error", text: e instanceof Error ? e.message : "Erreur lors de l'envoi de l'email." });
-    }
-  };
-
   const handleToggleStatus = async (user) => {
+    if (!userActions.canEditUser(can)) return;
     const newStatus = user.status === "active" ? "inactive" : "active";
     if (!window.confirm(`Changer le statut de ${user.email} vers ${STATUS_LABELS[newStatus]} ?`)) return;
     try {
-      const { error } = await supabase.from("profiles").update({ status: newStatus }).eq("id", user.id);
-      if (error) throw error;
+      await updateUserActive(user.id, newStatus !== "inactive");
       setUsers((prev) => prev.map((u) => u.id === user.id ? { ...u, status: newStatus } : u));
       setMessage({ type: "success", text: "Statut mis à jour." });
     } catch (e) {
-      setMessage({ type: "error", text: "Erreur lors du changement de statut." });
+      setMessage({ type: "error", text: e instanceof Error ? e.message : "Erreur lors du changement de statut." });
     }
   };
 
   const handleRoleChange = async (userId, roleId, add) => {
-    if (!hasPermission("users.change_role")) return;
+    if (!userActions.canChangeRole(can)) return;
     try {
       if (add) {
-        const { error } = await supabase.from("user_roles").insert({ user_id: userId, role_id: roleId, assigned_by: adminUser.id });
-        if (error) throw error;
+        await assignRole(userId, roleId);
       } else {
-        const { error } = await supabase.from("user_roles").delete().eq("user_id", userId).eq("role_id", roleId);
-        if (error) throw error;
+        await removeRole(userId, roleId);
       }
       fetchUsers();
       setMessage({ type: "success", text: `Rôle ${add ? "ajouté" : "retiré"}.` });
     } catch (e) {
-      setMessage({ type: "error", text: "Erreur lors de la modification du rôle." });
+      setMessage({ type: "error", text: e instanceof Error ? e.message : "Erreur lors de la modification du rôle." });
     }
   };
 
-  if (adminLoading) {
+  if (adminLoading || authorityLoading) {
     return (
-      <AppShell maxWidth={1000} sidebar={<div />}>
+      <AppShell maxWidth={1000} sidebar={<AppSidebar />}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
           <Loader2 size={24} className="animate-spin" color={NAVY} />
         </div>
@@ -119,13 +108,15 @@ export default function AdminUsers() {
     );
   }
 
+  const canViewUsers = userActions.canViewUsers(can);
+
   return (
-    <AppShell maxWidth={1000} sidebar={<div />}>
+    <AppShell maxWidth={1000} sidebar={<AppSidebar />}>
       <PageTitle
         title="Administration des utilisateurs"
         subtitle={`${filteredUsers.length} utilisateur${filteredUsers.length > 1 ? "s" : ""}`}
         right={
-          <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading || !canViewUsers}>
             <Loader2 size={14} className={loading ? "animate-spin" : ""} /> Actualiser
           </Button>
         }
@@ -176,11 +167,15 @@ export default function AdminUsers() {
         <AdminUserDetail
           user={selectedUser}
           onClose={() => setSelectedUser(null)}
-          onResetPassword={handleResetPassword}
           onToggleStatus={handleToggleStatus}
           onRoleChange={handleRoleChange}
-          canManageRoles={hasPermission("users.change_role")}
+          canManageRoles={userActions.canChangeRole(can)}
+          assignableRoles={assignableRoleIds}
         />
+      ) : !canViewUsers ? (
+        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "40px", textAlign: "center", color: MUTED }}>
+          Vous n'avez pas la permission de consulter les utilisateurs (users.view requis).
+        </div>
       ) : filteredUsers.length === 0 ? (
         <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "40px", textAlign: "center", color: MUTED }}>
           Aucun utilisateur ne correspond aux critères.
@@ -217,8 +212,8 @@ export default function AdminUsers() {
                 </span>
                 {u.role_ids?.map((r) => (
                   <span key={r} style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20,
-                    background: r === "admin" ? "#EDE9DC" : r === "super_admin" ? "#EDE9DC" : "#F3F4F6",
-                    color: r === "admin" ? "#7A5A15" : r === "super_admin" ? "#7A5A15" : "#374151", fontWeight: 600 }}>
+                    background: r === "admin" || r === "super_admin" ? "#EDE9DC" : "#F3F4F6",
+                    color: r === "admin" || r === "super_admin" ? "#7A5A15" : "#374151", fontWeight: 600 }}>
                     {ROLE_LABELS[r] || r}
                   </span>
                 ))}

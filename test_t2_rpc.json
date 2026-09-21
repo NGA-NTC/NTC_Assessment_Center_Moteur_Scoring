@@ -1,1 +1,0 @@
-{"p_target_role_id": "admin", "p_permission_id": "users.edit", "p_capabilities": {"use": true, "manage": false, "grant": false, "delegate": false}, "p_scope_type": "global", "p_scope_value": null}

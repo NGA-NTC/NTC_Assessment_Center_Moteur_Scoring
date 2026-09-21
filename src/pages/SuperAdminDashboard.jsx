@@ -1,7 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { Users, Shield, Key, FileText, Settings, BarChart2, ChevronRight } from "lucide-react";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
-import { supabase } from "../lib/supabaseClient.js";
+import { getSuperAdminStats } from "../services/dashboard/index.js";
+import { listAccounts, listImported, listHiddenStaticFiles } from "../lib/storage.js";
+import { listImportedResults } from "../lib/imported.js";
+import { buildCandidates } from "../lib/candidates.js";
 import { NAVY, CREAM, INK, LINE, MUTED } from "../lib/theme.js";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Card from "../components/ui/Card.jsx";
@@ -78,36 +81,16 @@ export default function SuperAdminDashboard() {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [usersRes, rolesRes, pagesRes, featuresRes, rpRes] = await Promise.all([
-          supabase.rpc("admin_get_users"),
-          supabase.from("roles").select("id, name"),
-          supabase.from("pages").select("id", { count: "exact", head: true }),
-          supabase.from("features").select("id", { count: "exact", head: true }),
-          supabase.from("role_permissions").select("id", { count: "exact", head: true }),
+        const data = await getSuperAdminStats();
+        const [accounts, staticImports, runtimeImports, hiddenStatic] = await Promise.all([
+          listAccounts(),
+          listImportedResults(),
+          listImported(),
+          listHiddenStaticFiles(),
         ]);
-
-        const usersCount = usersRes.data?.length || 0;
-        const rolesCount = rolesRes.data?.length || 0;
-        const pagesCount = pagesRes.count || 0;
-        const featuresCount = featuresRes.count || 0;
-        const accessCount = rpRes.count || 0;
-
-        setStats({
-          users: usersCount,
-          roles: rolesCount,
-          access: accessCount,
-          pages: pagesCount,
-          features: featuresCount,
-          results: 0,
-        });
-
-        if (usersRes.data) {
-          const recent = usersRes.data
-            .filter(u => u.created_at)
-            .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
-            .slice(0, 5);
-          setRecentActivity(recent);
-        }
+        const results = buildCandidates({ accounts, staticImports, runtimeImports, hiddenStatic }).length;
+        setStats({ ...data.totals, results });
+        setRecentActivity(data.recentUsers);
       } catch (e) {
         console.error("Erreur chargement stats:", e);
       } finally {

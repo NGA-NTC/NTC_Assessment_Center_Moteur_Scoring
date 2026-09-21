@@ -1,0 +1,1 @@
+export { getEffectiveAuthority } from "./getEffectiveAuthority.js";

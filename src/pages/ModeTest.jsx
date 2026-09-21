@@ -9,7 +9,7 @@ import { listImportedResults } from "../lib/imported.js";
 import { buildCandidates } from "../lib/candidates.js";
 import { GOLD, INK, LINE, MUTED } from "../lib/theme.js";
 import AppShell from "../components/layout/AppShell.jsx";
-import Sidebar from "../components/layout/Sidebar.jsx";
+import Sidebar from "../components/layout/BatterySidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import ResponsesReview from "../components/question/ResponsesReview.jsx";

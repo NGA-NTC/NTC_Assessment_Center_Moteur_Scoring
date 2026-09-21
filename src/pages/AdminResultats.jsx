@@ -1,9 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import UserAvatar from "../components/layout/UserAvatar.jsx";
-import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
-import { Menu, List, LayoutGrid, FileJson, Pencil, Trash2, Download, Database, ChevronLeft, Printer, UserPlus, Mail, Calendar, X, ArrowLeft, Check } from "lucide-react";
+import { List, LayoutGrid, FileJson, Pencil, Trash2, Download, Database, ChevronLeft, Printer, UserPlus, Mail, Calendar, ArrowLeft, Check } from "lucide-react";
 import {
   createAccount,
   isValidEmail,
@@ -26,7 +24,7 @@ import { exportResponsesJson, generatePdfFilename } from "../lib/export.js";
 import { computeDimensionScores, computeCoherence, computeAxisScores, computeRoleFit, generateReport, accountProgress } from "../lib/scoring.js";
 import { INK, LINE, MUTED } from "../lib/theme.js";
 import AppShell from "../components/layout/AppShell.jsx";
-import AdminSidebar from "../components/layout/AdminSidebar.jsx";
+import AppSidebar from "../components/layout/AppSidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
@@ -159,15 +157,12 @@ function responsesHtml(responses) {
 }
 
 export default function AdminResultats() {
-  const { logout, adminUser } = useAdminAuth();
-  const { isAdmin, hasRole } = useUserAuth();
+  const { hasRole } = useUserAuth();
   const navigate = useNavigate();
   const isSuperAdmin = hasRole("super_admin");
   const [accounts, setAccounts] = useState([]);
   const [staticImports, setStaticImports] = useState([]);
   const [runtimeImports, setRuntimeImports] = useState([]);
-  const [sidebarQuery, setSidebarQuery] = useState("");
-  const [sidebarFilters, setSidebarFilters] = useState({ ...BASE_FILTERS });
   const [pageQuery, setPageQuery] = useState("");
   const [pageFilters, setPageFilters] = useState({ ...BASE_FILTERS });
   const [viewMode, setViewMode] = useState("list");
@@ -177,7 +172,6 @@ export default function AdminResultats() {
   const [accForm, setAccForm] = useState({ open: false, email: "", password: "", error: null, busy: false });
   const [hiddenStatic, setHiddenStatic] = useState([]);
   const [updateTarget, setUpdateTarget] = useState(null);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [pdfExportModal, setPdfExportModal] = useState({ open: false, countdown: 10 });
   const timerRef = useRef(null);
   const selectedRef = useRef(null);
@@ -191,7 +185,6 @@ export default function AdminResultats() {
   });
 
   const handleNavigate = (path) => {
-    // eslint-disable-next-line react-hooks/immutability
     window.location.href = path;
   };
 
@@ -207,17 +200,6 @@ export default function AdminResultats() {
     listImportedResults().then((s) => { setStaticImports(s); return s; }).then(() => listImported().then(setRuntimeImports));
   };
 
-  const handleLogout = () => { logout(); navigate("/login"); };
-
-  useEffect(() => {
-    if (!mobileSidebarOpen) return undefined;
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") setMobileSidebarOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mobileSidebarOpen]);
-
   const anySectionSelected = Object.values(pdfExportSections).some((v) => v);
 
   const openPdfExportModal = () => {
@@ -232,10 +214,10 @@ export default function AdminResultats() {
     setPdfExportModal({ open: true, countdown: 10 });
   };
 
-  const closePdfExportModal = () => {
+  const closePdfExportModal = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     setPdfExportModal({ open: false, countdown: 10 });
-  };
+  }, []);
 
   const printCandidateReportWithSections = (candidate, sections) => {
     const responses = candidate.responses;
@@ -377,7 +359,6 @@ export default function AdminResultats() {
 
   const candidates = buildCandidates({ accounts, staticImports, runtimeImports, hiddenStatic });
 
-  const sidebarList = filterList(candidates, sidebarQuery, sidebarFilters);
   const pageList = filterList(candidates, pageQuery, pageFilters);
   const pageHasCriteria = Boolean(pageQuery.trim() || pageFilters.type !== "all" || pageFilters.progress !== "all" || pageFilters.metier !== "all" || pageFilters.axis !== "all");
   const selected = selection ? candidates.find((c) => c.id === selection.id) || null : null;
@@ -390,7 +371,6 @@ export default function AdminResultats() {
   const openCandidate = (c) => {
     setSelection({ id: c.id });
     setAccForm({ open: false, email: "", password: "", error: null, busy: false });
-    setMobileSidebarOpen(false);
   };
   const goBack = () => { setSelection(null); setImportMsg(null); };
 
@@ -478,20 +458,6 @@ export default function AdminResultats() {
 
   const acctMeta = selected?.data;
   const hasData = selected && selected.progress.answered > 0;
-  const sidebarProps = {
-    candidates: sidebarList,
-    onSelect: openCandidate,
-    selectedId: selection?.id || null,
-    onLogout: handleLogout,
-    onHome: goBack,
-    onNavigate: handleNavigate,
-    query: sidebarQuery,
-    onQueryChange: setSidebarQuery,
-    filters: sidebarFilters,
-    onFilters: setSidebarFilters,
-    metiers: METIERS,
-    axes: AXIS_OPTIONS,
-  };
 
   const SECTIONS = [
     { key: "axes", label: "Résultats par axe", description: "Scores des 8 axes (Radar)" },
@@ -503,39 +469,7 @@ export default function AdminResultats() {
   ];
 
   return (
-    <AppShell maxWidth={1000} sidebar={
-      <div className="app-sidebar-desktop">
-        <AdminSidebar {...sidebarProps} />
-      </div>
-    }>
-      {mobileSidebarOpen && (
-        <>
-          <button type="button" aria-label="Fermer le menu administrateur" className="app-sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
-          <aside id="app-mobile-sidebar-drawer" className="app-sidebar-drawer" role="dialog" aria-modal="true" aria-label="Navigation administrateur">
-            <div className="app-sidebar-drawer__header">
-              <button type="button" className="app-sidebar-drawer__close" onClick={() => setMobileSidebarOpen(false)}>
-                <X size={18} />
-                <span>Fermer</span>
-              </button>
-            </div>
-            <AdminSidebar {...sidebarProps} />
-          </aside>
-        </>
-      )}
-      <div className="app-mobile-topbar">
-        <button
-          type="button"
-          className="app-mobile-sidebar-toggle"
-          onClick={() => setMobileSidebarOpen(true)}
-          aria-label="Ouvrir le menu administrateur"
-          aria-controls="app-mobile-sidebar-drawer"
-          aria-expanded={mobileSidebarOpen}
-        >
-          <Menu size={18} />
-          <span>Menu</span>
-        </button>
-        <UserAvatar onNavigate={(path) => window.location.href = path} />
-      </div>
+    <AppShell maxWidth={1000} sidebar={<AppSidebar />}>
       {!selected ? (
         <>
           <PageTitle

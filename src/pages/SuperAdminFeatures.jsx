@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, Edit, Trash2, Loader2, Settings, Save, ChevronDown, ChevronUp, FileText } from "lucide-react";
-import { supabase } from "../lib/supabaseClient.js";
+import {
+  listFeatures,
+  createFeature,
+  updateFeature,
+  deleteFeature,
+} from "../services/features/index.js";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
@@ -21,18 +26,9 @@ export default function SuperAdminFeatures() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [pagesRes, featuresRes, pfRes] = await Promise.all([
-        supabase.from("pages").select("id, name").order("name"),
-        supabase.from("features").select("*").order("page_id, name"),
-        supabase.from("page_features").select("page_id, feature_id"),
-      ]);
-
-      if (pagesRes.error) throw pagesRes.error;
-      if (featuresRes.error) throw featuresRes.error;
-      if (pfRes.error) throw pfRes.error;
-
-      setPages(pagesRes.data || []);
-      setFeatures(featuresRes.data || []);
+      const { pages, features } = await listFeatures();
+      setPages(pages);
+      setFeatures(features);
     } catch (e) {
       console.error("Erreur chargement fonctionnalités:", e);
       setMessage({ type: "error", text: "Impossible de charger les données." });
@@ -47,12 +43,10 @@ export default function SuperAdminFeatures() {
     e.preventDefault();
     try {
       if (editingFeature) {
-        const { error } = await supabase.from("features").update({ name: formData.name, description: formData.description, page_id: formData.page_id, category: formData.category }).eq("id", editingFeature.id);
-        if (error) throw error;
+        await updateFeature(editingFeature.id, { name: formData.name, description: formData.description, page_id: formData.page_id, category: formData.category });
         setMessage({ type: "success", text: "Fonctionnalité mise à jour." });
       } else {
-        const { error } = await supabase.from("features").insert({ id: formData.id, name: formData.name, description: formData.description, page_id: formData.page_id, category: formData.category });
-        if (error) throw error;
+        await createFeature({ id: formData.id, name: formData.name, description: formData.description, page_id: formData.page_id, category: formData.category });
         setMessage({ type: "success", text: "Fonctionnalité créée." });
       }
       setShowModal(false);
@@ -71,8 +65,7 @@ export default function SuperAdminFeatures() {
     }
     if (!window.confirm(`Supprimer la fonctionnalité "${feature.name}" ?`)) return;
     try {
-      const { error } = await supabase.from("features").delete().eq("id", feature.id);
-      if (error) throw error;
+      await deleteFeature(feature.id);
       setMessage({ type: "success", text: "Fonctionnalité supprimée." });
       fetchData();
     } catch {

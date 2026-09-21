@@ -35,23 +35,12 @@ Deno.serve(async (req: Request) => {
       { global: { headers: { Authorization: `Bearer ${accessToken}` } } }
     );
 
-    // Verify the caller's identity and permissions
+    // Verify the caller's identity
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
       return new Response(
         JSON.stringify({ error: 'Utilisateur non authentifié' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    // Check caller has admin/super_admin role + users.change_role permission
-    const { data: permCheck, error: permError } = await supabaseUser
-      .rpc('has_permission', { user_id: user.id, perm_text: 'users.change_role' });
-
-    if (permError || !permCheck) {
-      return new Response(
-        JSON.stringify({ error: 'Permission insuffisante : users.change_role requise' }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -66,17 +55,17 @@ Deno.serve(async (req: Request) => {
       );
     }
 
-    // Verify target user exists
-    const { data: targetUser, error: targetError } = await supabaseUser
-      .from('auth.users')
-      .select('id, email')
-      .eq('id', target_user_id)
-      .single();
+    // Authority check AND target existence handled by the SECURITY DEFINER RPC
+    // admin_reset_user_password (GRANT scoped : users.change_role USE global ou
+    // ciblée). Une RAISE côté RPC remonte comme erreur PostgREST.
+    const { error: rpcError } = await supabaseUser.rpc('admin_reset_user_password', {
+      target_user_id,
+    });
 
-    if (targetError || !targetUser) {
+    if (rpcError) {
       return new Response(
-        JSON.stringify({ error: 'Utilisateur cible introuvable' }),
-        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ error: 'Permission insuffisante ou utilisateur cible introuvable' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -87,11 +76,23 @@ Deno.serve(async (req: Request) => {
       { auth: { autoRefreshToken: false, persistSession: false } }
     );
 
+    // Fetch target email via GoTrue admin API (auth.users is not exposed via PostgREST)
+    const { data: targetUser, error: targetError } = await supabaseAdmin.auth.admin.getUserById(target_user_id);
+
+    if (targetError || !targetUser?.user) {
+      return new Response(
+        JSON.stringify({ error: 'Utilisateur cible introuvable' }),
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const targetEmail = targetUser.user.email ?? '';
+
     // Generate password reset link
     const redirectTo = `${new URL(req.url).origin}/reinitialiser-mot-de-passe`;
-    const { data: linkData, error: linkError } = await supabaseAdmin.auth.admin.generateLink({
+    const { error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
-      email: targetUser.email,
+      email: targetEmail,
       options: { redirectTo },
     });
 
@@ -106,7 +107,7 @@ Deno.serve(async (req: Request) => {
     return new Response(
       JSON.stringify({
         ok: true,
-        message: `Email de réinitialisation envoyé à ${targetUser.email}`,
+        message: `Email de réinitialisation envoyé à ${targetEmail}`,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );

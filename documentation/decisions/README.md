@@ -22,6 +22,8 @@ tags:
 | [ADR-001](./ADR-001-frontend-untrusted.md) | Frontend non fiable — Sécurité côté Supabase | Accepted | 2026-09-11 | P1.2.1 Security Fix |
 | [ADR-002](./ADR-002-role-access-audience-permission.md) | Séparation ROLE / AUTH STATE / ACCESS AUDIENCE / PERMISSION | Accepted | 2026-09-14 | P1.2.5 Pages & Features |
 | [ADR-003](./ADR-003-delegation-model.md) | Modèle de délégation hiérarchique + individuelle | Accepted | 2026-09-15 | P1.3.2 + P1.3.3 |
+| [ADR-frontend-modular-architecture](./ADR-frontend-modular-architecture.md) | Architecture frontend modulaire (domaines au même niveau) | Proposed | 2026-09-18 | Refactorisation frontend |
+| [ADR-dynamic-routing](./ADR-dynamic-routing.md) | Routage dynamique (route_key/path/component/config/authorization) | Proposed | 2026-09-18 | Refactorisation frontend |
 
 ---
 
@@ -59,8 +61,10 @@ Références vers code, migrations, docs associées.
 |-------|-----|
 | Sécurité globale | ADR-001 |
 | Modèle d'autorisation | ADR-002, ADR-003 |
-| Frontend/Backend | ADR-001 |
+| Frontend/Backend | ADR-001, ADR-004, ADR-005 |
 | RBAC/Délégation | ADR-002, ADR-003 |
+| Architecture frontend | ADR-004 |
+| Routing | ADR-005 |
 
 ---
 

@@ -1,0 +1,53 @@
+{
+  "connexion": {
+    "title": "Connexion — Accès à l'évaluation"
+  },
+  "inscription": {
+    "title": "Inscription — Passez l'évaluation"
+  },
+  "motDePasseOublie": {
+    "title": "Mot de passe oublié"
+  },
+  "reinitialiserMotDePasse": {
+    "title": "Réinitialiser le mot de passe"
+  },
+  "loginAdmin": {
+    "title": "Accès administrateur"
+  },
+  "test": {
+    "title": "Passage de l'évaluation"
+  },
+  "modifierMotDePasse": {
+    "title": "Modifier le mot de passe"
+  },
+  "compte": {
+    "title": "Mon compte"
+  },
+  "resultats": {
+    "title": "Candidats"
+  },
+  "utilisateurs": {
+    "title": "Administration des utilisateurs"
+  },
+  "modeTest": {
+    "title": "Mode test"
+  },
+  "tableauDeBord": {
+    "title": "Tableau de bord Super Admin"
+  },
+  "comptes": {
+    "title": "Comptes"
+  },
+  "roles": {
+    "title": "Rôles"
+  },
+  "accessControl": {
+    "title": "Accès"
+  },
+  "pages": {
+    "title": "Pages"
+  },
+  "fonctionnalites": {
+    "title": "Fonctionnalités"
+  }
+}

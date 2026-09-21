@@ -6,7 +6,7 @@ import { BATTERIES } from "../data/index.js";
 import { emptyResponses } from "../lib/scoring.js";
 import { loadAccountResponses, saveAccountResponses } from "../lib/storage.js";
 import AppShell from "../components/layout/AppShell.jsx";
-import Sidebar from "../components/layout/Sidebar.jsx";
+import Sidebar from "../components/layout/BatterySidebar.jsx";
 import SuperAdminSidebar from "../components/layout/SuperAdminSidebar.jsx";
 import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
