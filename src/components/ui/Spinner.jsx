@@ -1,6 +1,6 @@
 import { Loader2 } from "lucide-react";
-import { NAVY } from "../../lib/theme.js";
+import { cn } from "@/lib/utils";
 
-export default function Spinner({ size = 20, color = NAVY, className = "", ...props }) {
-  return <Loader2 size={size} color={color} className={`ntc-spin ${className}`.trim()} {...props} />;
+export default function Spinner({ size = 20, color, className = "", ...props }) {
+  return <Loader2 size={size} color={color} className={cn("ntc-spin text-navy", className)} {...props} />;
 }

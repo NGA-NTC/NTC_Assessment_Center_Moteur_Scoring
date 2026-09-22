@@ -27,6 +27,9 @@ import AdminUserDetail from "./AdminUserDetail.jsx";
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "neutral", suspended: "warning" };
 
+const FILTER_SELECT_CLASS =
+  "h-11 w-full cursor-pointer rounded-sm border border-border bg-surface px-3 font-sans text-[14px] text-foreground outline-none";
+
 export default function SuperAdminAccounts() {
   const { can } = useEffectiveAuthority();
   const canCreateUser = userActions.canCreateUser(can);
@@ -159,30 +162,30 @@ export default function SuperAdminAccounts() {
     switch (col.key) {
       case "user":
         return (
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="flex items-center gap-2.5">
             <Avatar name={`${user.first_name || ""} ${user.last_name || ""}`.trim()} email={user.email} size={36} />
             <div>
-              <div style={{ fontWeight: 600 }}>{[user.first_name, user.last_name].filter(Boolean).join(" ") || "—"}</div>
-              <div style={{ fontSize: 11.5, color: "#6E6A5E" }}>{user.email}</div>
+              <div className="font-semibold text-foreground">{[user.first_name, user.last_name].filter(Boolean).join(" ") || "—"}</div>
+              <div className="text-[11.5px] text-muted-foreground">{user.email}</div>
             </div>
           </div>
         );
       case "roles":
         return (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+          <div className="flex flex-wrap gap-1.5">
             {(user.role_ids || []).map((r) => (
               <Badge key={r} tone={roleById.get(r)?.is_system ? "system" : "muted"}>{roleName(r)}</Badge>
             ))}
-            {(user.role_ids || []).length === 0 && <span style={{ fontSize: 11, color: "#6E6A5E" }}>Aucun rôle</span>}
+            {(user.role_ids || []).length === 0 && <span className="text-[11px] text-muted-foreground">Aucun rôle</span>}
           </div>
         );
       case "status":
         return <StatusBadge status={user.status} labels={STATUS_LABELS} tones={STATUS_TONES} />;
       case "created":
-        return <span style={{ color: "#6E6A5E", fontSize: 12.5 }}>{user.created_at ? new Date(user.created_at).toLocaleDateString("fr-FR") : "—"}</span>;
+        return <span className="text-[12.5px] text-muted-foreground">{user.created_at ? new Date(user.created_at).toLocaleDateString("fr-FR") : "—"}</span>;
       case "actions":
         return (
-          <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+          <div className="flex flex-wrap gap-2">
             {canEditUser && (
               <Button size="sm" variant="outlineDark" onClick={(e) => { e.stopPropagation(); requestToggleStatus(user); }} disabled={loading}>
                 {user.status === "active" ? "Suspendre" : "Réactiver"}
@@ -220,28 +223,20 @@ export default function SuperAdminAccounts() {
         </Alert>
       )}
 
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "center", marginBottom: 20, padding: "20px 24px", background: "#fff", border: "1px solid #E4DFD0", borderRadius: 14, boxShadow: "0 8px 30px rgba(27,42,74,0.08)" }}>
-        <div style={{ flex: 1, minWidth: 220 }}>
+      <div className="mb-5 flex flex-wrap items-center gap-4 rounded-xl border border-border bg-surface p-5 shadow-card">
+        <div className="min-w-[220px] flex-1">
           <SearchInput value={search} onChange={setSearch} placeholder="Rechercher par nom, email…" />
         </div>
-        <div style={{ minWidth: 170, flexGrow: 1, maxWidth: 220 }}>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            style={{ width: "100%", minHeight: 44, padding: "10px 12px", border: "1px solid #E4DFD0", borderRadius: 8, fontSize: 14, background: "#fff", fontFamily: "inherit", color: "#2A2A28" }}
-          >
+        <div className="min-w-[170px] max-w-[220px] flex-1">
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={FILTER_SELECT_CLASS}>
             <option value="all">Tous les statuts</option>
             <option value="active">Actif</option>
             <option value="inactive">Inactif</option>
             <option value="suspended">Suspendu</option>
           </select>
         </div>
-        <div style={{ minWidth: 170, flexGrow: 1, maxWidth: 220 }}>
-          <select
-            value={roleFilter}
-            onChange={(e) => setRoleFilter(e.target.value)}
-            style={{ width: "100%", minHeight: 44, padding: "10px 12px", border: "1px solid #E4DFD0", borderRadius: 8, fontSize: 14, background: "#fff", fontFamily: "inherit", color: "#2A2A28" }}
-          >
+        <div className="min-w-[170px] max-w-[220px] flex-1">
+          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className={FILTER_SELECT_CLASS}>
             <option value="all">Tous les rôles</option>
             {roles.map((r) => (
               <option key={r.id} value={r.id}>{r.name}</option>
@@ -285,10 +280,10 @@ export default function SuperAdminAccounts() {
 
       <Modal open={showCreateModal} onClose={() => setShowCreateModal(false)} title="Nouvel utilisateur" maxWidth={480}>
         <form onSubmit={handleCreateUser}>
-          <div style={{ display: "grid", gap: 16 }}>
+          <div className="grid gap-1">
             <Field label="Email" type="email" value={createForm.email} onChange={(e) => setCreateForm((f) => ({ ...f, email: e.target.value }))} required />
             <Field label="Mot de passe" type="password" value={createForm.password} onChange={(e) => setCreateForm((f) => ({ ...f, password: e.target.value }))} required />
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <div className="grid grid-cols-1 gap-x-4 sm:grid-cols-2">
               <Field label="Prénom" value={createForm.first_name} onChange={(e) => setCreateForm((f) => ({ ...f, first_name: e.target.value }))} />
               <Field label="Nom" value={createForm.last_name} onChange={(e) => setCreateForm((f) => ({ ...f, last_name: e.target.value }))} />
             </div>
@@ -303,7 +298,7 @@ export default function SuperAdminAccounts() {
               <option value="inactive">Inactif</option>
             </Field>
           </div>
-          <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 24 }}>
+          <div className="mt-6 flex justify-end gap-3">
             <Button type="button" variant="ghost" onClick={() => setShowCreateModal(false)}>Annuler</Button>
             <Button type="submit"><UserPlus size={14} /> Créer</Button>
           </div>

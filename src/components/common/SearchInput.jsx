@@ -1,5 +1,5 @@
 import { Search } from "lucide-react";
-import { colors, radius, type, controls } from "../../lib/theme.js";
+import { cn } from "@/lib/utils";
 
 export default function SearchInput({
   value,
@@ -13,8 +13,11 @@ export default function SearchInput({
 }) {
   const isSmall = size === "sm";
   return (
-    <div style={{ position: "relative", flex: 1, minWidth: 0, ...style }}>
-      <Search size={isSmall ? 14 : 15} style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: colors.mutedForeground, pointerEvents: "none" }} />
+    <div className="relative min-w-0 flex-1" style={style}>
+      <Search
+        size={isSmall ? 14 : 15}
+        className="pointer-events-none absolute top-1/2 left-[11px] -translate-y-1/2 text-muted-foreground"
+      />
       <input
         type="search"
         value={value}
@@ -23,20 +26,11 @@ export default function SearchInput({
         disabled={disabled}
         autoFocus={autoFocus}
         aria-label={placeholder}
-        className={className}
-        style={{
-          width: "100%",
-          minHeight: isSmall ? controls.heightSm : controls.height,
-          paddingLeft: 34,
-          paddingRight: 12,
-          borderRadius: radius.sm,
-          border: `1px solid ${colors.border}`,
-          background: colors.surface,
-          fontSize: type.fontSize.baseMd,
-          fontFamily: type.fontFamily.sans,
-          outline: "none",
-          color: colors.foreground,
-        }}
+        className={cn(
+          "w-full rounded-sm border border-border bg-surface pr-3 font-sans text-[13.5px] text-foreground outline-none",
+          isSmall ? "h-9 pl-[34px]" : "h-11 pl-[34px]",
+          className
+        )}
       />
     </div>
   );

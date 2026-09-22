@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Plus, Edit, Trash2, Loader2, Settings, Save, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, Settings, Save, ChevronDown, ChevronUp, FileText } from "lucide-react";
 import {
   listFeatures,
   createFeature,
@@ -9,19 +9,33 @@ import {
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
-import { NAVY, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
 import Card from "../components/ui/Card.jsx";
+import Badge from "../components/ui/Badge.jsx";
+import Alert from "../components/ui/Alert.jsx";
+import Modal from "../components/ui/Modal.jsx";
+import ConfirmDialog from "../components/common/ConfirmDialog.jsx";
+import { EmptyState, LoadingState } from "../components/ui/States.jsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/Table.jsx";
 
 export default function SuperAdminFeatures() {
   const [pages, setPages] = useState([]);
   const [features, setFeatures] = useState([]);
-  
+
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingFeature, setEditingFeature] = useState(null);
   const [formData, setFormData] = useState({ id: "", name: "", description: "", page_id: "", category: "", is_system: false });
   const [expandedPages, setExpandedPages] = useState({});
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -61,18 +75,23 @@ export default function SuperAdminFeatures() {
     }
   };
 
-  const handleDelete = async (feature) => {
-    if (feature.is_system) {
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    if (deleteTarget.is_system) {
+      setDeleteTarget(null);
       setMessage({ type: "error", text: "Impossible de supprimer une fonctionnalité système." });
       return;
     }
-    if (!window.confirm(`Supprimer la fonctionnalité "${feature.name}" ?`)) return;
+    setDeleteBusy(true);
     try {
-      await deleteFeature(feature.id);
+      await deleteFeature(deleteTarget.id);
       setMessage({ type: "success", text: "Fonctionnalité supprimée." });
+      setDeleteTarget(null);
       fetchData();
     } catch {
       setMessage({ type: "error", text: "Erreur lors de la suppression." });
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -107,6 +126,14 @@ export default function SuperAdminFeatures() {
     return grouped;
   }, [features]);
 
+  const FEATURE_COLUMNS = [
+    "Fonctionnalité",
+    "Description",
+    "Catégorie",
+    "Type",
+    "Actions",
+  ];
+
   return (
     <div>
       <PageTitle
@@ -116,97 +143,91 @@ export default function SuperAdminFeatures() {
       />
 
       {message && (
-        <div style={{ marginBottom: 16, padding: "12px 16px", borderRadius: 8, background: message.type === "success" ? "#E3F0E4" : "#FAE8E6", color: message.type === "success" ? "#2E6B3C" : "#8A2B22", fontSize: 13 }}>
+        <Alert type={message.type === "success" ? "success" : "error"}>
           {message.text}
-        </div>
+        </Alert>
       )}
 
-      <Card style={{ padding: 0, overflow: "hidden" }}>
+      <Card className="overflow-hidden">
         {loading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "300px", color: MUTED }}>
-            <Loader2 size={24} className="spin" style={{ animation: "spin 1s linear infinite" }} /> Chargement…
-          </div>
+          <LoadingState minHeight={300} />
         ) : pages.length === 0 ? (
-          <div style={{ padding: "48px 24px", textAlign: "center", color: MUTED }}>
-            <Settings size={48} style={{ marginBottom: 16, opacity: 0.3 }} />
-            <p>Aucune page définie. Créez d'abord des pages dans la section « Pages ».</p>
-          </div>
+          <EmptyState
+            icon={Settings}
+            title="Aucune page définie"
+            description="Créez d'abord des pages dans la section « Pages »."
+          />
         ) : (
           <div>
             {pages.map(page => {
               const pageFeats = featuresByPage[page.id] || [];
               const isExpanded = expandedPages[page.id] !== false;
               return (
-                <div key={page.id} style={{ borderBottom: `1px solid ${LINE}` }}>
+                <div key={page.id} className="border-b border-border last:border-b-0">
                   <button
                     onClick={() => togglePageExpanded(page.id)}
-                    style={{
-                      width: "100%", padding: "16px 24px", textAlign: "left", border: "none", background: CREAM,
-                      cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: 600, color: INK,
-                      display: "flex", alignItems: "center", justifyContent: "space-between",
-                    }}
+                    aria-expanded={isExpanded}
+                    className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-cream px-6 py-4 text-left font-sans text-[14px] font-semibold text-foreground transition-colors hover:bg-cream"
                   >
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <FileText size={20} color={NAVY} />
-                      <span>{page.name}</span>
-                      <span style={{ fontSize: 12, padding: "2px 8px", borderRadius: 999, background: "#F0F0F0", color: MUTED }}>
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <FileText size={20} className="shrink-0 text-navy" />
+                      <span className="truncate">{page.name}</span>
+                      <Badge tone="neutral">
                         {pageFeats.length} fonctionnalité{pageFeats.length > 1 ? "s" : ""}
-                      </span>
+                      </Badge>
                     </div>
-                    {isExpanded ? <ChevronUp size={18} color={MUTED} /> : <ChevronDown size={18} color={MUTED} />}
+                    {isExpanded ? (
+                      <ChevronUp size={18} className="shrink-0 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown size={18} className="shrink-0 text-muted-foreground" />
+                    )}
                   </button>
 
                   {isExpanded && (
-                    <div style={{ padding: "16px 24px 24px" }}>
+                    <div className="px-4 py-4 lg:px-6">
                       {pageFeats.length === 0 ? (
-                        <div style={{ textAlign: "center", color: MUTED, padding: "24px" }}>
+                        <div className="flex flex-wrap items-center justify-center gap-3 p-6 text-center text-muted-foreground">
                           Aucune fonctionnalité pour cette page.
-                          <Button size="sm" variant="outline" onClick={() => openCreateModal(page.id)} style={{ marginLeft: 12 }}>
+                          <Button size="sm" variant="outline" onClick={() => openCreateModal(page.id)}>
                             <Plus size={14} /> Ajouter
                           </Button>
                         </div>
                       ) : (
-                        <div style={{ overflowX: "auto" }}>
-                          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-                            <thead>
-                              <tr style={{ borderBottom: `1px solid ${LINE}` }}>
-                                <th style={{ padding: "8px 12px", textAlign: "left", fontWeight: 600, color: INK, fontSize: 11, textTransform: "uppercase" }}>Fonctionnalité</th>
-                                <th style={{ padding: "8px 12px", textAlign: "left", fontWeight: 600, color: INK, fontSize: 11, textTransform: "uppercase" }}>Description</th>
-                                <th style={{ padding: "8px 12px", textAlign: "left", fontWeight: 600, color: INK, fontSize: 11, textTransform: "uppercase" }}>Catégorie</th>
-                                <th style={{ padding: "8px 12px", textAlign: "left", fontWeight: 600, color: INK, fontSize: 11, textTransform: "uppercase" }}>Type</th>
-                                <th style={{ padding: "8px 12px", textAlign: "left", fontWeight: 600, color: INK, fontSize: 11, textTransform: "uppercase" }}>Actions</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {pageFeats.map(feature => (
-                                <tr key={feature.id} style={{ borderBottom: `1px solid ${LINE}` }}>
-                                  <td style={{ padding: "10px 12px", fontWeight: 500, color: INK }}>{feature.name}</td>
-                                  <td style={{ padding: "10px 12px", color: MUTED, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{feature.description || "—"}</td>
-                                  <td style={{ padding: "10px 12px", fontSize: 11, color: MUTED }}>{feature.category || "—"}</td>
-                                  <td style={{ padding: "10px 12px" }}>
-                                    {feature.is_system ? (
-                                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: "#FEF3E2", color: "#B5652E" }}>Système</span>
-                                    ) : (
-                                      <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: "#E3F0E4", color: "#2E6B3C" }}>Personnalisée</span>
-                                    )}
-                                  </td>
-                                  <td style={{ padding: "10px 12px" }}>
-                                    <div style={{ display: "flex", gap: 8 }}>
-                                      <Button size="sm" variant="outline" onClick={() => openEditModal(feature)}>
-                                        <Edit size={14} /> Modifier
-                                      </Button>
-                                      {!feature.is_system && (
-                                        <Button size="sm" variant="outline" onClick={() => handleDelete(feature)} style={{ color: "#B5652E", borderColor: "#B5652E" }}>
-                                          <Trash2 size={14} /> Supprimer
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </td>
-                                </tr>
+                        <Table>
+                          <TableHeader>
+                            <TableRow className="border-b border-border hover:bg-transparent">
+                              {FEATURE_COLUMNS.map((col) => (
+                                <TableHead key={col} className="px-3 py-2 text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase first:pl-3 last:pr-3">
+                                  {col}
+                                </TableHead>
                               ))}
-                            </tbody>
-                          </table>
-                        </div>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {pageFeats.map(feature => (
+                              <TableRow key={feature.id} className="border-b border-border">
+                                <TableCell className="px-3 py-2.5 font-medium text-foreground">{feature.name}</TableCell>
+                                <TableCell className="max-w-[300px] truncate px-3 py-2.5 text-muted-foreground">{feature.description || "—"}</TableCell>
+                                <TableCell className="px-3 py-2.5 text-[11px] text-muted-foreground">{feature.category || "—"}</TableCell>
+                                <TableCell className="px-3 py-2.5">
+                                  {feature.is_system ? <Badge tone="warning">Système</Badge> : <Badge tone="success">Personnalisée</Badge>}
+                                </TableCell>
+                                <TableCell className="px-3 py-2.5">
+                                  <div className="flex gap-2">
+                                    <Button size="sm" variant="outline" onClick={() => openEditModal(feature)}>
+                                      <Edit size={14} /> Modifier
+                                    </Button>
+                                    {!feature.is_system && (
+                                      <Button size="sm" variant="outlineDark" className="border-warning text-warning" onClick={() => setDeleteTarget(feature)}>
+                                        <Trash2 size={14} /> Supprimer
+                                      </Button>
+                                    )}
+                                  </div>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
                       )}
                     </div>
                   )}
@@ -217,33 +238,41 @@ export default function SuperAdminFeatures() {
         )}
       </Card>
 
-      {showModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(20,26,40,.45)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={closeModal}>
-          <div style={{ background: "#fff", borderRadius: 14, padding: "24px", maxWidth: 560, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,.25)" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: NAVY }}>{editingFeature ? "Modifier la fonctionnalité" : "Nouvelle fonctionnalité"}</h3>
-              <button onClick={closeModal} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: MUTED }}>×</button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: "grid", gap: 16 }}>
-                {!editingFeature && (
-                  <Field label="ID (unique, sans espaces)" value={formData.id} onChange={(e) => setFormData(f => ({ ...f, id: e.target.value.toLowerCase().replace(/\s+/g, "_") }))} required />
-                )}
-                <Field label="Nom" value={formData.name} onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))} required />
-                <Field label="Page parente" type="select" value={formData.page_id} onChange={(e) => setFormData(f => ({ ...f, page_id: e.target.value }))} required>
-                  {pages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </Field>
-                <Field label="Description" type="textarea" value={formData.description} onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))} rows={3} />
-                <Field label="Catégorie" value={formData.category} onChange={(e) => setFormData(f => ({ ...f, category: e.target.value }))} placeholder="ex: lecture, écriture, admin" />
-              </div>
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 24 }}>
-                <Button type="button" variant="ghost" onClick={closeModal}>Annuler</Button>
-                <Button type="submit"><Save size={14} /> {editingFeature ? "Sauvegarder" : "Créer"}</Button>
-              </div>
-            </form>
+      <Modal
+        open={showModal}
+        onClose={closeModal}
+        title={editingFeature ? "Modifier la fonctionnalité" : "Nouvelle fonctionnalité"}
+        maxWidth={560}
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-1">
+            {!editingFeature && (
+              <Field label="ID (unique, sans espaces)" value={formData.id} onChange={(e) => setFormData(f => ({ ...f, id: e.target.value.toLowerCase().replace(/\s+/g, "_") }))} required />
+            )}
+            <Field label="Nom" value={formData.name} onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))} required />
+            <Field label="Page parente" type="select" value={formData.page_id} onChange={(e) => setFormData(f => ({ ...f, page_id: e.target.value }))} required>
+              {pages.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </Field>
+            <Field label="Description" type="textarea" value={formData.description} onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))} rows={3} />
+            <Field label="Catégorie" value={formData.category} onChange={(e) => setFormData(f => ({ ...f, category: e.target.value }))} placeholder="ex: lecture, écriture, admin" />
           </div>
-        </div>
-      )}
+          <div className="mt-6 flex justify-end gap-3">
+            <Button type="button" variant="ghost" onClick={closeModal}>Annuler</Button>
+            <Button type="submit"><Save size={14} /> {editingFeature ? "Sauvegarder" : "Créer"}</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        loading={deleteBusy}
+        title="Supprimer la fonctionnalité"
+        description={deleteTarget ? `Supprimer la fonctionnalité « ${deleteTarget.name} » ?` : ""}
+        confirmLabel="Supprimer"
+        danger
+      />
     </div>
   );
 }

@@ -1,56 +1,112 @@
 import { FileJson } from "lucide-react";
-import { GOLD, NAVY, SERIF } from "../../lib/theme.js";
 import SearchField from "../ui/SearchField.jsx";
 import FilterDropdown from "../ui/FilterDropdown.jsx";
 import UserAvatar from "./UserAvatar.jsx";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+} from "../ui/Sidebar.jsx";
+import { useSidebar } from "../ui/primitives/sidebar-context.js";
+import { cn } from "@/lib/utils";
 
-export default function AdminSidebar({ candidates = [], selectedId = null, onSelect, query = "", onQueryChange, filters = { type: "all", progress: "all" }, onFilters, metiers = [], axes = [], onHome, onNavigate }) {
+export default function AdminSidebar({
+  candidates = [],
+  selectedId = null,
+  onSelect,
+  query = "",
+  onQueryChange,
+  filters = { type: "all", progress: "all" },
+  onFilters,
+  metiers = [],
+  axes = [],
+  onHome,
+  onNavigate,
+}) {
+  const { setOpenMobile } = useSidebar();
+
+  const select = (c) => {
+    onSelect(c);
+    setOpenMobile(false);
+  };
+
   return (
-    <div className="admin-sidebar app-sidebar" style={{ width: "100%", maxWidth: 280, flexShrink: 0, background: NAVY, color: "#fff", display: "flex", flexDirection: "column", height: "100%" }}>
-      <button type="button" onClick={onHome} className="app-sidebar__brand" style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", color: "inherit", fontFamily: "inherit", padding: "20px 18px 12px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
-        <div style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 600, letterSpacing: 0.2 }}>NTC Assessment</div>
-        <div style={{ fontSize: 11, color: "#B8C0D4", marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>Espace administrateur</div>
-      </button>
+    <Sidebar collapsible="offcanvas">
+      <SidebarHeader>
+        <button
+          type="button"
+          onClick={onHome}
+          className="flex w-full cursor-pointer items-center gap-2 rounded-md border-none bg-transparent px-2 py-2 text-left text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-accent-foreground">
+            <span className="font-serif text-[15px] font-bold">N</span>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-serif text-[15px] leading-tight font-semibold">
+              NTC Assessment
+            </span>
+            <span className="block text-[10.5px] font-medium uppercase tracking-[0.5px] text-muted-foreground">
+              Espace administrateur
+            </span>
+          </span>
+        </button>
+      </SidebarHeader>
 
-      <div style={{ padding: "12px 14px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
-        <SearchField value={query} onChange={onQueryChange} placeholder="Rechercher un candidat…" />
-      </div>
-
-      <div style={{ padding: "12px 14px 8px", borderBottom: "1px solid rgba(255,255,255,0.12)" }}>
-        <FilterDropdown variant="dark" full filters={filters} onFilters={onFilters} metiers={metiers} axes={axes} />
-      </div>
-
-      <div style={{ flex: 1, overflowY: "auto", padding: "10px 10px" }}>
-        <div style={{ fontSize: 10.5, color: "#B8C0D4", textTransform: "uppercase", letterSpacing: 0.6, padding: "4px 8px 8px" }}>Candidats ({candidates.length})</div>
-        {candidates.length === 0 && (
-          <div style={{ padding: "16px 10px", fontSize: 12.5, color: "#9AA6C0", lineHeight: 1.6 }}>
-            Aucun candidat correspondant aux critères actuels.
+      <SidebarContent>
+        <div className="px-1">
+          <SearchField value={query} onChange={onQueryChange} placeholder="Rechercher un candidat…" />
+          <div className="mt-2">
+            <FilterDropdown full filters={filters} onFilters={onFilters} metiers={metiers} axes={axes} />
           </div>
-        )}
-        {candidates.map((c) => {
-          const isActive = selectedId === c.id;
-          return (
-            <button key={c.id} onClick={() => onSelect(c)} style={{
-              width: "100%", display: "flex", alignItems: "center", gap: 10, padding: "9px 9px", marginBottom: 2,
-              borderRadius: 8, border: "none", cursor: "pointer", textAlign: "left", fontFamily: "inherit",
-              background: isActive ? "rgba(255,255,255,0.14)" : "transparent", transition: "background .15s",
-            }}>
-              <div style={{ width: 30, height: 30, borderRadius: "50%", flexShrink: 0, background: c.kind === "acct" ? GOLD : "rgba(255,255,255,0.15)", color: c.kind === "acct" ? NAVY : "#D9A94A", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 12 }}>
-                {c.kind === "acct" ? c.label.charAt(0).toUpperCase() : <FileJson size={13} />}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: 600, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{c.label}</div>
-                <div style={{ fontSize: 11, color: "#9AA6C0" }}>{c.kind === "acct" ? "Compte" : "Importé"} · {c.progress.answered}/{c.progress.total}</div>
-              </div>
-              <span style={{ fontSize: 11, fontWeight: 600, color: "#B8C0D4" }}>{c.progress.pct}%</span>
-            </button>
-          );
-        })}
-      </div>
+        </div>
 
-      <div style={{ padding: "8px 10px", borderTop: "1px solid rgba(255,255,255,0.12)" }}>
+        <div className="px-1 pt-2 pb-1 text-[10.5px] font-bold uppercase tracking-[0.6px] text-muted-foreground">
+          Candidats ({candidates.length})
+        </div>
+        {candidates.length === 0 && (
+          <p className="px-2 py-2 text-[12.5px] leading-[1.6] text-muted-foreground">
+            Aucun candidat correspondant aux critères actuels.
+          </p>
+        )}
+        <SidebarMenu>
+          {candidates.map((c) => {
+            const isActive = selectedId === c.id;
+            return (
+              <SidebarMenuItem key={c.id}>
+                <button
+                  type="button"
+                  aria-current={isActive ? "page" : undefined}
+                  onClick={() => select(c)}
+                  className={cn(
+                    "flex w-full cursor-pointer items-center gap-2.5 rounded-md border-none px-2 py-2 text-left text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
+                    isActive && "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                  )}
+                >
+                  <span className="flex h-[30px] w-[30px] shrink-0 items-center justify-center rounded-full bg-sidebar-accent text-[12px] font-bold text-sidebar-accent-foreground">
+                    {c.kind === "acct" ? c.label.charAt(0).toUpperCase() : <FileJson size={13} />}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px] font-semibold">
+                      {c.label}
+                    </span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      {c.kind === "acct" ? "Compte" : "Importé"} · {c.progress.answered}/{c.progress.total}
+                    </span>
+                  </span>
+                  <span className="text-[11px] font-semibold text-muted-foreground">{c.progress.pct}%</span>
+                </button>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarContent>
+
+      <SidebarFooter>
         <UserAvatar variant="sidebar" onNavigate={onNavigate} />
-      </div>
-    </div>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

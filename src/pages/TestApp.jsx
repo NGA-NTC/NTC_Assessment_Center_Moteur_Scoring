@@ -1,5 +1,5 @@
-import { useState, useEffect, useMemo } from "react";
-import { ChevronRight, Menu, X, ArrowLeft } from "lucide-react";
+import { useState, useEffect, useMemo, useCallback } from "react";
+import { ChevronRight, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
 import { BATTERIES } from "../data/index.js";
@@ -11,7 +11,6 @@ import SuperAdminSidebar from "../components/layout/SuperAdminSidebar.jsx";
 import AdminSidebar from "../components/layout/AdminSidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
-import UserAvatar from "../components/layout/UserAvatar.jsx";
 import McqBattery from "../components/question/McqBattery.jsx";
 import RubricBattery from "../components/question/RubricBattery.jsx";
 import CoherenceBattery from "../components/question/CoherenceBattery.jsx";
@@ -22,7 +21,6 @@ export default function TestApp() {
   const [active, setActive] = useState(1);
   const [responses, setResponses] = useState(emptyResponses());
   const [hydrated, setHydrated] = useState(false);
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const isSuperAdmin = hasRole("super_admin");
   const isAdmin = hasRole("admin");
@@ -54,107 +52,45 @@ export default function TestApp() {
     return () => clearTimeout(t);
   }, [responses, user, hydrated]);
 
-  useEffect(() => {
-    if (!mobileSidebarOpen) return undefined;
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") setMobileSidebarOpen(false);
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
-  }, [mobileSidebarOpen]);
-
-  const handleLogout = () => { logout(); navigate("/connexion"); };
+  const handleLogout = useCallback(() => { logout(); navigate("/connexion"); }, [logout, navigate]);
   const currentBattery = BATTERIES.find((b) => b.id === active);
-
-  const goBattery = (id) => {
-    setActive(id);
-    setMobileSidebarOpen(false);
-  };
-
-  const candidateSidebar = (
-    <Sidebar
-      active={active}
-      setActive={setActive}
-      responses={responses}
-      userEmail={user?.email}
-      onLogout={handleLogout}
-      onHome={() => goBattery(1)}
-    />
-  );
 
   const sidebar = useMemo(() => {
     if (isSuperAdmin) return <SuperAdminSidebar />;
     if (isAdmin) {
       return (
         <AdminSidebar
-          onNavigate={(path) => window.location.href = path}
-          onHome={() => goBattery(1)}
-          onLogout={handleLogout}
+          onNavigate={(path) => { window.location.href = path; }}
+          onHome={() => setActive(1)}
         />
       );
     }
-    return candidateSidebar;
-  }, [isSuperAdmin, isAdmin, handleLogout, goBattery, candidateSidebar]);
+    return (
+      <Sidebar
+        active={active}
+        setActive={setActive}
+        responses={responses}
+        userEmail={user?.email}
+        onLogout={handleLogout}
+        onHome={() => setActive(1)}
+      />
+    );
+  }, [isSuperAdmin, isAdmin, active, responses, user, handleLogout]);
 
   if (loading) {
     return (
-      <AppShell maxWidth={900} sidebar={<div className="app-sidebar-desktop">{sidebar}</div>}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-          <div style={{ fontSize: 14, color: "#8A8578" }}>Chargement…</div>
+      <AppShell maxWidth={900}>
+        <div className="flex min-h-[60vh] items-center justify-center text-sm text-muted-foreground">
+          Chargement…
         </div>
       </AppShell>
     );
   }
 
   return (
-    <AppShell maxWidth={900} sidebar={<div className="app-sidebar-desktop">{sidebar}</div>}>
-      {mobileSidebarOpen && (
-        <>
-          <button type="button" aria-label="Fermer le menu des batteries" className="app-sidebar-backdrop" onClick={() => setMobileSidebarOpen(false)} />
-          <aside id="app-mobile-sidebar-drawer" className="app-sidebar-drawer" role="dialog" aria-modal="true" aria-label="Navigation batteries">
-            <div className="app-sidebar-drawer__header">
-              <button type="button" className="app-sidebar-drawer__close" onClick={() => setMobileSidebarOpen(false)}>
-                <X size={18} />
-                <span>Fermer</span>
-              </button>
-            </div>
-            {isSuperAdmin ? (
-              <SuperAdminSidebar />
-            ) : isAdmin ? (
-              <AdminSidebar
-                onNavigate={(path) => window.location.href = path}
-                onHome={() => goBattery(1)}
-                onLogout={handleLogout}
-              />
-            ) : (
-              <Sidebar
-                active={active}
-                setActive={goBattery}
-                responses={responses}
-                userEmail={user?.email}
-                onLogout={handleLogout}
-                onHome={() => goBattery(1)}
-              />
-            )}
-          </aside>
-        </>
-      )}
-      <div className="app-mobile-topbar">
-        <button
-          type="button"
-          className="app-mobile-sidebar-toggle"
-          onClick={() => setMobileSidebarOpen(true)}
-          aria-label="Ouvrir le menu des batteries"
-          aria-controls="app-mobile-sidebar-drawer"
-          aria-expanded={mobileSidebarOpen}
-        >
-          <Menu size={18} />
-          <span>Batteries</span>
-        </button>
-        <UserAvatar onNavigate={(path) => window.location.href = path} />
-      </div>
-      <PageTitle 
-        title={`Batterie ${currentBattery.id}`} 
+    <AppShell maxWidth={900} sidebar={sidebar}>
+      <PageTitle
+        title={`Batterie ${currentBattery.id}`}
         subtitle={currentBattery.name}
         right={returnPath && (
           <Button variant="outline" size="sm" onClick={goReturn}>
@@ -169,7 +105,7 @@ export default function TestApp() {
       ) : (
         <CoherenceBattery battery={currentBattery} responses={responses} setResponses={setResponses} />
       )}
-      <div style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}>
+      <div className="mt-2 flex justify-end">
         {active < 8 && (
           <Button onClick={() => setActive(active + 1)}>
             Batterie suivante <ChevronRight size={15} />

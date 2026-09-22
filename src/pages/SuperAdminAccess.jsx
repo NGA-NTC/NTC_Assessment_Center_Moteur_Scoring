@@ -1,9 +1,10 @@
 import { useMemo } from "react";
-import { Loader2, Shield, Save, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Shield, Save, AlertCircle } from "lucide-react";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
-import { NAVY, MUTED, LINE, CREAM, INK, GOLD } from "../lib/theme.js";
 import Card from "../components/ui/Card.jsx";
+import Alert from "../components/ui/Alert.jsx";
+import { EmptyState, LoadingState } from "../components/ui/States.jsx";
 import { useAccessControl } from "../hooks/rbac/useAccessControl.js";
 import RoleAssignabilityMatrix from "../components/admin/RoleAssignabilityMatrix.jsx";
 
@@ -13,6 +14,8 @@ const CAPABILITY_COLUMNS = [
   { key: "grant", label: "GRANT", hint: "Accorder le droit à d'autres rôles ou utilisateurs" },
   { key: "delegate", label: "DELEGATE", hint: "Déléguer le droit (délégations)" },
 ];
+
+const CAP_GRID_CLASS = "grid grid-cols-[minmax(0,1fr)_repeat(4,72px)] items-center gap-2";
 
 export default function SuperAdminAccess() {
   const {
@@ -49,6 +52,8 @@ export default function SuperAdminAccess() {
   const lockedCap = (permId) =>
     selectedRoleId === "super_admin" && permId.startsWith("rbac.") ? ["grant", "delegate"] : [];
 
+  const statusMessage = success ?? error;
+
   return (
     <div>
       <PageTitle
@@ -69,47 +74,52 @@ export default function SuperAdminAccess() {
         }
       />
 
-      {(error || success) && (
-        <div style={{ marginBottom: 16, padding: "12px 16px", borderRadius: 8, display: "flex", alignItems: "center", gap: 8, background: success ? "#E3F0E4" : "#FAE8E6", color: success ? "#2E6B3C" : "#8A2B22", fontSize: 13 }}>
-          {success ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-          <span>{success ?? error}</span>
-        </div>
+      {statusMessage && (
+        <Alert type={success ? "success" : "error"}>
+          {statusMessage}
+        </Alert>
       )}
 
-      <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 24 }}>
-        <Card style={{ padding: 0, overflow: "hidden", height: "fit-content", position: "sticky", top: "100px" }}>
-          <div style={{ padding: "20px 24px", borderBottom: `1px solid ${LINE}`, background: CREAM, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ fontSize: 16, fontWeight: 600, color: INK }}>Rôles</div>
-            <Shield size={20} color={GOLD} />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+        <Card className="h-fit overflow-hidden lg:sticky lg:top-[100px]">
+          <div className="flex items-center justify-between border-b border-border bg-cream px-6 py-5">
+            <div className="text-[16px] font-semibold text-foreground">Rôles</div>
+            <Shield size={20} className="shrink-0 text-gold" />
           </div>
-          <div style={{ maxHeight: "60vh", overflowY: "auto" }}>
+          <div className="max-h-[60vh] overflow-y-auto">
             {loading ? (
-              <div style={{ padding: "24px", textAlign: "center", color: MUTED }}>
-                <Loader2 size={24} className="spin" style={{ animation: "spin 1s linear infinite", margin: "0 auto 8px" }} /> Chargement…
-              </div>
+              <LoadingState minHeight={200} label="Chargement…" />
             ) : roles.length === 0 ? (
-              <div style={{ padding: "24px", textAlign: "center", color: MUTED }}>Aucun rôle</div>
+              <EmptyState title="Aucun rôle" description="Aucun rôle n'est configuré." />
             ) : (
-              <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-                {roles.map((role) => (
-                  <li key={role.id}>
-                    <button
-                      onClick={() => selectRole(role.id)}
-                      style={{
-                        width: "100%", padding: "14px 20px", textAlign: "left", border: "none",
-                        cursor: "pointer", fontFamily: "inherit", fontSize: 14, fontWeight: selectedRoleId === role.id ? 600 : 500,
-                        color: selectedRoleId === role.id ? NAVY : INK, borderLeft: selectedRoleId === role.id ? `3px solid ${GOLD}` : "3px solid transparent",
-                        background: selectedRoleId === role.id ? "#F5F5F5" : "transparent", transition: "all .15s",
-                      }}
-                    >
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <Shield size={18} color={selectedRoleId === role.id ? GOLD : MUTED} />
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{role.name}</span>
-                      </div>
-                      <div style={{ fontSize: 11, color: MUTED, marginTop: 2, fontFamily: "monospace" }}>{role.id}</div>
-                    </button>
-                  </li>
-                ))}
+              <ul className="m-0 list-none p-0">
+                {roles.map((role) => {
+                  const isActive = selectedRoleId === role.id;
+                  return (
+                    <li key={role.id}>
+                      <button
+                        onClick={() => selectRole(role.id)}
+                        aria-current={isActive ? "true" : undefined}
+                        className={
+                          "w-full cursor-pointer border-none px-5 py-3.5 text-left font-sans text-[14px] transition-colors duration-150 " +
+                          "border-l-[3px] " +
+                          (isActive
+                            ? "border-l-gold bg-[#F5F5F5] font-semibold text-navy"
+                            : "border-l-transparent bg-transparent font-medium text-ink")
+                        }
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <Shield
+                            size={18}
+                            className={"shrink-0 " + (isActive ? "text-gold" : "text-muted-foreground")}
+                          />
+                          <span className="truncate">{role.name}</span>
+                        </div>
+                        <div className="mt-0.5 font-mono text-[11px] text-muted-foreground">{role.id}</div>
+                      </button>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </div>
@@ -117,89 +127,92 @@ export default function SuperAdminAccess() {
 
         <div>
           {loading ? (
-            <Card style={{ padding: "48px", textAlign: "center", color: MUTED }}>
-              <Loader2 size={24} className="spin" style={{ animation: "spin 1s linear infinite", margin: "0 auto 8px" }} /> Chargement des permissions…
+            <Card className="p-12 text-center">
+              <LoadingState minHeight={160} label="Chargement des permissions…" />
             </Card>
           ) : !selectedRole ? (
-            <Card style={{ padding: "48px", textAlign: "center", color: MUTED }}>
-              <Shield size={48} style={{ marginBottom: 16, opacity: 0.3 }} />
-              <p style={{ fontSize: 16, margin: 0 }}>Sélectionnez un rôle à gauche pour gérer ses accès</p>
+            <Card className="p-12 text-center text-muted-foreground">
+              <Shield size={48} className="mx-auto mb-4 opacity-30" />
+              <p className="m-0 text-[16px]">Sélectionnez un rôle à gauche pour gérer ses accès</p>
             </Card>
           ) : (
-            <Card style={{ padding: 0, overflow: "hidden" }}>
-              <div style={{ padding: "20px 24px", borderBottom: `1px solid ${LINE}`, background: CREAM }}>
-                <div style={{ fontSize: 16, fontWeight: 600, color: INK }}>
-                  Permissions pour <span style={{ color: NAVY }}>{selectedRole.name}</span>
+            <Card className="overflow-hidden">
+              <div className="border-b border-border bg-cream px-6 py-5">
+                <div className="text-[16px] font-semibold text-foreground">
+                  Permissions pour <span className="text-navy">{selectedRole.name}</span>
                 </div>
-                <div style={{ fontSize: 12.5, color: MUTED, marginTop: 4 }}>
+                <div className="mt-1 text-[12.5px] text-muted-foreground">
                   USE, MANAGE, GRANT et DELEGATE sont indépendants. Les changements ne sont appliqués qu'après sauvegarde.
                 </div>
               </div>
-              <div style={{ padding: "20px 24px", maxHeight: "70vh", overflowY: "auto" }}>
-                <div
-                  style={{
-                    display: "grid", gridTemplateColumns: "1fr repeat(4, 72px)", gap: 8,
-                    padding: "0 12px 10px 0", borderBottom: `1px solid ${LINE}`, marginBottom: 12,
-                    alignItems: "center",
-                  }}
-                >
-                  <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5 }}>Permission</div>
+
+              <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
+                <div className={`${CAP_GRID_CLASS} mb-3 border-b border-border pb-2.5`}>
+                  <div className="text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase">
+                    Permission
+                  </div>
                   {CAPABILITY_COLUMNS.map((col) => (
-                    <div key={col.key} style={{ textAlign: "center", fontSize: 12, fontWeight: 700, color: NAVY }} title={col.hint}>
+                    <div key={col.key} className="text-center text-[12px] font-bold text-navy" title={col.hint}>
                       {col.label}
                     </div>
                   ))}
                 </div>
 
-                {Object.entries(permissionsByCategory).map(([category, perms]) => (
-                  <div key={category} style={{ marginBottom: 20 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: MUTED, textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8, paddingBottom: 6, borderBottom: `1px solid ${LINE}` }}>
-                      {category}
-                    </div>
-                    {perms.map((perm) => {
-                      const caps = selectedRolePerms[perm.id] ?? {};
-                      const locked = lockedCap(perm.id);
-                      return (
-                        <div
-                          key={perm.id}
-                          style={{ display: "grid", gridTemplateColumns: "1fr repeat(4, 72px)", gap: 8, alignItems: "center", padding: "6px 0", borderBottom: `1px solid ${LINE}` }}
-                        >
-                          <div style={{ minWidth: 0 }}>
-                            <div style={{ fontSize: 13, fontWeight: 500, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={perm.description || perm.id}>
-                              {perm.name}
-                            </div>
-                            <div style={{ fontSize: 10, color: MUTED, fontFamily: "monospace" }}>{perm.id}</div>
-                          </div>
-                          {CAPABILITY_COLUMNS.map((col) => {
-                            const isLocked = locked.includes(col.key);
-                            const checked = !!caps[col.key];
-                            return (
-                              <div key={col.key} style={{ textAlign: "center" }}>
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  disabled={isLocked}
-                                  title={isLocked ? "Protégé par le backend (anti-élévation) pour ce rôle" : col.hint}
-                                  onChange={() => toggleCapability(selectedRoleId, perm.id, col.key)}
-                                  style={{ width: 18, height: 18, accentColor: GOLD, cursor: isLocked ? "not-allowed" : "pointer", opacity: isLocked ? 0.4 : 1 }}
-                                />
-                              </div>
-                            );
-                          })}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
                 {permissions.length === 0 && (
-                  <div style={{ textAlign: "center", color: MUTED, padding: "48px" }}>
-                    <AlertCircle size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
-                    <p>Aucune permission définie dans le système.</p>
+                  <div className="p-12 text-center text-muted-foreground">
+                    <AlertCircle size={32} className="mx-auto mb-3 opacity-30" />
+                    <p className="m-0">Aucune permission définie dans le système.</p>
                   </div>
                 )}
+
+                <div className="overflow-x-auto">
+                  <div className="min-w-[520px]">
+                    {Object.entries(permissionsByCategory).map(([category, perms]) => (
+                      <div key={category} className="mb-5">
+                        <div className="mb-2 border-b border-border pb-1.5 text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase">
+                          {category}
+                        </div>
+                        {perms.map((perm) => {
+                          const caps = selectedRolePerms[perm.id] ?? {};
+                          const locked = lockedCap(perm.id);
+                          return (
+                            <div key={perm.id} className={`${CAP_GRID_CLASS} border-b border-border py-1.5 last:border-b-0`}>
+                              <div className="min-w-0">
+                                <div className="truncate text-[13px] font-medium text-foreground" title={perm.description || perm.id}>
+                                  {perm.name}
+                                </div>
+                                <div className="font-mono text-[10px] text-muted-foreground">{perm.id}</div>
+                              </div>
+                              {CAPABILITY_COLUMNS.map((col) => {
+                                const isLocked = locked.includes(col.key);
+                                const checked = !!caps[col.key];
+                                return (
+                                  <div key={col.key} className="text-center">
+                                    <input
+                                      type="checkbox"
+                                      checked={checked}
+                                      disabled={isLocked}
+                                      title={isLocked ? "Protégé par le backend (anti-élévation) pour ce rôle" : col.hint}
+                                      onChange={() => toggleCapability(selectedRoleId, perm.id, col.key)}
+                                      className={
+                                        "h-[18px] w-[18px] accent-gold " +
+                                        (isLocked ? "cursor-not-allowed opacity-40" : "cursor-pointer")
+                                      }
+                                    />
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div style={{ padding: "16px 24px", borderTop: `1px solid ${LINE}`, background: CREAM, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12 }}>
-                {!hasChanges && <span style={{ fontSize: 12, color: MUTED }}>Aucune modification en attente</span>}
+
+              <div className="flex items-center justify-end gap-3 border-t border-border bg-cream px-6 py-4">
+                {!hasChanges && <span className="text-[12px] text-muted-foreground">Aucune modification en attente</span>}
                 <Button onClick={handleSave} disabled={saving || !hasChanges}>
                   <Save size={16} /> {saving ? "Sauvegarde…" : "Sauvegarder les modifications"}
                 </Button>
@@ -209,7 +222,7 @@ export default function SuperAdminAccess() {
         </div>
       </div>
 
-      <div style={{ marginTop: 24 }}>
+      <div className="mt-6">
         <RoleAssignabilityMatrix />
       </div>
     </div>

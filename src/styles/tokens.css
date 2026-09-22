@@ -1,65 +1,141 @@
 /* ===========================================================================
-   NTC Assessment — Design Tokens (miroir CSS de src/lib/theme.js)
-   Source unique des valeurs : src/lib/theme.js (JS)
-   Ces variables servent au CSS global et au responsive de base.
+   FONDATION UI — Tokens standard shadcn/ui (valeurs neutres).
+   Source de vérité de la phase de consolidation :
+   - shadcn/ui = comportements + tokens (light + dark)
+   - Tailwind  = utilitaires générés depuis ces tokens
+   - Les anciens noms --ntc-* sont conservés en ALIASES (non destructif) et
+     pointent sur les tokens standards. L'identité NTC sera réintroduite
+     ultérieurement en réorientant uniquement ces valeurs.
    =========================================================================== */
 
-/* ---- Palette fondatrice (identité conservée) ---- */
 :root {
-  --ntc-navy: #1B2A4A;
-  --ntc-gold: #B8862B;
-  --ntc-gold2: #D9A94A;
-  --ntc-cream: #F7F4EC;
-  --ntc-ink: #2A2A28;
-  --ntc-muted: #8A8578;
-  --ntc-line: #E4DFD0;
+  color-scheme: light;
 
-  /* Rôles */
-  --ntc-background: var(--ntc-cream);
-  --ntc-foreground: var(--ntc-ink);
-  --ntc-muted-foreground: var(--ntc-muted);
-  --ntc-border: var(--ntc-line);
-  --ntc-surface: #FFFFFF;
+  /* ---- Tokens canoniques shadcn/ui (light — neutre zinc) ---- */
+  --background: oklch(0.985 0 0);
+  --foreground: oklch(0.13 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.24 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.92 0 0);
+  --secondary-foreground: oklch(0.24 0 0);
+  --muted: oklch(0.95 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+  --accent: oklch(0.94 0 0);
+  --accent-foreground: oklch(0.24 0 0);
+  --destructive: oklch(0.55 0.17 25);
+  --destructive-foreground: oklch(0.985 0 0);
+  --border: oklch(0.9 0 0);
+  --input: oklch(0.87 0 0);
+  --ring: oklch(0.24 0 0);
+  --radius: 0.5rem;
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-full: 999px;
 
-  /* Sémantique */
-  --ntc-primary: var(--ntc-navy);
-  --ntc-secondary: var(--ntc-gold);
-  --ntc-accent: var(--ntc-gold2);
-  --ntc-success: #2E6B3C;
-  --ntc-success-soft: #E3F0E4;
-  --ntc-warning: #B5652E;
-  --ntc-warning-soft: #FEF3E2;
-  --ntc-destructive: #8A2B22;
-  --ntc-destructive-soft: #FAE8E6;
-  --ntc-info: #1A3D5C;
-  --ntc-info-soft: #E7EDF7;
+  /* Sidebar (shadcn) */
+  --sidebar: var(--background);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
 
-  /* Sidebar navy */
-  --ntc-navy-pale: #B8C0D4;
-  --ntc-navy-pale-2: #9AA6C0;
-  --ntc-sidebar-divider: rgba(255, 255, 255, 0.12);
-  --ntc-sidebar-item: rgba(255, 255, 255, 0.14);
-  --ntc-sidebar-hover: rgba(255, 255, 255, 0.08);
+  /* Graphiques / jetons complémentaires (signaux sémantiques conservés) */
+  --chart-1: oklch(0.55 0.2 260);
+  --chart-2: oklch(0.6 0.15 160);
+  --chart-3: oklch(0.7 0.16 80);
+  --chart-4: oklch(0.65 0.18 20);
+  --chart-5: oklch(0.6 0.12 300);
 
-  /* Typo */
+  --success: oklch(0.5 0.13 150);
+  --success-soft: oklch(0.95 0.04 150);
+  --success-border: oklch(0.85 0.06 150);
+  --warning: oklch(0.6 0.12 55);
+  --warning-deep: oklch(0.45 0.1 60);
+  --warning-strong: oklch(0.4 0.1 45);
+  --warning-soft: oklch(0.97 0.03 80);
+  --warning-soft-alt: oklch(0.96 0.04 85);
+  --warning-border: oklch(0.93 0.04 80);
+  --info: oklch(0.5 0.1 250);
+  --info-soft: oklch(0.95 0.03 250);
+  --destructive-strong: oklch(0.5 0.19 25);
+  --destructive-soft: oklch(0.96 0.03 25);
+  --destructive-border: oklch(0.88 0.06 25);
+  --system-soft: oklch(0.95 0 0);
+  --neutral-soft-3: oklch(0.94 0 0);
+  --line-soft: oklch(0.955 0 0);
+
+  /* ---- Anciens noms NTC en ALIASES (valeurs neutres) — à réorienter
+         lors de la réintroduction de l'identité NTC ---- */
+  --ntc-navy: var(--primary);
+  --ntc-gold: var(--secondary);
+  --ntc-gold2: var(--accent);
+  --ntc-cream: var(--background);
+  --ntc-ink: var(--foreground);
+  --ntc-muted: var(--muted-foreground);
+  --ntc-line: var(--border);
+
+  --ntc-background: var(--background);
+  --ntc-foreground: var(--foreground);
+  --ntc-muted-foreground: var(--muted-foreground);
+  --ntc-border: var(--border);
+  --ntc-surface: var(--card);
+  --ntc-muted-surface: var(--muted);
+
+  --ntc-primary: var(--primary);
+  --ntc-secondary: var(--secondary);
+  --ntc-accent: var(--accent);
+  --ntc-success: var(--success);
+  --ntc-success-soft: var(--success-soft);
+  --ntc-warning: var(--warning);
+  --ntc-warning-soft: var(--warning-soft);
+  --ntc-destructive: var(--destructive);
+  --ntc-destructive-soft: var(--destructive-soft);
+  --ntc-info: var(--info);
+  --ntc-info-soft: var(--info-soft);
+  --ntc-success-border: var(--success-border);
+  --ntc-destructive-border: var(--destructive-border);
+  --ntc-navy-soft-border: var(--info-soft);
+  --ntc-warning-deep: var(--warning-deep);
+  --ntc-warning-strong: var(--warning-strong);
+  --ntc-warning-soft-alt: var(--warning-soft-alt);
+  --ntc-warning-border: var(--warning-border);
+  --ntc-system-soft: var(--system-soft);
+  --ntc-neutral-soft-3: var(--neutral-soft-3);
+  --ntc-destructive-strong: var(--destructive-strong);
+  --ntc-line-soft: var(--line-soft);
+
+  --ntc-navy-pale: var(--muted-foreground);
+  --ntc-navy-pale-2: var(--muted-foreground);
+  --ntc-navy-soft: var(--info-soft);
+  --ntc-sidebar-divider: color-mix(in oklab, var(--sidebar-foreground) 12%, transparent);
+  --ntc-sidebar-item: color-mix(in oklab, var(--sidebar-foreground) 14%, transparent);
+  --ntc-sidebar-hover: color-mix(in oklab, var(--sidebar-foreground) 8%, transparent);
+
   --ntc-font-sans: 'IBM Plex Sans', system-ui, sans-serif;
   --ntc-font-serif: 'Fraunces', serif;
 
-  /* Rayons */
-  --ntc-radius-sm: 8px;
-  --ntc-radius-md: 10px;
-  --ntc-radius-lg: 12px;
-  --ntc-radius-xl: 14px;
-  --ntc-radius-full: 999px;
+  --ntc-radius-sm: var(--radius-sm);
+  --ntc-radius-md: var(--radius-md);
+  --ntc-radius-lg: var(--radius-lg);
+  --ntc-radius-xl: var(--radius-xl);
+  --ntc-radius-full: var(--radius-full);
 
-  /* Ombres */
-  --ntc-shadow-card: 0 8px 30px rgba(27, 42, 74, 0.08);
-  --ntc-shadow-menu: 0 6px 24px rgba(27, 42, 74, 0.12);
-  --ntc-shadow-dropdown: 0 10px 30px rgba(0, 0, 0, 0.2);
-  --ntc-shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.25);
-  --ntc-shadow-drawer: 0 14px 36px rgba(0, 0, 0, 0.35);
+  --ntc-shadow-card: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --ntc-shadow-menu: 0 4px 12px rgb(0 0 0 / 0.08);
+  --ntc-shadow-dropdown: 0 6px 16px rgb(0 0 0 / 0.1);
+  --ntc-shadow-modal: 0 24px 48px rgb(0 0 0 / 0.16);
+  --ntc-shadow-drawer: 0 14px 36px rgb(0 0 0 / 0.2);
 
-  /* Espacements */
   --ntc-space-1: 4px;
   --ntc-space-2: 8px;
   --ntc-space-3: 12px;
@@ -69,22 +145,77 @@
   --ntc-space-7: 28px;
   --ntc-space-8: 32px;
 
-  /* Contrôles */
   --ntc-control-height: 44px;
   --ntc-control-height-sm: 36px;
 
-  /* Conteneurs */
   --ntc-container-sm: 720px;
   --ntc-container-md: 900px;
   --ntc-container-lg: 1000px;
 
-  /* Breakpoints */
   --ntc-bp-lg: 1024px;
   --ntc-bp-md: 768px;
   --ntc-bp-sm: 480px;
 }
 
-/* ---- Spinner global (les pages référencent `animation: spin …`) ---- */
+/* ---- Thème sombre (réservé : tokens prêts pour le toggle futur) ---- */
+.dark {
+  color-scheme: dark;
+
+  --background: oklch(0.13 0 0);
+  --foreground: oklch(0.97 0 0);
+  --card: oklch(0.17 0 0);
+  --card-foreground: var(--foreground);
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+  --primary: oklch(0.9 0 0);
+  --primary-foreground: oklch(0.15 0 0);
+  --secondary: oklch(0.24 0 0);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.2 0 0);
+  --muted-foreground: oklch(0.65 0 0);
+  --accent: oklch(0.24 0 0);
+  --accent-foreground: var(--foreground);
+  --destructive: oklch(0.62 0.17 25);
+  --destructive-foreground: oklch(0.97 0 0);
+  --border: oklch(0.24 0 0);
+  --input: oklch(0.26 0 0);
+  --ring: oklch(0.9 0 0);
+
+  --sidebar: oklch(0.16 0 0);
+  --sidebar-foreground: oklch(0.97 0 0);
+  --sidebar-primary: oklch(0.9 0 0);
+  --sidebar-primary-foreground: oklch(0.15 0 0);
+  --sidebar-accent: oklch(0.24 0 0);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: oklch(0.24 0 0);
+  --sidebar-ring: oklch(0.9 0 0);
+
+  --chart-1: oklch(0.7 0.16 260);
+  --chart-2: oklch(0.65 0.14 160);
+  --chart-3: oklch(0.72 0.15 80);
+  --chart-4: oklch(0.7 0.16 20);
+  --chart-5: oklch(0.65 0.12 300);
+
+  --success: oklch(0.7 0.14 150);
+  --success-soft: oklch(0.2 0.05 150);
+  --success-border: oklch(0.3 0.07 150);
+  --warning: oklch(0.75 0.12 55);
+  --warning-deep: oklch(0.8 0.1 60);
+  --warning-strong: oklch(0.82 0.1 60);
+  --warning-soft: oklch(0.22 0.03 80);
+  --warning-soft-alt: oklch(0.24 0.03 80);
+  --warning-border: oklch(0.3 0.04 80);
+  --info: oklch(0.75 0.1 250);
+  --info-soft: oklch(0.22 0.04 250);
+  --destructive-strong: oklch(0.75 0.17 25);
+  --destructive-soft: oklch(0.24 0.05 25);
+  --destructive-border: oklch(0.32 0.06 25);
+  --system-soft: oklch(0.24 0 0);
+  --neutral-soft-3: oklch(0.26 0 0);
+  --line-soft: oklch(0.22 0 0);
+}
+
+/* ---- Spinner global ---- */
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -96,43 +227,12 @@
   animation: spin 1s linear infinite;
 }
 
-/* ---- Focus / accessibilité ---- */
+/* ---- Focus / accessibilité (anneau standard shadcn) ---- */
 ::selection {
-  background: rgba(184, 134, 43, 0.28);
+  background: color-mix(in oklab, var(--ring) 25%, transparent);
 }
 
-/* ---- Boutons (.button posé par components/ui/Button.jsx) ---- */
-.button {
-  transition: filter 0.15s, background 0.15s, border-color 0.15s, transform 0.05s, opacity 0.15s;
-}
-.button:not(:disabled):hover {
-  filter: brightness(0.96);
-}
-.button:not(:disabled):active {
-  transform: translateY(0.5px);
-}
-.button[data-variant="ghost"]:not(:disabled):hover {
-  background: rgba(27, 42, 74, 0.06);
-  border-color: rgba(27, 42, 74, 0.22);
-}
-.button[data-variant="outline"]:not(:disabled):hover {
-  background: rgba(255, 255, 255, 0.14);
-}
-.button[data-variant="primary"]:not(:disabled):hover {
-  background: #20365e;
-}
-.button[data-variant="gold"]:not(:disabled):hover {
-  background: #a37a24;
-}
-.button[data-variant="danger"]:not(:disabled):hover {
-  background: #7d261f;
-}
-.button:focus-visible {
-  outline: 2px solid var(--ntc-gold);
-  outline-offset: 1px;
-}
-
-/* ---- Champs (Field / SearchInput) : focus et disable ---- */
+/* ---- Champs : état désactivé ---- */
 select:disabled,
 input:disabled,
 textarea:disabled {
@@ -147,41 +247,7 @@ textarea:disabled {
 }
 .ntc-card-interactive:hover {
   transform: translateY(-2px);
-  box-shadow: 0 12px 34px rgba(27, 42, 74, 0.12);
+  box-shadow: 0 12px 34px var(--sidebar-ring);
 }
 
 /* ---- Tableaux ---- */
-.ntc-table-row:hover {
-  background: rgba(27, 42, 74, 0.04);
-}
-
-/* ---- Modales ---- */
-.ntc-modal-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  background: rgba(20, 26, 40, 0.45);
-}
-.ntc-modal-panel {
-  background: #fff;
-  border-radius: 14px;
-  padding: 24px;
-  width: 100%;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
-  max-height: calc(100dvh - 40px);
-  overflow-y: auto;
-}
-@media (max-width: 768px) {
-  .ntc-modal-overlay {
-    align-items: flex-start;
-    padding: 14px;
-    overflow-y: auto;
-  }
-  .ntc-modal-panel {
-    max-height: calc(100dvh - 28px);
-  }
-}

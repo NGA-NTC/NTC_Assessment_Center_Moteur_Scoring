@@ -1,27 +1,20 @@
-import { NAVY, MUTED, type } from "../../lib/theme.js";
-
 export default function PageHeader({ title, subtitle, description, right, action, meta, style }) {
   const actions = right ?? action;
   return (
     <div
-      className="page-title"
-      style={{ marginBottom: 18, display: "flex", alignItems: "flex-end", gap: 10, flexWrap: "wrap", justifyContent: "space-between", width: "100%", ...style }}
+      className="page-title mb-[18px] flex w-full flex-wrap items-end justify-between gap-2.5"
+      style={style}
     >
-      <div style={{ minWidth: 0, flex: 1, maxWidth: "100%" }}>
-        <div
-          className="page-title__title"
-          style={{ fontFamily: type.fontFamily.serif, fontSize: type.fontSize.h1, fontWeight: type.fontWeight.bold, color: NAVY, wordBreak: "break-word" }}
-        >
-          {title}
-        </div>
+      <div className="min-w-0 max-w-full flex-1">
+        <div className="page-title__title font-serif text-2xl font-bold text-navy break-words">{title}</div>
         {(subtitle || description) && (
-          <div className="page-title__subtitle" style={{ fontSize: type.fontSize.base, color: MUTED, marginTop: 3, wordBreak: "break-word" }}>
+          <div className="page-title__subtitle mt-[3px] text-[13px] text-muted-foreground break-words">
             {subtitle ?? description}
           </div>
         )}
-        {meta && <div style={{ marginTop: 8, display: "flex", gap: 8, flexWrap: "wrap" }}>{meta}</div>}
+        {meta && <div className="mt-2 flex flex-wrap gap-2">{meta}</div>}
       </div>
-      {actions && <div className="page-title__actions" style={{ flexShrink: 0, minWidth: 0, maxWidth: "100%", display: "flex", gap: 8, flexWrap: "wrap" }}>{actions}</div>}
+      {actions && <div className="page-title__actions flex min-w-0 max-w-full flex-wrap justify-end gap-2">{actions}</div>}
     </div>
   );
 }

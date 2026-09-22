@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Plus, Edit, Trash2, Loader2, FileText, Save } from "lucide-react";
+import { Plus, Edit, Trash2, FileText, Save } from "lucide-react";
 import {
   listPages,
   createPage,
@@ -9,8 +9,20 @@ import {
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
-import { NAVY, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
 import Card from "../components/ui/Card.jsx";
+import Badge from "../components/ui/Badge.jsx";
+import Alert from "../components/ui/Alert.jsx";
+import Modal from "../components/ui/Modal.jsx";
+import ConfirmDialog from "../components/common/ConfirmDialog.jsx";
+import { EmptyState, LoadingState } from "../components/ui/States.jsx";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../components/ui/Table.jsx";
 import { routes } from "../routes/registry/index.jsx";
 
 const flattenPaths = (list, acc = []) => {
@@ -44,6 +56,8 @@ export default function SuperAdminPages() {
   const [showModal, setShowModal] = useState(false);
   const [editingPage, setEditingPage] = useState(null);
   const [formData, setFormData] = useState({ id: "", name: "", path: "", description: "", icon: "", is_system: false });
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteBusy, setDeleteBusy] = useState(false);
 
   const IMPLEMENTED_PATHS = useMemo(() => flattenPaths(routes), []);
   const isPathImplemented = (path) => !path || IMPLEMENTED_PATHS.includes(path);
@@ -88,18 +102,23 @@ export default function SuperAdminPages() {
     }
   };
 
-  const handleDelete = async (page) => {
-    if (page.is_system) {
+  const confirmDelete = async () => {
+    if (!deleteTarget) return;
+    if (deleteTarget.is_system) {
+      setDeleteTarget(null);
       setMessage({ type: "error", text: "Impossible de supprimer une page système." });
       return;
     }
-    if (!window.confirm(`Supprimer la page "${page.name}" ? Cette action est irréversible.`)) return;
+    setDeleteBusy(true);
     try {
-      await deletePage(page.id);
+      await deletePage(deleteTarget.id);
       setMessage({ type: "success", text: "Page supprimée." });
+      setDeleteTarget(null);
       fetchPages();
     } catch {
       setMessage({ type: "error", text: "Erreur lors de la suppression." });
+    } finally {
+      setDeleteBusy(false);
     }
   };
 
@@ -130,103 +149,103 @@ export default function SuperAdminPages() {
       />
 
       {message && (
-        <div style={{ marginBottom: 16, padding: "12px 16px", borderRadius: 8, background: message.type === "success" ? "#E3F0E4" : "#FAE8E6", color: message.type === "success" ? "#2E6B3C" : "#8A2B22", fontSize: 13 }}>
+        <Alert type={message.type === "success" ? "success" : "error"}>
           {message.text}
-        </div>
+        </Alert>
       )}
 
-      <Card style={{ padding: 0, overflow: "hidden" }}>
+      <Card className="overflow-hidden">
         {loading ? (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "300px", color: MUTED }}>
-            <Loader2 size={24} className="spin" style={{ animation: "spin 1s linear infinite" }} /> Chargement…
-          </div>
+          <LoadingState minHeight={300} />
         ) : pages.length === 0 ? (
-          <div style={{ padding: "48px 24px", textAlign: "center", color: MUTED }}>Aucune page définie</div>
+          <EmptyState title="Aucune page définie" description="Créez votre première page avec « Nouvelle page »." />
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
-              <thead>
-                <tr style={{ background: CREAM, borderBottom: `1px solid ${LINE}` }}>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Page</th>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Chemin</th>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Implémentation</th>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Description</th>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Type</th>
-                  <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pages.map(page => (
-                  <tr key={page.id} style={{ borderBottom: `1px solid ${LINE}` }}>
-                    <td style={{ padding: "12px 16px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                        <div style={{ width: 36, height: 36, borderRadius: 8, background: NAVY, color: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                          <FileText size={18} />
-                        </div>
-                        <div style={{ fontWeight: 600, color: INK }}>{page.name}</div>
+          <Table>
+            <TableHeader>
+              <TableRow className="border-b border-border bg-cream hover:bg-cream">
+                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Page</TableHead>
+                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Chemin</TableHead>
+                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Implémentation</TableHead>
+                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Description</TableHead>
+                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Type</TableHead>
+                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {pages.map(page => (
+                <TableRow key={page.id} className="border-b border-border">
+                  <TableCell className="px-4 py-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-navy text-white">
+                        <FileText size={18} />
                       </div>
-                    </td>
-                    <td style={{ padding: "12px 16px", fontFamily: "monospace", fontSize: 12, color: MUTED }}>{page.path}</td>
-                    <td style={{ padding: "12px 16px" }}>
-                      {isPathImplemented(page.path) ? (
-                        <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: "#E3F0E4", color: "#2E6B3C" }}>Implémentée</span>
-                      ) : (
-                        <span title="Déclarée dans la base, aucune route correspondante dans le registre frontend" style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: "#FEF3E2", color: "#B5652E" }}>Déclarée</span>
-                      )}
-                    </td>
-                    <td style={{ padding: "12px 16px", color: MUTED, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{page.description || "—"}</td>
-                    <td style={{ padding: "12px 16px" }}>
-                      {page.is_system ? (
-                        <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: "#FEF3E2", color: "#B5652E" }}>Système</span>
-                      ) : (
-                        <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: "#E3F0E4", color: "#2E6B3C" }}>Personnalisée</span>
-                      )}
-                    </td>
-                    <td style={{ padding: "12px 16px" }}>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <Button size="sm" variant="outline" onClick={() => openEditModal(page)}>
-                          <Edit size={14} /> Modifier
+                      <span className="font-semibold text-foreground">{page.name}</span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-4 py-3 font-mono text-[12px] text-muted-foreground">{page.path}</TableCell>
+                  <TableCell className="px-4 py-3">
+                    {isPathImplemented(page.path) ? (
+                      <Badge tone="success">Implémentée</Badge>
+                    ) : (
+                      <Badge tone="warning" title="Déclarée dans la base, aucune route correspondante dans le registre frontend">Déclarée</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell className="max-w-[300px] truncate px-4 py-3 text-muted-foreground">{page.description || "—"}</TableCell>
+                  <TableCell className="px-4 py-3">
+                    {page.is_system ? <Badge tone="warning">Système</Badge> : <Badge tone="success">Personnalisée</Badge>}
+                  </TableCell>
+                  <TableCell className="px-4 py-3">
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => openEditModal(page)}>
+                        <Edit size={14} /> Modifier
+                      </Button>
+                      {!page.is_system && (
+                        <Button size="sm" variant="outlineDark" className="border-warning text-warning" onClick={() => setDeleteTarget(page)}>
+                          <Trash2 size={14} /> Supprimer
                         </Button>
-                        {!page.is_system && (
-                          <Button size="sm" variant="outline" onClick={() => handleDelete(page)} style={{ color: "#B5652E", borderColor: "#B5652E" }}>
-                            <Trash2 size={14} /> Supprimer
-                          </Button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                      )}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
         )}
       </Card>
 
-      {showModal && (
-        <div style={{ position: "fixed", inset: 0, background: "rgba(20,26,40,.45)", zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }} onClick={closeModal}>
-          <div style={{ background: "#fff", borderRadius: 14, padding: "24px", maxWidth: 560, width: "100%", boxShadow: "0 20px 60px rgba(0,0,0,.25)" }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700, color: NAVY }}>{editingPage ? "Modifier la page" : "Nouvelle page"}</h3>
-              <button onClick={closeModal} style={{ background: "none", border: "none", fontSize: 24, cursor: "pointer", color: MUTED }}>×</button>
-            </div>
-            <form onSubmit={handleSubmit}>
-              <div style={{ display: "grid", gap: 16 }}>
-                {!editingPage && (
-                  <Field label="ID (unique, sans espaces)" value={formData.id} onChange={(e) => setFormData(f => ({ ...f, id: e.target.value.toLowerCase().replace(/\s+/g, "-") }))} required />
-                )}
-                <Field label="Nom affiché" value={formData.name} onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))} required />
-                <Field label="Chemin (route)" value={formData.path} onChange={(e) => setFormData(f => ({ ...f, path: e.target.value }))} placeholder="/ma-page" required />
-                <Field label="Description" type="textarea" value={formData.description} onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))} rows={3} />
-                <Field label="Icône (nom Lucide)" value={formData.icon} onChange={(e) => setFormData(f => ({ ...f, icon: e.target.value }))} placeholder="FileText" />
-              </div>
-              <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 24 }}>
-                <Button type="button" variant="ghost" onClick={closeModal}>Annuler</Button>
-                <Button type="submit"><Save size={14} /> {editingPage ? "Sauvegarder" : "Créer"}</Button>
-              </div>
-            </form>
+      <Modal
+        open={showModal}
+        onClose={closeModal}
+        title={editingPage ? "Modifier la page" : "Nouvelle page"}
+        maxWidth={560}
+      >
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-1">
+            {!editingPage && (
+              <Field label="ID (unique, sans espaces)" value={formData.id} onChange={(e) => setFormData(f => ({ ...f, id: e.target.value.toLowerCase().replace(/\s+/g, "-") }))} required />
+            )}
+            <Field label="Nom affiché" value={formData.name} onChange={(e) => setFormData(f => ({ ...f, name: e.target.value }))} required />
+            <Field label="Chemin (route)" value={formData.path} onChange={(e) => setFormData(f => ({ ...f, path: e.target.value }))} placeholder="/ma-page" required />
+            <Field label="Description" type="textarea" value={formData.description} onChange={(e) => setFormData(f => ({ ...f, description: e.target.value }))} rows={3} />
+            <Field label="Icône (nom Lucide)" value={formData.icon} onChange={(e) => setFormData(f => ({ ...f, icon: e.target.value }))} placeholder="FileText" />
           </div>
-        </div>
-      )}
+          <div className="mt-6 flex justify-end gap-3">
+            <Button type="button" variant="ghost" onClick={closeModal}>Annuler</Button>
+            <Button type="submit"><Save size={14} /> {editingPage ? "Sauvegarder" : "Créer"}</Button>
+          </div>
+        </form>
+      </Modal>
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onCancel={() => setDeleteTarget(null)}
+        onConfirm={confirmDelete}
+        loading={deleteBusy}
+        title="Supprimer la page"
+        description={deleteTarget ? `Supprimer la page « ${deleteTarget.name} » ? Cette action est irréversible.` : ""}
+        confirmLabel="Supprimer"
+        danger
+      />
     </div>
   );
 }

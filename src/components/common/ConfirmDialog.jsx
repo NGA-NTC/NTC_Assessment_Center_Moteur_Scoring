@@ -15,8 +15,8 @@ export default function ConfirmDialog({
 }) {
   return (
     <Modal open={open} onClose={loading ? undefined : onCancel} title={title} maxWidth={maxWidth}>
-      <div style={{ fontSize: 13.5, lineHeight: 1.6, color: "#5c594d" }}>{description}</div>
-      <div style={{ display: "flex", gap: 12, justifyContent: "flex-end", marginTop: 24 }}>
+      <div className="text-[13.5px] leading-[1.6] text-[#5c594d]">{description}</div>
+      <div className="mt-6 flex justify-end gap-3">
         <Button type="button" variant="ghost" onClick={onCancel} disabled={loading}>
           {cancelLabel}
         </Button>

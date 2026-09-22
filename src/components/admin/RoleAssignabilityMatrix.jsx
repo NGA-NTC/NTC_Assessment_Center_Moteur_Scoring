@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Loader2, Save, AlertCircle, CheckCircle2, Shield, Network } from "lucide-react";
+import { Save, AlertCircle, Shield, Network } from "lucide-react";
 import Card from "../ui/Card.jsx";
 import Button from "../ui/Button.jsx";
+import Alert from "../ui/Alert.jsx";
+import { EmptyState, LoadingState } from "../ui/States.jsx";
 import { listRoles } from "../../services/rbac/roles/listRoles.js";
 import { listRoleAssignability, setRoleAssignability } from "../../services/rbac/roleAssignability/index.js";
 import { useEffectiveAuthority } from "../../hooks/auth/useEffectiveAuthority.js";
-import { NAVY, MUTED, LINE, CREAM, INK, GOLD } from "../../lib/theme.js";
 
 const edgeKey = (assigner, assignable) => `${assigner}|${assignable}`;
 
@@ -124,11 +125,15 @@ export default function RoleAssignabilityMatrix() {
 
   if (!canDelegate) {
     return (
-      <Card style={{ padding: "20px 24px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Network size={20} color={MUTED} />
-          <span style={{ fontSize: 14, color: MUTED }}>
-            Assignabilité des rôles — requiert la capacité DELEGATE sur <code>rbac.role_assignability</code>.
+      <Card className="p-5">
+        <div className="flex items-start gap-2.5 text-[14px] text-muted-foreground">
+          <Network size={20} className="mt-0.5 shrink-0" />
+          <span>
+            Assignabilité des rôles — requiert la capacité DELEGATE sur{" "}
+            <code className="rounded-sm border border-border bg-muted px-1 py-0.5 font-mono text-[12px]">
+              rbac.role_assignability
+            </code>
+            .
           </span>
         </div>
       </Card>
@@ -136,60 +141,44 @@ export default function RoleAssignabilityMatrix() {
   }
 
   return (
-    <Card style={{ padding: 0, overflow: "hidden" }}>
-      <div style={{ padding: "20px 24px", borderBottom: `1px solid ${LINE}`, background: CREAM, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <Network size={22} color={GOLD} />
+    <Card className="overflow-hidden">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-cream px-6 py-5">
+        <div className="flex items-center gap-3">
+          <Network size={22} className="shrink-0 text-gold" />
           <div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: INK }}>Assignabilité des rôles</div>
-            <div style={{ fontSize: 12.5, color: MUTED, marginTop: 2 }}>
+            <div className="text-[16px] font-semibold text-foreground">Assignabilité des rôles</div>
+            <div className="mt-0.5 max-w-[620px] text-[12.5px] text-muted-foreground">
               Un rôle « assigneur » peut-il être attribué aux utilisateurs ? Les cellules se configurent indépendamment par rôle.
             </div>
           </div>
         </div>
-        <Shield size={20} color={GOLD} />
+        <Shield size={20} className="shrink-0 text-gold" />
       </div>
 
       {message && (
-        <div style={{ margin: "16px 24px 0", padding: "12px 16px", borderRadius: 8, display: "flex", alignItems: "center", gap: 8, background: message.type === "success" ? "#E3F0E4" : "#FAE8E6", color: message.type === "success" ? "#2E6B3C" : "#8A2B22", fontSize: 13 }}>
-          {message.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-          <span>{message.text}</span>
-        </div>
+        <Alert type={message.type === "success" ? "success" : "error"} className="mx-6 mt-4">
+          {message.text}
+        </Alert>
       )}
 
-      <div style={{ padding: "20px 24px" }}>
+      <div className="p-6">
         {loading ? (
-          <div style={{ padding: "40px", textAlign: "center", color: MUTED }}>
-            <Loader2 size={24} className="spin" style={{ animation: "spin 1s linear infinite", margin: "0 auto 8px" }} /> Chargement…
-          </div>
+          <LoadingState minHeight={160} />
         ) : roles.length === 0 ? (
-          <div style={{ textAlign: "center", color: MUTED, padding: "40px" }}>
-            <AlertCircle size={32} style={{ marginBottom: 12, opacity: 0.3 }} />
-            <p style={{ margin: 0 }}>Aucun rôle défini dans le système.</p>
-          </div>
+          <EmptyState icon={AlertCircle} title="Aucun rôle défini" description="Aucun rôle n'est configuré dans le système." />
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ borderCollapse: "separate", borderSpacing: 0, width: "100%", minWidth: 480 }}>
+          <div className="overflow-x-auto">
+            <table className="w-full border-separate border-spacing-0" style={{ minWidth: 480 }}>
               <thead>
                 <tr>
-                  <th
-                    style={{
-                      textAlign: "left", padding: "10px 12px", fontSize: 11, fontWeight: 700,
-                      textTransform: "uppercase", letterSpacing: 0.5, color: MUTED,
-                      borderBottom: `1px solid ${LINE}`, minWidth: 180, background: "#FDFCF9",
-                    }}
-                  >
+                  <th className="min-w-[180px] border-b border-border bg-line-soft px-3 py-2.5 text-left align-middle text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase">
                     Rôle assigné à un utilisateur
                   </th>
                   {roles.map((b) => (
                     <th
                       key={b.id}
                       title={b.id}
-                      style={{
-                        textAlign: "center", padding: "10px 6px", fontSize: 12, fontWeight: 700, color: NAVY,
-                        borderBottom: `1px solid ${LINE}`, whiteSpace: "nowrap", overflow: "hidden",
-                        textOverflow: "ellipsis", maxWidth: 120, background: "#FDFCF9",
-                      }}
+                      className="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap border-b border-border bg-line-soft px-1.5 py-2.5 text-center align-middle text-[12px] font-bold text-navy"
                     >
                       {b.name}
                     </th>
@@ -199,23 +188,37 @@ export default function RoleAssignabilityMatrix() {
               <tbody>
                 {roles.map((a) => (
                   <tr key={a.id}>
-                    <td style={{ padding: "8px 12px", fontSize: 13, fontWeight: 500, color: INK, borderBottom: `1px solid ${LINE}`, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 220 }} title={a.id}>
+                    <td
+                      className="max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap border-b border-border px-3 py-2 text-[13px] font-medium text-foreground"
+                      title={a.id}
+                    >
                       {a.name}
                     </td>
                     {roles.map((b) => {
                       const isSelf = a.id === b.id;
                       const checked = edges.has(edgeKey(a.id, b.id));
                       return (
-                        <td key={b.id} style={{ textAlign: "center", padding: "8px 6px", borderBottom: `1px solid ${LINE}`, background: isSelf ? "#F6F5F1" : "#fff" }}>
+                        <td
+                          key={b.id}
+                          className={
+                            "border-b border-border px-1.5 py-2 text-center align-middle " +
+                            (isSelf ? "bg-neutral-soft" : "bg-surface")
+                          }
+                        >
                           {isSelf ? (
-                            <span style={{ color: MUTED, fontSize: 12 }} title="Un rôle ne peut pas s'assigner lui-même">—</span>
+                            <span
+                              className="text-[12px] text-muted-foreground"
+                              title="Un rôle ne peut pas s'assigner lui-même"
+                            >
+                              —
+                            </span>
                           ) : (
                             <input
                               type="checkbox"
                               checked={checked}
                               onChange={() => toggle(a.id, b.id)}
                               title={`${a.name} peut être attribué : ${checked ? "oui" : "non"}`}
-                              style={{ width: 16, height: 16, accentColor: GOLD, cursor: "pointer" }}
+                              className="h-4 w-4 cursor-pointer accent-gold"
                             />
                           )}
                         </td>
@@ -229,13 +232,13 @@ export default function RoleAssignabilityMatrix() {
         )}
       </div>
 
-      <div style={{ padding: "16px 24px", borderTop: `1px solid ${LINE}`, background: CREAM, display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border bg-cream px-6 py-4">
         {dirtyCount > 0 ? (
-          <span style={{ fontSize: 12, color: NAVY, fontWeight: 600 }}>
+          <span className="text-[12px] font-semibold text-navy">
             {dirtyCount} modification(s) en attente
           </span>
         ) : (
-          <span style={{ fontSize: 12, color: MUTED }}>Aucune modification en attente</span>
+          <span className="text-[12px] text-muted-foreground">Aucune modification en attente</span>
         )}
         <Button variant="ghost" size="sm" onClick={reset} disabled={saving || !hasChanges}>
           Annuler

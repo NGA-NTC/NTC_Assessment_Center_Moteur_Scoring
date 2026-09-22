@@ -1,26 +1,24 @@
-import { colors, radius, shadows } from "../../lib/theme.js";
+import { cn } from "@/lib/utils";
 
-export default function Card({ children, onClick, style, variant = "default", ...props }) {
-  const baseStyle = {
-    background: variant === "flat" ? colors.background : colors.surface,
-    border: `1px solid ${colors.border}`,
-    borderRadius: radius.xl,
-    boxShadow: variant === "flat" ? "none" : shadows.card,
-    ...style,
-  };
+export default function Card({ children, onClick, style, variant = "default", className, ...props }) {
+  const base = cn(
+    "rounded-xl border border-border",
+    variant === "flat" ? "bg-background shadow-none" : "bg-surface shadow-card",
+    onClick && "ntc-card-interactive",
+    className
+  );
 
   if (onClick) {
     return (
-      <div
-        {...props}
-        onClick={onClick}
-        className="ntc-card-interactive"
-        style={baseStyle}
-      >
+      <div {...props} onClick={onClick} className={base} style={style}>
         {children}
       </div>
     );
   }
 
-  return <div {...props} style={baseStyle}>{children}</div>;
+  return (
+    <div {...props} className={base} style={style}>
+      {children}
+    </div>
+  );
 }

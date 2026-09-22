@@ -1,4 +1,6 @@
-import { NAVY, INK, colors, radius, controls, type as typo } from "../../lib/theme.js";
+import { ChevronDown } from "lucide-react";
+import { Textarea } from "./Textarea.jsx";
+import { cn } from "@/lib/utils";
 
 export default function Field({
   label,
@@ -15,64 +17,59 @@ export default function Field({
 }) {
   const isSelect = type === "select";
   const isTextarea = type === "textarea" || multiline;
-  const borderColor = error ? colors.destructive : colors.border;
-  const baseStyle = {
-    width: "100%",
-    padding: "11px 12px",
-    paddingLeft: icon ? 38 : undefined,
-    ...(right ? { paddingRight: 34 } : {}),
-    border: `1px solid ${borderColor}`,
-    borderRadius: radius.sm,
-    fontSize: typo.fontSize.md,
-    fontFamily: typo.fontFamily.sans,
-    color: INK,
-    background: colors.surface,
-    outline: "none",
-    transition: "border-color .15s",
-    ...style,
-  };
+
+  const controlCls = cn(
+    "w-full rounded-sm border bg-surface px-3 font-sans text-sm text-ink outline-none transition-[border-color]",
+    error ? "border-destructive" : "border-border",
+    icon && "pl-10",
+    isTextarea ? "min-h-9 resize-y p-3" : "h-11 py-0",
+    !right && !isSelect && "pr-3",
+    right && "pr-9"
+  );
 
   const labelNode = label ? (
-    <span style={{ display: "block", fontSize: typo.size.label, fontWeight: typo.fontWeight.semibold, color: NAVY, marginBottom: 6 }}>
-      {label}
-    </span>
+    <span className="mb-1.5 block font-sans text-xs font-semibold text-navy">{label}</span>
   ) : null;
 
   return (
-    <div style={{ marginBottom: controls.spaceY }}>
+    <div className="mb-4">
       {!isSelect && labelNode}
-      <div style={{ position: "relative" }}>
-        {icon && <span style={{ position: "absolute", left: 12, top: 12, display: "flex", alignItems: "center", pointerEvents: "none" }}>{icon}</span>}
+      <div className="relative">
+        {icon && (
+          <span className="pointer-events-none absolute top-1/2 left-3 flex -translate-y-1/2 items-center">
+            {icon}
+          </span>
+        )}
         {isSelect ? (
           <div>
             {labelNode}
             <select
               {...inputProps}
-              style={{
-                ...baseStyle,
-                minHeight: controls.height,
-                appearance: "none",
-                WebkitAppearance: "none",
-                backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%238A8578' d='M6 8 0 0h12z'/%3E%3C/svg%3E\")",
-                backgroundRepeat: "no-repeat",
-                backgroundPosition: "right 14px center",
-                paddingRight: 34,
-              }}
+              className={cn(controlCls, "cursor-pointer appearance-none")}
+              style={style}
             >
               {children}
             </select>
+            {!right && (
+              <ChevronDown
+                size={14}
+                className="text-muted pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
+              />
+            )}
           </div>
         ) : isTextarea ? (
-          <textarea {...inputProps} rows={rows} style={{ ...baseStyle, resize: "vertical", minHeight: controls.heightSm }} />
+          <Textarea {...inputProps} rows={rows} className={controlCls} style={style} />
         ) : (
-          <input type={type} {...inputProps} style={baseStyle} />
+          <input type={type} {...inputProps} className={controlCls} style={style} />
         )}
-        {right && <span style={{ position: "absolute", right: 8, top: 12, display: "flex", alignItems: "center" }}>{right}</span>}
+        {right && (
+          <span className="absolute top-1/2 right-2 flex -translate-y-1/2 items-center">{right}</span>
+        )}
       </div>
       {error ? (
-        <span style={{ display: "block", marginTop: 5, fontSize: 12, color: colors.destructive }}>{error}</span>
+        <span className="mt-[5px] block text-xs text-destructive">{error}</span>
       ) : hint ? (
-        <span style={{ display: "block", marginTop: 5, fontSize: 12, color: colors.mutedForeground }}>{hint}</span>
+        <span className="mt-[5px] block text-xs text-muted-foreground">{hint}</span>
       ) : null}
     </div>
   );

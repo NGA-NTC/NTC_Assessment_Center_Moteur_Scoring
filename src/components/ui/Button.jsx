@@ -1,19 +1,26 @@
 import { Loader2 } from "lucide-react";
-import { NAVY, colors, radius, type, controls } from "../../lib/theme.js";
+import { Button as BaseButton } from "./primitives/button.jsx";
+import { cn } from "@/lib/utils";
 
-const variants = {
-  primary: { background: colors.primary, color: "#fff" },
-  gold: { background: colors.secondary, color: NAVY },
-  ghost: { background: "transparent", color: NAVY, border: `1px solid ${colors.border}` },
-  outline: { background: "rgba(255,255,255,0.05)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" },
-  danger: { background: colors.destructive, color: "#fff" },
-  outlineDark: { background: "#fff", color: NAVY, border: `1px solid ${colors.border}` },
+const VARIANT_MAP = {
+  primary: "default",
+  gold: "secondary",
+  ghost: "ghost",
+  outline: "outlineSidebar",
+  danger: "destructive",
+  outlineDark: "outlineDark",
 };
 
-const sizes = {
-  sm: { padding: "9px 14px", fontSize: type.fontSize.smMd, height: controls.heightSm },
-  md: { padding: "10px 18px", fontSize: type.fontSize.baseMd, height: controls.height },
-  lg: { padding: "12px 18px", fontSize: type.fontSize.md, height: controls.heightLg },
+const SIZE_MAP = {
+  sm: "sm",
+  md: "default",
+  lg: "lg",
+};
+
+const FONT_SIZES = {
+  sm: "text-[12.5px]",
+  md: "text-[13.5px]",
+  lg: "text-sm",
 };
 
 export default function Button({
@@ -27,35 +34,19 @@ export default function Button({
   disabled,
   ...props
 }) {
-  const pad = sizes[size];
-  const isBusy = loading || disabled;
   return (
-    <button
+    <BaseButton
       {...props}
       data-variant={variant}
-      className={className ? `button ${className}` : "button"}
-      disabled={isBusy}
-      style={{
-        display: "inline-flex",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 8,
-        minHeight: pad.height,
-        width: full ? "100%" : "auto",
-        padding: pad.padding,
-        borderRadius: radius.sm,
-        fontSize: pad.fontSize,
-        fontWeight: type.fontWeight.semibold,
-        fontFamily: type.fontFamily.sans,
-        border: "none",
-        cursor: isBusy ? "not-allowed" : "pointer",
-        opacity: isBusy && !loading ? 0.5 : 1,
-        ...variants[variant],
-        ...style,
-      }}
+      variant={VARIANT_MAP[variant] ?? "default"}
+      size={SIZE_MAP[size] ?? "default"}
+      disabled={loading || disabled}
+      aria-busy={loading || undefined}
+      className={cn("font-sans", full && "w-full", FONT_SIZES[size] ?? "text-[13.5px]", className)}
+      style={style}
     >
-      {loading && <Loader2 size={size === "sm" ? 14 : 16} className="ntc-spin" />}
+      {loading && <Loader2 className={cn("ntc-spin", size === "sm" ? "size-3.5" : "size-4")} />}
       {children}
-    </button>
+    </BaseButton>
   );
 }

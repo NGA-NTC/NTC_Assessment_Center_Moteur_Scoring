@@ -1,25 +1,113 @@
-@import "./styles/tokens.css";
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./styles/tokens.css";
 
-:root {
-  --navy: #1B2A4A;
-  --gold: #B8862B;
-  --gold2: #D9A94A;
-  --cream: #F7F4EC;
-  --ink: #2A2A28;
-  --muted: #8A8578;
-  --line: #E4DFD0;
+@custom-variant dark (&:is(.dark *));
 
-  font-family: 'IBM Plex Sans', system-ui, sans-serif;
-  color-scheme: light;
-  color: var(--ink);
-  background: var(--cream);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ===========================================================================
+   FONDATION UI — Couche sémantique.
+   Les tokens canoniques (--background, --foreground, …) sont définis dans
+   ./styles/tokens.css (source unique). Ici : exposition Tailwind + base.
+   =========================================================================== */
+
+/* ---- Breakpoints & utilitaires non-couleur ---- */
+@theme {
+  --breakpoint-sm: 480px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+
+  --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --font-serif: 'Fraunces', serif;
+
+  --shadow-card: var(--ntc-shadow-card);
+  --shadow-menu: var(--ntc-shadow-menu);
+  --shadow-dropdown: var(--ntc-shadow-dropdown);
+  --shadow-modal: var(--ntc-shadow-modal);
+  --shadow-drawer: var(--ntc-shadow-drawer);
 }
 
+/* ---- Exposition Tailwind des tokens (résolus à l'exécution) ---- */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Aliases historiques NTC (identité neutralisée pour cette phase) */
+  --color-navy: var(--ntc-navy);
+  --color-gold: var(--ntc-gold);
+  --color-gold2: var(--ntc-gold2);
+  --color-cream: var(--ntc-cream);
+  --color-ink: var(--ntc-ink);
+  --color-line: var(--ntc-line);
+  --color-surface: var(--ntc-surface);
+  --color-navy-pale: var(--ntc-navy-pale);
+  --color-navy-pale-2: var(--ntc-navy-pale-2);
+  --color-navy-soft: var(--ntc-navy-soft);
+  --color-success: var(--ntc-success);
+  --color-success-soft: var(--ntc-success-soft);
+  --color-warning: var(--ntc-warning);
+  --color-warning-soft: var(--ntc-warning-soft);
+  --color-warning-deep: var(--ntc-warning-deep);
+  --color-warning-strong: var(--ntc-warning-strong);
+  --color-warning-soft-alt: var(--ntc-warning-soft-alt);
+  --color-warning-border: var(--ntc-warning-border);
+  --color-destructive-soft: var(--ntc-destructive-soft);
+  --color-destructive-strong: var(--ntc-destructive-strong);
+  --color-destructive-border: var(--ntc-destructive-border);
+  --color-info: var(--ntc-info);
+  --color-info-soft: var(--ntc-info-soft);
+  --color-success-border: var(--ntc-success-border);
+  --color-navy-soft-border: var(--ntc-navy-soft-border);
+  --color-system-soft: var(--ntc-system-soft);
+  --color-neutral-soft-3: var(--ntc-neutral-soft-3);
+  --color-line-soft: var(--ntc-line-soft);
+
+  --font-sans: var(--ntc-font-sans);
+  --font-serif: var(--ntc-font-serif);
+
+  --radius-xs: var(--radius-sm);
+  --radius-sm: var(--radius-sm);
+  --radius-md: var(--radius-md);
+  --radius-lg: var(--radius-lg);
+  --radius-xl: var(--radius-xl);
+  --radius-2xl: var(--radius-2xl);
+  --radius-full: var(--radius-full);
+}
+
+/* ================= Base ================= */
 * {
   box-sizing: border-box;
 }
@@ -36,9 +124,15 @@ html {
 
 body {
   margin: 0;
-  background: var(--cream);
+  font-family: var(--ntc-font-sans);
+  color: var(--foreground);
+  background: var(--background);
   max-width: 100%;
   overflow-x: hidden;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
@@ -51,49 +145,15 @@ svg {
   max-width: 100%;
 }
 
-/* ---- Sidebar desktop : fixe, pleine hauteur, à gauche ---- */
-.app-shell__sidebar {
-  position: sticky;
-  top: 0;
-  align-self: flex-start;
-  height: 100svh;
-  flex-shrink: 0;
-}
-
-.app-sidebar-desktop {
-  height: 100%;
-}
-
-.app-sidebar-desktop .app-sidebar {
-  height: 100%;
-}
-
-.app-sidebar__brand {
-  transition: background 0.15s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.app-sidebar__brand:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.app-sidebar nav button:not(:disabled):hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-/* ---- Tiroirs / topbar mobile (masqués sur desktop) ---- */
-.app-mobile-topbar,
-.app-sidebar-backdrop,
-.app-sidebar-drawer {
-  display: none;
-}
-
-textarea:focus,
-input:focus,
-select:focus,
-button:focus-visible {
-  outline: 2px solid var(--gold);
-  outline-offset: 1px;
+/* ---- Focus visible standard (anneau shadcn, vérifiable clavier) ---- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 ::-webkit-scrollbar {
@@ -101,94 +161,15 @@ button:focus-visible {
   height: 8px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #C9C2AC;
+  background: var(--border);
   border-radius: 4px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 
-/* ================= Tablette / mobile (<= 1024) ================= */
+/* ================= Responsive par page ================= */
 @media (max-width: 1024px) {
-  .app-shell {
-    flex-direction: column;
-  }
-
-  .app-shell__sidebar {
-    position: static;
-    height: auto;
-    width: 100%;
-  }
-
-  /* Super-admin : sidebar passe au-dessus du contenu */
-  .super-admin-shell {
-    flex-direction: column;
-  }
-
-  .super-admin-shell__sidebar {
-    position: static;
-    height: auto;
-    width: 100%;
-  }
-
-  .super-admin-shell__sidebar .app-sidebar {
-    width: 100%;
-    max-width: none;
-    height: auto;
-    flex-direction: column;
-  }
-
-  /* Navigation → barre horizontale scrollable (nav générique uniquement) */
-  .app-shell__sidebar .app-sidebar > nav,
-  .super-admin-shell__sidebar .app-sidebar > nav {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    overflow-x: auto;
-    padding: 8px 10px;
-    flex: none;
-    scrollbar-width: thin;
-  }
-
-  .app-shell__sidebar .app-sidebar > nav > div,
-  .super-admin-shell__sidebar .app-sidebar > nav > div {
-    display: contents;
-  }
-
-  .app-shell__sidebar .app-sidebar > nav > div > div,
-  .super-admin-shell__sidebar .app-sidebar > nav > div > div {
-    font-size: 10px;
-    color: var(--ntc-navy-pale);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    padding: 0 6px;
-    white-space: nowrap;
-  }
-
-  .app-shell__sidebar .app-sidebar > nav button,
-  .super-admin-shell__sidebar .app-sidebar > nav button {
-    width: auto !important;
-    white-space: nowrap;
-    margin: 0;
-    padding: 8px 10px !important;
-  }
-
-  .app-shell__sidebar .app-sidebar__brand,
-  .super-admin-shell__sidebar .app-sidebar__brand {
-    display: none;
-  }
-
-  .app-shell__sidebar .app-sidebar > div:last-child,
-  .super-admin-shell__sidebar .app-sidebar > div:last-child {
-    padding: 6px 10px;
-  }
-
-  .app-shell__content,
-  .super-admin-shell__content {
-    padding: 22px 18px !important;
-    width: 100%;
-  }
-
   .admin-toolbar__actions {
     margin-left: 0 !important;
   }
@@ -197,108 +178,9 @@ button:focus-visible {
     flex-wrap: wrap;
     align-items: flex-start !important;
   }
-
-  /* ---- Sidebar passe en tiroir (admin + candidat) ---- */
-  .app-sidebar-desktop {
-    display: none;
-  }
-
-  .app-mobile-topbar {
-    display: flex;
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    background: var(--cream);
-    margin-bottom: 12px;
-    padding-top: env(safe-area-inset-top);
-  }
-
-  .app-mobile-sidebar-toggle {
-    min-height: 44px;
-    border: 1px solid var(--line);
-    border-radius: 10px;
-    background: #fff;
-    color: var(--navy);
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 14px;
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .app-sidebar-backdrop {
-    position: fixed;
-    inset: 0;
-    border: none;
-    background: rgba(13, 20, 36, 0.5);
-    cursor: pointer;
-    z-index: 120;
-    display: block;
-  }
-
-  .app-sidebar-drawer {
-    position: fixed;
-    top: 0;
-    left: 0;
-    height: 100svh;
-    width: min(86vw, 320px);
-    max-width: 100%;
-    z-index: 130;
-    background: var(--navy);
-    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.35);
-    display: flex;
-    flex-direction: column;
-    padding-bottom: env(safe-area-inset-bottom);
-    transform: translateX(-100%);
-    animation: sidebar-slide-in 0.18s ease-out forwards;
-  }
-
-  @keyframes sidebar-slide-in {
-    to {
-      transform: translateX(0);
-    }
-  }
-
-  .app-sidebar-drawer__header {
-    display: flex;
-    justify-content: flex-end;
-    padding: 10px 10px 0;
-    background: var(--navy);
-  }
-
-  .app-sidebar-drawer__close {
-    min-height: 44px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: 9px;
-    background: transparent;
-    color: #fff;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 12.5px;
-    font-weight: 600;
-  }
-
-  .app-sidebar-drawer .app-sidebar {
-    max-width: none !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
 }
 
-/* ================= Mobile (<= 768) ================= */
 @media (max-width: 768px) {
-  .app-shell__content,
-  .super-admin-shell__content {
-    padding: 16px 14px !important;
-  }
-
   .admin-toolbar > * {
     width: 100%;
   }
@@ -370,17 +252,7 @@ button:focus-visible {
   }
 }
 
-/* ================= Petits écrans (<= 480) ================= */
 @media (max-width: 480px) {
-  .app-shell__content,
-  .super-admin-shell__content {
-    padding: 14px 10px !important;
-  }
-
-  .app-mobile-topbar {
-    margin-bottom: 10px;
-  }
-
   .candidate-header-subtitle {
     font-size: 12px;
   }

@@ -1,40 +1,92 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, LogOut } from "lucide-react";
 import { BATTERIES } from "../../data/index.js";
 import { progress } from "../../lib/scoring.js";
-import { GOLD2, NAVY, SERIF } from "../../lib/theme.js";
 import ProgressCircle from "../ui/ProgressCircle.jsx";
-import SidebarFooter from "./SidebarFooter.jsx";
+import Button from "../ui/Button.jsx";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+} from "../ui/Sidebar.jsx";
+import { useSidebar } from "../ui/primitives/sidebar-context.js";
+import { cn } from "@/lib/utils";
 
-export default function Sidebar({ active, setActive, responses, userEmail, onLogout, onHome }) {
+export default function BatterySidebar({ active, setActive, responses, userEmail, onLogout, onHome }) {
+  const { setOpenMobile } = useSidebar();
+
+  const select = (id) => {
+    setActive(id);
+    setOpenMobile(false);
+  };
+
   return (
-    <div className="app-sidebar" style={{ width: "100%", maxWidth: 260, flexShrink: 0, background: NAVY, color: "#fff", display: "flex", flexDirection: "column", height: "100%", minWidth: 0 }}>
-      <button type="button" onClick={onHome} className="app-sidebar__brand" style={{
-        width: "100%", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", color: "inherit",
-        fontFamily: "inherit", padding: "22px 20px 16px", borderBottom: "1px solid rgba(255,255,255,0.12)",
-      }}>
-        <div style={{ fontFamily: SERIF, fontSize: 19, fontWeight: 600, letterSpacing: 0.2 }}>NTC Assessment</div>
-        <div style={{ fontSize: 11, color: "#B8C0D4", marginTop: 2, letterSpacing: 0.5, textTransform: "uppercase" }}>Évaluation</div>
-        <div style={{ fontSize: 12, color: GOLD2, marginTop: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{userEmail}</div>
-      </button>
-      <nav style={{ flex: 1, overflowY: "auto", padding: "12px 12px" }}>
-        {BATTERIES.map((b) => {
-          const p = progress(b, responses);
-          const isActive = active === b.id;
-          return (
-            <button key={b.id} onClick={() => setActive(b.id)}
-              style={{ width: "100%", display: "flex", alignItems: "center", gap: 11, padding: "9px 10px", marginBottom: 3, borderRadius: 8, border: "none", cursor: "pointer", textAlign: "left", background: isActive ? "rgba(255,255,255,0.12)" : "transparent", transition: "background .15s" }}>
-              <ProgressCircle done={p.answered} total={p.total}>
-                {p.answered === p.total && p.total > 0 && <CheckCircle2 size={14} color={GOLD2} />}
-              </ProgressCircle>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 13, fontWeight: isActive ? 600 : 500, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>B{b.id} · {b.name}</div>
-                <div style={{ fontSize: 11, color: "#9AA6C0" }}>{p.answered}/{p.total}</div>
-              </div>
-            </button>
-          );
-        })}
-      </nav>
-      <SidebarFooter onLogout={onLogout} />
-    </div>
+    <Sidebar collapsible="offcanvas">
+      <SidebarHeader>
+        <button
+          type="button"
+          onClick={onHome}
+          className="flex w-full cursor-pointer items-center gap-2 rounded-md border-none bg-transparent px-2 py-2 text-left text-sidebar-foreground transition-colors hover:bg-sidebar-accent"
+        >
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-sidebar-accent text-sidebar-accent-foreground">
+            <span className="font-serif text-[15px] font-bold">N</span>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate font-serif text-[15px] leading-tight font-semibold">
+              NTC Assessment
+            </span>
+            <span className="block text-[10.5px] font-medium uppercase tracking-[0.5px] text-muted-foreground">
+              Évaluation
+            </span>
+          </span>
+        </button>
+        {userEmail && (
+          <div className="truncate px-2 text-[12px] text-muted-foreground">{userEmail}</div>
+        )}
+      </SidebarHeader>
+
+      <SidebarContent>
+        <SidebarMenu>
+          {BATTERIES.map((b) => {
+            const p = progress(b, responses);
+            const isActive = active === b.id;
+            return (
+              <SidebarMenuItem key={b.id}>
+                <button
+                  type="button"
+                  aria-current={isActive ? "page" : undefined}
+                  onClick={() => select(b.id)}
+                  className={cn(
+                    "flex w-full cursor-pointer items-center gap-2.5 rounded-md border-none px-2 py-2 text-left text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
+                    isActive && "bg-sidebar-accent font-medium text-sidebar-accent-foreground"
+                  )}
+                >
+                  <ProgressCircle done={p.answered} total={p.total}>
+                    {p.answered === p.total && p.total > 0 && <CheckCircle2 size={14} className="text-success" />}
+                  </ProgressCircle>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13px]">
+                      B{b.id} · {b.name}
+                    </span>
+                    <span className="block text-[11px] text-muted-foreground">
+                      {p.answered}/{p.total}
+                    </span>
+                  </span>
+                </button>
+              </SidebarMenuItem>
+            );
+          })}
+        </SidebarMenu>
+      </SidebarContent>
+
+      <SidebarFooter>
+        <Button variant="outline" size="sm" full onClick={onLogout}>
+          <LogOut size={14} />
+          <span>Déconnexion</span>
+        </Button>
+      </SidebarFooter>
+    </Sidebar>
   );
 }

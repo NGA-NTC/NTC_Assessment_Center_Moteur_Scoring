@@ -5,7 +5,7 @@ import { getSuperAdminStats } from "../services/dashboard/index.js";
 import { listAccounts, listImported, listHiddenStaticFiles } from "../lib/storage.js";
 import { listImportedResults } from "../lib/imported.js";
 import { buildCandidates } from "../lib/candidates.js";
-import { NAVY, colors, radius, type } from "../lib/theme.js";
+import { NAVY, colors } from "../lib/theme.js";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Card from "../components/ui/Card.jsx";
 import Avatar from "../components/ui/Avatar.jsx";
@@ -34,28 +34,21 @@ function QuickAction({ label, description, icon: Icon, color, path }) {
   return (
     <div
       onClick={() => { window.location.href = path; }}
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 14,
-        padding: "14px 16px",
-        borderRadius: radius.lg,
-        border: `1px solid ${colors.border}`,
-        background: colors.surface,
-        cursor: "pointer",
-        transition: "transform .15s, box-shadow .15s, border-color .15s",
-      }}
+      className="flex w-full cursor-pointer items-center gap-3.5 border border-border bg-surface p-4 transition-[border-color,box-shadow,transform] duration-150"
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; }}
-      onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; }}
+      onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
     >
-      <div style={{ width: 44, height: 44, borderRadius: radius.lg, background: `${color}15`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+      <div
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
+        style={{ background: `${color}15` }}
+      >
         <Icon size={20} color={color} />
       </div>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: type.fontSize.lg, fontWeight: type.fontWeight.semibold, color: colors.foreground }}>{label}</div>
-        <div style={{ fontSize: type.fontSize.smMd, color: colors.mutedForeground, marginTop: 2 }}>{description}</div>
+      <div className="min-w-0 flex-1">
+        <div className="text-[15px] font-semibold text-foreground">{label}</div>
+        <div className="mt-0.5 text-[12.5px] text-muted-foreground">{description}</div>
       </div>
-      <ChevronRight size={18} color={colors.mutedForeground} />
+      <ChevronRight size={18} className="shrink-0 text-muted-foreground" />
     </div>
   );
 }
@@ -68,12 +61,12 @@ function getRoleDisplayName(roles) {
 
 function CardSection({ title, action, children }) {
   return (
-    <Card style={{ padding: 0, overflow: "hidden" }}>
-      <div style={{ padding: "18px 24px", borderBottom: `1px solid ${colors.border}`, background: colors.cream, display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
-        <div style={{ fontSize: type.fontSize.xl, fontWeight: type.fontWeight.semibold, color: colors.foreground }}>{title}</div>
+    <Card className="overflow-hidden">
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-cream px-6 py-[18px]">
+        <div className="font-serif text-[16px] font-semibold text-foreground">{title}</div>
         {action}
       </div>
-      <div style={{ padding: "16px 24px" }}>{children}</div>
+      <div className="p-6">{children}</div>
     </Card>
   );
 }
@@ -121,7 +114,7 @@ export default function SuperAdminDashboard() {
         subtitle={`${displayName} · ${roleDisplayName}`}
       />
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 16, marginBottom: 28 }}>
+      <div className="mb-7 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
         {STAT_CARDS.map((item) => (
           <StatCard
             key={item.key}
@@ -134,9 +127,9 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(380px, 1fr))", gap: 20 }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-5">
         <CardSection title="Accès rapides">
-          <div style={{ display: "grid", gap: 10 }}>
+          <div className="grid gap-2.5">
             {QUICK_ACTIONS.map((item) => (
               <QuickAction key={item.path} {...item} />
             ))}
@@ -145,41 +138,33 @@ export default function SuperAdminDashboard() {
 
         <CardSection
           title="Activité récente"
-          action={<Activity size={16} color={colors.mutedForeground} />}
+          action={<Activity size={16} className="text-muted-foreground" />}
         >
           {loading ? (
             <LoadingState minHeight={200} label="Chargement de l'activité…" />
           ) : recentActivity.length === 0 ? (
             <EmptyState title="Aucune activité récente" description="Les nouveaux comptes créer récemment apparaîtront ici." />
           ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="flex flex-col gap-2.5">
               {recentActivity.map((u) => (
                 <div
                   key={u.id}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 12,
-                    padding: "12px",
-                    background: colors.nearlyBlack,
-                    borderRadius: radius.sm,
-                    border: `1px solid ${colors.border}`,
-                  }}
+                  className="flex items-center gap-3 rounded-md border border-border bg-line-soft p-3"
                 >
                   <Avatar
                     name={`${u.first_name || ""} ${u.last_name || ""}`.trim()}
                     email={u.email}
                     size={40}
                   />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: type.fontSize.baseMd, fontWeight: type.fontWeight.semibold, color: colors.foreground, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-[13.5px] font-semibold text-foreground">
                       {[u.first_name, u.last_name].filter(Boolean).join(" ") || u.email}
                     </div>
-                    <div style={{ fontSize: type.fontSize.sm, color: colors.mutedForeground }}>
+                    <div className="text-[12px] text-muted-foreground">
                       {u.email} · {u.role_ids?.join(", ") || "Aucun rôle"} · {u.status || "Actif"}
                     </div>
                   </div>
-                  <span style={{ fontSize: type.fontSize.sm, color: colors.mutedForeground, whiteSpace: "nowrap" }}>
+                  <span className="shrink-0 whitespace-nowrap text-[12px] text-muted-foreground">
                     {u.created_at ? new Date(u.created_at).toLocaleDateString("fr-FR") : "—"}
                   </span>
                 </div>

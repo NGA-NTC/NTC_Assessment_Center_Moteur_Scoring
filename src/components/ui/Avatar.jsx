@@ -1,4 +1,4 @@
-import { colors, radius, type } from "../../lib/theme.js";
+import { cn } from "@/lib/utils";
 
 function resolveInitials(name, email) {
   const n = (name || "").trim().split(/\s+/).filter(Boolean);
@@ -14,29 +14,21 @@ export default function Avatar({
   size = 36,
   gradient = false,
   style,
+  className,
   ...props
 }) {
   const initials = initialsProp ?? resolveInitials(name, email);
-  const background = gradient ? `linear-gradient(135deg, ${colors.navy}, ${colors.gold})` : colors.navy;
   return (
     <div
       {...props}
       aria-hidden="true"
-      style={{
-        width: size,
-        height: size,
-        borderRadius: radius.circle,
-        flexShrink: 0,
-        background,
-        color: "#fff",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontWeight: type.fontWeight.bold,
-        fontSize: size >= 40 ? type.fontSize.md : type.fontSize.base,
-        userSelect: "none",
-        ...style,
-      }}
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full font-bold text-white select-none",
+        gradient ? "bg-gradient-to-br from-navy to-gold" : "bg-navy",
+        size >= 40 ? "text-sm" : "text-[13px]",
+        className
+      )}
+      style={{ width: size, height: size, ...style }}
     >
       {initials}
     </div>

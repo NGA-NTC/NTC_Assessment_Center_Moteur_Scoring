@@ -1,18 +1,12 @@
-import { colors, radius, shadows } from "../../lib/theme.js";
+import { cn } from "@/lib/utils";
 
-export default function FormCard({ children, onSubmit, style, ...props }) {
+export default function FormCard({ children, onSubmit, style, className, ...props }) {
   return (
     <form
       onSubmit={onSubmit}
       {...props}
-      style={{
-        background: colors.surface,
-        border: `1px solid ${colors.border}`,
-        borderRadius: radius.xl,
-        padding: "26px 26px 24px",
-        boxShadow: shadows.card,
-        ...style,
-      }}
+      className={cn("rounded-xl border border-border bg-surface px-[26px] pt-[26px] pb-6 shadow-card", className)}
+      style={style}
     >
       {children}
     </form>

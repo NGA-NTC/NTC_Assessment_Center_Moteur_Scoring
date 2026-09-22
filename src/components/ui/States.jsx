@@ -1,23 +1,26 @@
 import { Inbox } from "lucide-react";
 import Spinner from "./Spinner.jsx";
-import { colors, radius } from "../../lib/theme.js";
+import Button from "./Button.jsx";
 
 export function EmptyState({ icon: Icon = Inbox, title = "Aucun élément", description, action, style }) {
   return (
-    <div style={{ padding: "40px 24px", textAlign: "center", color: colors.mutedForeground, ...style }}>
-      <div style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 44, height: 44, borderRadius: radius.lg, background: colors.neutralSoft, marginBottom: 12 }}>
-        <Icon size={20} color={colors.mutedForeground} />
+    <div className="px-6 py-10 text-center text-muted-foreground" style={style}>
+      <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-lg bg-muted">
+        <Icon size={20} className="text-muted-foreground" />
       </div>
-      <div style={{ fontSize: 14, fontWeight: 600, color: colors.foreground }}>{title}</div>
-      {description && <div style={{ fontSize: 12.5, color: colors.mutedForeground, marginTop: 4, maxWidth: 420, marginInline: "auto" }}>{description}</div>}
-      {action && <div style={{ marginTop: 16 }}>{action}</div>}
+      <div className="text-sm font-semibold text-foreground">{title}</div>
+      {description && <div className="mx-auto mt-1 max-w-[420px] text-[12.5px] text-muted-foreground">{description}</div>}
+      {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }
 
 export function LoadingState({ label = "Chargement…", minHeight = 300 }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 10, minHeight, color: colors.mutedForeground, fontSize: 13 }}>
+    <div
+      className="flex flex-col items-center justify-center gap-2.5 text-[13px] text-muted-foreground"
+      style={{ minHeight }}
+    >
       <Spinner size={24} />
       <span>{label}</span>
     </div>
@@ -26,17 +29,13 @@ export function LoadingState({ label = "Chargement…", minHeight = 300 }) {
 
 export function ErrorState({ title = "Une erreur est survenue", description, onRetry, actionLabel = "Réessayer" }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 8, minHeight: 240, padding: 24, textAlign: "center" }}>
-      <div style={{ fontSize: 14, fontWeight: 600, color: colors.destructive }}>{title}</div>
-      {description && <div style={{ fontSize: 12.5, color: colors.mutedForeground, maxWidth: 420 }}>{description}</div>}
+    <div className="flex min-h-[240px] flex-col items-center justify-center gap-2 p-6 text-center">
+      <div className="text-sm font-semibold text-destructive">{title}</div>
+      {description && <div className="max-w-[420px] text-[12.5px] text-muted-foreground">{description}</div>}
       {onRetry && (
-        <button
-          type="button"
-          onClick={onRetry}
-          style={{ marginTop: 8, padding: "9px 16px", borderRadius: radius.sm, border: "none", background: colors.primary, color: "#fff", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}
-        >
+        <Button type="button" size="sm" variant="primary" className="mt-2 px-4" onClick={onRetry}>
           {actionLabel}
-        </button>
+        </Button>
       )}
     </div>
   );

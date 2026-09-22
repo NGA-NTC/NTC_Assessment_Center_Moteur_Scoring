@@ -2,8 +2,9 @@ import { useState, useMemo } from "react";
 import { ChevronLeft, Shield, Briefcase, Mail } from "lucide-react";
 import { useEffectiveAuthority } from "../hooks/auth/useEffectiveAuthority.js";
 import { userActions } from "../services/auth/users/actionAccess.js";
-import { NAVY, GOLD, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
 import Button from "../components/ui/Button.jsx";
+import Badge from "../components/ui/Badge.jsx";
+import Card from "../components/ui/Card.jsx";
 
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
@@ -45,129 +46,135 @@ export default function AdminUserDetail({
 
   const displayValue = (value) => value || "—";
 
+  const infoRow = (row) => (
+    <div key={row.label}>
+      <div className="mb-1 text-[11px] tracking-[0.4px] text-muted-foreground uppercase">{row.label}</div>
+      <div className="text-[13.5px] break-words text-foreground">{displayValue(row.value)}</div>
+    </div>
+  );
+
   const infoCard = (title, icon) => (
-    <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "20px" }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+    <Card className="p-5">
+      <div className="mb-4 flex items-center gap-2">
         {icon}
-        <div style={{ fontFamily: "Fraunces, serif", fontSize: 16, fontWeight: 600, color: NAVY }}>{title}</div>
+        <div className="font-serif text-[16px] font-semibold text-navy">{title}</div>
       </div>
-      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+      <div className="flex flex-col gap-3">
         {[
           { label: "Email", value: user.email },
           { label: "Téléphone", value: user.phone },
           { label: "Localisation", value: user.location },
-        ].map((row) => (
-          <div key={row.label}>
-            <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", marginBottom: 4 }}>{row.label}</div>
-            <div style={{ fontSize: 13.5, color: INK, wordBreak: "break-word" }}>{displayValue(row.value)}</div>
-          </div>
-        ))}
+        ].map(infoRow)}
       </div>
-    </div>
+    </Card>
   );
 
+  const statusTone = STATUS_TONES[user.status] || "muted";
+
   return (
-    <div style={{ display: "flex", flexDirection: "column" }}>
-      <button onClick={onClose} style={{
-        display: "flex", alignItems: "center", gap: 5, background: "none", border: "none",
-        color: MUTED, fontSize: 13, cursor: "pointer", padding: 0, marginBottom: 4, fontFamily: "inherit",
-      }}>
+    <div className="flex flex-col">
+      <button
+        onClick={onClose}
+        className="mb-1 inline-flex w-fit cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-sans text-[13px] text-muted-foreground"
+      >
         <ChevronLeft size={16} /> Retour à la liste
       </button>
 
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(320px, 1fr))", gap: 20 }}>
-        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
-            <div>
-              <div style={{ fontFamily: "Fraunces, serif", fontSize: 18, fontWeight: 600, color: NAVY }}>
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(320px,1fr))] gap-5">
+        <Card className="p-5">
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="font-serif text-[18px] font-semibold text-navy break-words">
                 {user.first_name || user.last_name ? `${user.first_name || ""} ${user.last_name || ""}`.trim() : user.email}
               </div>
-              <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{user.email}</div>
+              <div className="mt-0.5 text-[12px] text-muted-foreground">{user.email}</div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20,
-                background: STATUS_TONES[user.status] === "success" ? "#E3F0E4" : STATUS_TONES[user.status] === "warning" ? "#FEF3C7" : "#F3F4F6",
-                color: STATUS_TONES[user.status] === "success" ? "#2E6B3C" : STATUS_TONES[user.status] === "warning" ? "#92400E" : "#6B7280", fontWeight: 600 }}>
-                {STATUS_LABELS[user.status] || "—"}
-              </span>
+            <div className="flex shrink-0 items-center gap-2">
+              <Badge tone={statusTone}>{STATUS_LABELS[user.status] || "—"}</Badge>
               {user.status !== "active" ? (
-                <Button variant="outline" size="sm" onClick={handleStatusChange} disabled={!canEdit}>Réactiver</Button>
+                <Button variant="outline" size="sm" onClick={handleStatusChange} disabled={!canEdit}>
+                  Réactiver
+                </Button>
               ) : (
-                <Button variant="outline" size="sm" onClick={handleStatusChange} disabled={!canEdit}>Désactiver</Button>
+                <Button variant="outline" size="sm" onClick={handleStatusChange} disabled={!canEdit}>
+                  Désactiver
+                </Button>
               )}
             </div>
           </div>
 
-          <div style={{ marginBottom: 16, padding: "12px", background: CREAM, borderRadius: 8, border: `1px solid ${LINE}` }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <Shield size={16} color={activeRoles.some((r) => roleById.get(r)?.is_system) ? GOLD : MUTED} />
-              <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase" }}>Rôle(s)</div>
+          <div className="mb-4 rounded-md border border-border bg-cream p-3">
+            <div className="mb-2 flex items-center gap-2">
+              <Shield
+                size={16}
+                className={activeRoles.some((r) => roleById.get(r)?.is_system) ? "text-gold" : "text-muted-foreground"}
+              />
+              <div className="text-[11px] tracking-[0.4px] text-muted-foreground uppercase">Rôle(s)</div>
             </div>
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {activeRoles.length === 0 && <span style={{ fontSize: 11, color: MUTED }}>Aucun rôle actif</span>}
+            <div className="flex flex-wrap gap-1.5">
+              {activeRoles.length === 0 && <span className="text-[11px] text-muted-foreground">Aucun rôle actif</span>}
               {activeRoles.map((r) => {
                 const isSystem = !!roleById.get(r)?.is_system;
                 return (
-                  <span key={r} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20,
-                    background: isSystem ? "#EDE9DC" : "#F3F4F6",
-                    color: isSystem ? "#7A5A15" : "#374151", fontWeight: 600 }}>
+                  <Badge key={r} tone={isSystem ? "system" : "muted"}>
                     {roleName(r)}
-                  </span>
+                  </Badge>
                 );
               })}
             </div>
           </div>
 
           {canManageRoles && (
-            <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${LINE}` }}>
-              <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Attribuer / retirer des rôles</div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+            <div className="mt-3 border-t border-border pt-3">
+              <div className="mb-2 text-[11px] tracking-[0.4px] text-muted-foreground uppercase">
+                Attribuer / retirer des rôles
+              </div>
+              <div className="flex flex-col gap-1.5">
                 {roleRows.map(({ id: r, name, isSystem, addable, revocable }) => {
                   const has = activeRoles.includes(r);
                   const disabled = has ? !revocable : !addable;
                   return (
-                    <label key={r} style={{ display: "flex", alignItems: "center", gap: 8, cursor: disabled ? "not-allowed" : "pointer", fontSize: 13 }}>
+                    <label
+                      key={r}
+                      className="flex items-center gap-2 text-[13px]"
+                      style={{ cursor: disabled ? "not-allowed" : "pointer" }}
+                    >
                       <input
                         type="checkbox"
                         checked={has}
                         onChange={() => handleRoleToggle(r)}
                         disabled={disabled}
                         title={disabled ? (has ? "Retrait réservé à un acteur disposant de users.change_role" : "Rôle non assignable par vos rôles actuels") : undefined}
-                        style={{ width: 16, height: 16, accentColor: NAVY }}
+                        className="h-4 w-4 accent-navy"
                       />
-                      <span style={{ fontWeight: has ? 600 : 400 }}>{name}</span>
-                      {isSystem && <span style={{ fontSize: 11, color: MUTED }}>· rôle système</span>}
+                      <span className={has ? "font-semibold" : "font-normal"}>{name}</span>
+                      {isSystem && <span className="text-[11px] text-muted-foreground">· rôle système</span>}
                     </label>
                   );
                 })}
               </div>
-              <div style={{ fontSize: 11, color: MUTED, marginTop: 8 }}>
+              <div className="mt-2 text-[11px] text-muted-foreground">
                 Ajout : rôle assignable par vos rôles · Retrait : capacité users.change_role requise.
               </div>
             </div>
           )}
-        </div>
+        </Card>
 
-        {infoCard("Coordonnées", <Mail size={18} color={NAVY} />)}
+        {infoCard("Coordonnées", <Mail size={18} className="text-navy" />)}
 
-        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "20px" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
-            <Briefcase size={18} color={NAVY} />
-            <div style={{ fontFamily: "Fraunces, serif", fontSize: 16, fontWeight: 600, color: NAVY }}>Informations professionnelles</div>
+        <Card className="p-5">
+          <div className="mb-4 flex items-center gap-2">
+            <Briefcase size={18} className="text-navy" />
+            <div className="font-serif text-[16px] font-semibold text-navy">Informations professionnelles</div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+          <div className="flex flex-col gap-3">
             {[
               { label: "Fonction / Poste", value: user.job_title },
               { label: "LinkedIn", value: user.linkedin_url },
               { label: "Bio", value: user.bio },
-            ].map((row) => (
-              <div key={row.label}>
-                <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", marginBottom: 4 }}>{row.label}</div>
-                <div style={{ fontSize: 13.5, color: INK, wordBreak: "break-word" }}>{displayValue(row.value)}</div>
-              </div>
-            ))}
+            ].map(infoRow)}
           </div>
-        </div>
+        </Card>
       </div>
     </div>
   );
