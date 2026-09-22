@@ -8,6 +8,7 @@ import {
   removeRole,
 } from "../services/auth/users/index.js";
 import { listAssignableRoles } from "../services/rbac/assignableRoles/index.js";
+import { listRoles } from "../services/rbac/roles/index.js";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
@@ -17,7 +18,6 @@ import { NAVY, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
 import AdminUserDetail from "./AdminUserDetail.jsx";
 import Card from "../components/ui/Card.jsx";
 
-const ROLE_LABELS = { candidate: "Candidat", admin: "Administrateur", super_admin: "Super Administrateur" };
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
 
@@ -26,8 +26,8 @@ export default function SuperAdminAccounts() {
   const canCreateUser = userActions.canCreateUser(can);
   const canEditUser = userActions.canEditUser(can);
   const canChangeRole = userActions.canChangeRole(can);
-  const canPromoteAdmin = userActions.canPromoteAdmin(can);
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [assignableRoleIds, setAssignableRoleIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -38,12 +38,20 @@ export default function SuperAdminAccounts() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [createForm, setCreateForm] = useState({ email: "", password: "", first_name: "", last_name: "", role: "candidate", status: "active" });
 
+  const roleById = useMemo(() => new Map(roles.map((r) => [r.id, r])), [roles]);
+  const roleName = (roleId) => roleById.get(roleId)?.name ?? roleId;
+  const initialRoleOptions = useMemo(
+    () => roles.filter((r) => assignableRoleIds.includes(r.id)),
+    [roles, assignableRoleIds]
+  );
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const [userData, assignable] = await Promise.all([listUsers(), listAssignableRoles()]);
+      const [userData, assignable, roleData] = await Promise.all([listUsers(), listAssignableRoles(), listRoles()]);
       setUsers(userData);
       setAssignableRoleIds((assignable ?? []).map((r) => r.assignable_role_id));
+      setRoles(roleData);
     } catch (e) {
       console.error("Erreur chargement utilisateurs:", e);
       setMessage({ type: "error", text: "Impossible de charger les utilisateurs." });
@@ -158,9 +166,9 @@ export default function SuperAdminAccounts() {
           <div style={{ minWidth: 160 }}>
             <Field label="Rôle" type="select" value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)}>
               <option value="all">Tous les rôles</option>
-              <option value="candidate">Candidat</option>
-              <option value="admin">Administrateur</option>
-              <option value="super_admin">Super Administrateur</option>
+              {roles.map((r) => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
             </Field>
           </div>
         </div>
@@ -204,9 +212,9 @@ export default function SuperAdminAccounts() {
                     <td style={{ padding: "12px 16px" }}>
                       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                         {(user.role_ids || []).map((r) => (
-                          <span key={r} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: "#F0F0F0", color: INK }}>
-                            {ROLE_LABELS[r] || r}
-                          </span>
+                          <span key={r} style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: roleById.get(r)?.is_system ? "#EDE9DC" : "#F0F0F0", color: roleById.get(r)?.is_system ? "#7A5A15" : INK }}>
+                              {roleName(r)}
+                            </span>
                         ))}
                         {(user.role_ids || []).length === 0 && <span style={{ fontSize: 11, color: MUTED }}>Aucun rôle</span>}
                       </div>
@@ -217,7 +225,7 @@ export default function SuperAdminAccounts() {
                         background: STATUS_TONES[user.status] === "success" ? "#E3F0E4" : STATUS_TONES[user.status] === "warning" ? "#FEF3E2" : "#FAE8E6",
                         color: STATUS_TONES[user.status] === "success" ? "#2E6B3C" : STATUS_TONES[user.status] === "warning" ? "#B5652E" : "#8A2B22",
                       }}>
-                        {STATUS_LABELS[user.status] || user.status}
+                        {STATUS_LABELS[user.status] || "—"}
                       </span>
                     </td>
                     <td style={{ padding: "12px 16px", color: MUTED, fontSize: 12.5 }}>
@@ -253,6 +261,7 @@ export default function SuperAdminAccounts() {
           onRoleChange={handleRoleChange}
           canManageRoles={canChangeRole}
           assignableRoles={assignableRoleIds}
+          roles={roles}
         />
       )}
 
@@ -272,8 +281,10 @@ export default function SuperAdminAccounts() {
                   <Field label="Nom" value={createForm.last_name} onChange={(e) => setCreateForm((f) => ({ ...f, last_name: e.target.value }))} />
                 </div>
                 <Field label="Rôle initial" type="select" value={createForm.role} onChange={(e) => setCreateForm((f) => ({ ...f, role: e.target.value }))}>
-                  <option value="candidate">Candidat</option>
-                  {canPromoteAdmin && assignableRoleIds.includes("admin") && <option value="admin">Administrateur</option>}
+                  {initialRoleOptions.length === 0 && <option value="">Aucun rôle assignable</option>}
+                  {initialRoleOptions.map((r) => (
+                    <option key={r.id} value={r.id}>{r.name}</option>
+                  ))}
                 </Field>
                 <Field label="Statut" type="select" value={createForm.status} onChange={(e) => setCreateForm((f) => ({ ...f, status: e.target.value }))}>
                   <option value="active">Actif</option>

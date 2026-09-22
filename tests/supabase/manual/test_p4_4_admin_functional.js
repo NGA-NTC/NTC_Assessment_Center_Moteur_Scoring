@@ -212,7 +212,9 @@ async function main() {
   runTest('G3 Compte : rôle affiché dynamiquement (roles du contexte)', /computeRoleDisplay/.test(prof) && /roles\s*\?\?/.test(prof), 'dynamique');
   const admDetail = readSrc('pages/AdminUserDetail.jsx');
   runTest('G4 Détail : perso en lecture seule (aucun éditeur perso)', !/updateUserProfile/.test(admDetail) && !/Enregistrer les modifications/.test(admDetail), 'display-only');
-  runTest('G5 Détail : roles gated par assignableRoles + promotions', /assignableRoles\.includes/.test(admDetail) && /canPromoteSuperAdmin/.test(admDetail), 'gated');
+  runTest('G5 Détail : rôles dynamiques (prop roles), plus d\'ensemble fermé ni de canal promote',
+    /roles\s*=\s*\[\]/.test(admDetail) && /assignableRoles\.includes/.test(admDetail)
+    && !/ROLE_LABELS/.test(admDetail) && !/canPromoteSuperAdmin/.test(admDetail) && !/canPromoteAdmin/.test(admDetail), 'dynamique');
 
   // ---- H. Cohérence globale ----
   console.log('\n--- H. Cohérence globale ---\n');

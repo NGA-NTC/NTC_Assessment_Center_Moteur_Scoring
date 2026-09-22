@@ -60,9 +60,8 @@ function QuickAction({ label, description, icon: Icon, color, path }) {
 
 function getRoleDisplayName(roles) {
   if (!roles || roles.length === 0) return "Utilisateur";
-  const priority = ["super_admin", "admin", "candidate"];
-  const sorted = [...roles].sort((a, b) => priority.indexOf(a.id) - priority.indexOf(b.id));
-  return sorted[0]?.name || sorted[0]?.id || "Utilisateur";
+  const first = roles[0];
+  return first?.name || first?.id || "Utilisateur";
 }
 
 export default function SuperAdminDashboard() {

@@ -5,6 +5,7 @@ import Button from "../components/ui/Button.jsx";
 import { NAVY, MUTED, LINE, CREAM, INK, GOLD } from "../lib/theme.js";
 import Card from "../components/ui/Card.jsx";
 import { useAccessControl } from "../hooks/rbac/useAccessControl.js";
+import RoleAssignabilityMatrix from "../components/admin/RoleAssignabilityMatrix.jsx";
 
 const CAPABILITY_COLUMNS = [
   { key: "use", label: "USE", hint: "Utilisation (consultation / exécution)" },
@@ -206,6 +207,10 @@ export default function SuperAdminAccess() {
             </Card>
           )}
         </div>
+      </div>
+
+      <div style={{ marginTop: 24 }}>
+        <RoleAssignabilityMatrix />
       </div>
     </div>
   );

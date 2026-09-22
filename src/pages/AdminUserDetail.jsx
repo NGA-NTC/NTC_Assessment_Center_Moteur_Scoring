@@ -1,16 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { ChevronLeft, Shield, Briefcase, Mail } from "lucide-react";
 import { useEffectiveAuthority } from "../hooks/auth/useEffectiveAuthority.js";
 import { userActions } from "../services/auth/users/actionAccess.js";
 import { NAVY, GOLD, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
 import Button from "../components/ui/Button.jsx";
 
-const ROLE_LABELS = { candidate: "Candidat", admin: "Administrateur", super_admin: "Super Administrateur" };
-const ROLE_DESC = {
-  candidate: "Accès aux assessments, gestion de son profil",
-  admin: "Accès complet à l'administration, gestion des utilisateurs",
-  super_admin: "Accès total : gestion admins, permissions, bootstrap super_admin",
-};
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
 
@@ -21,12 +15,14 @@ export default function AdminUserDetail({
   onRoleChange,
   canManageRoles,
   assignableRoles = [],
+  roles = [],
 }) {
-  const [roles, setRoles] = useState((user.role_ids || []).slice());
+  const [activeRoles, setActiveRoles] = useState((user.role_ids || []).slice());
   const { can } = useEffectiveAuthority();
   const canEdit = userActions.canEditUser(can);
-  const canPromoteAdmin = userActions.canPromoteAdmin(can);
-  const canPromoteSuperAdmin = userActions.canPromoteSuperAdmin(can);
+
+  const roleById = useMemo(() => new Map(roles.map((r) => [r.id, r])), [roles]);
+  const roleName = (roleId) => roleById.get(roleId)?.name ?? roleId;
 
   const handleStatusChange = () => {
     if (!canEdit) return;
@@ -34,16 +30,18 @@ export default function AdminUserDetail({
   };
 
   const handleRoleToggle = (roleId) => {
-    const add = !roles.includes(roleId);
+    const add = !activeRoles.includes(roleId);
     onRoleChange(user.id, roleId, add);
-    setRoles((prev) => (add ? [...prev, roleId] : prev.filter((r) => r !== roleId)));
+    setActiveRoles((prev) => (add ? [...prev, roleId] : prev.filter((r) => r !== roleId)));
   };
 
-  const roleRows = [
-    { id: "candidate", addable: assignableRoles.includes("candidate"), revocable: true },
-    { id: "admin", addable: assignableRoles.includes("admin"), revocable: canPromoteAdmin },
-    { id: "super_admin", addable: assignableRoles.includes("super_admin"), revocable: canPromoteSuperAdmin },
-  ];
+  const roleRows = roles.map((role) => ({
+    id: role.id,
+    name: role.name,
+    isSystem: !!role.is_system,
+    addable: assignableRoles.includes(role.id),
+    revocable: canManageRoles,
+  }));
 
   const displayValue = (value) => value || "—";
 
@@ -90,7 +88,7 @@ export default function AdminUserDetail({
               <span style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20,
                 background: STATUS_TONES[user.status] === "success" ? "#E3F0E4" : STATUS_TONES[user.status] === "warning" ? "#FEF3C7" : "#F3F4F6",
                 color: STATUS_TONES[user.status] === "success" ? "#2E6B3C" : STATUS_TONES[user.status] === "warning" ? "#92400E" : "#6B7280", fontWeight: 600 }}>
-                {STATUS_LABELS[user.status] || user.status}
+                {STATUS_LABELS[user.status] || "—"}
               </span>
               {user.status !== "active" ? (
                 <Button variant="outline" size="sm" onClick={handleStatusChange} disabled={!canEdit}>Réactiver</Button>
@@ -102,18 +100,21 @@ export default function AdminUserDetail({
 
           <div style={{ marginBottom: 16, padding: "12px", background: CREAM, borderRadius: 8, border: `1px solid ${LINE}` }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
-              <Shield size={16} color={user.role_ids?.includes("admin") || user.role_ids?.includes("super_admin") ? GOLD : MUTED} />
+              <Shield size={16} color={activeRoles.some((r) => roleById.get(r)?.is_system) ? GOLD : MUTED} />
               <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase" }}>Rôle(s)</div>
             </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-              {roles.length === 0 && <span style={{ fontSize: 11, color: MUTED }}>Aucun rôle actif</span>}
-              {roles.map((r) => (
-                <span key={r} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20,
-                  background: r === "admin" || r === "super_admin" ? "#EDE9DC" : "#F3F4F6",
-                  color: r === "admin" || r === "super_admin" ? "#7A5A15" : "#374151", fontWeight: 600 }}>
-                  {ROLE_LABELS[r] || r}
-                </span>
-              ))}
+              {activeRoles.length === 0 && <span style={{ fontSize: 11, color: MUTED }}>Aucun rôle actif</span>}
+              {activeRoles.map((r) => {
+                const isSystem = !!roleById.get(r)?.is_system;
+                return (
+                  <span key={r} style={{ fontSize: 11, padding: "4px 10px", borderRadius: 20,
+                    background: isSystem ? "#EDE9DC" : "#F3F4F6",
+                    color: isSystem ? "#7A5A15" : "#374151", fontWeight: 600 }}>
+                    {roleName(r)}
+                  </span>
+                );
+              })}
             </div>
           </div>
 
@@ -121,8 +122,8 @@ export default function AdminUserDetail({
             <div style={{ marginTop: 12, paddingTop: 12, borderTop: `1px solid ${LINE}` }}>
               <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase", marginBottom: 8 }}>Attribuer / retirer des rôles</div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                {roleRows.map(({ id: r, addable, revocable }) => {
-                  const has = roles.includes(r);
+                {roleRows.map(({ id: r, name, isSystem, addable, revocable }) => {
+                  const has = activeRoles.includes(r);
                   const disabled = has ? !revocable : !addable;
                   return (
                     <label key={r} style={{ display: "flex", alignItems: "center", gap: 8, cursor: disabled ? "not-allowed" : "pointer", fontSize: 13 }}>
@@ -131,19 +132,17 @@ export default function AdminUserDetail({
                         checked={has}
                         onChange={() => handleRoleToggle(r)}
                         disabled={disabled}
-                        title={disabled ? (has ? "Retrait réservé à un acteur disposant de la promotion concernée" : "Rôle non assignable par vos rôles actuels") : undefined}
+                        title={disabled ? (has ? "Retrait réservé à un acteur disposant de users.change_role" : "Rôle non assignable par vos rôles actuels") : undefined}
                         style={{ width: 16, height: 16, accentColor: NAVY }}
                       />
-                      <span style={{ fontWeight: has ? 600 : 400 }}>{ROLE_LABELS[r] || r}</span>
-                      <span style={{ fontSize: 11, color: MUTED }}>
-                        {r === "super_admin" && " · rôle système"}
-                      </span>
+                      <span style={{ fontWeight: has ? 600 : 400 }}>{name}</span>
+                      {isSystem && <span style={{ fontSize: 11, color: MUTED }}>· rôle système</span>}
                     </label>
                   );
                 })}
               </div>
               <div style={{ fontSize: 11, color: MUTED, marginTop: 8 }}>
-                {roleRows.map(({ id: r }) => ROLE_DESC[r]).join(" · ")}
+                Ajout : rôle assignable par vos rôles · Retrait : capacité users.change_role requise.
               </div>
             </div>
           )}

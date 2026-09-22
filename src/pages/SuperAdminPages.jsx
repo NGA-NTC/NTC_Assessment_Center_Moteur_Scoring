@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, Edit, Trash2, Loader2, FileText, Save } from "lucide-react";
 import {
   listPages,
@@ -11,6 +11,15 @@ import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
 import { NAVY, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
 import Card from "../components/ui/Card.jsx";
+import { routes } from "../routes/registry/index.jsx";
+
+const flattenPaths = (list, acc = []) => {
+  list.forEach((route) => {
+    if (route.path) acc.push(route.path);
+    if (route.children && route.children.length) flattenPaths(route.children, acc);
+  });
+  return acc;
+};
 
 const DEFAULT_PAGES = [
   { id: "dashboard", name: "Tableau de bord", path: "/", description: "Page d'accueil après connexion", icon: "LayoutDashboard" },
@@ -36,6 +45,9 @@ export default function SuperAdminPages() {
   const [editingPage, setEditingPage] = useState(null);
   const [formData, setFormData] = useState({ id: "", name: "", path: "", description: "", icon: "", is_system: false });
 
+  const IMPLEMENTED_PATHS = useMemo(() => flattenPaths(routes), []);
+  const isPathImplemented = (path) => !path || IMPLEMENTED_PATHS.includes(path);
+
   const fetchPages = useCallback(async () => {
     setLoading(true);
     try {
@@ -52,7 +64,10 @@ export default function SuperAdminPages() {
     }
   }, []);
 
-  useEffect(() => { fetchPages(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => { fetchPages(); }, 0);
+    return () => clearTimeout(t);
+  }, [fetchPages]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,6 +149,7 @@ export default function SuperAdminPages() {
                 <tr style={{ background: CREAM, borderBottom: `1px solid ${LINE}` }}>
                   <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Page</th>
                   <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Chemin</th>
+                  <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Implémentation</th>
                   <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Description</th>
                   <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Type</th>
                   <th style={{ padding: "12px 16px", textAlign: "left", fontWeight: 600, color: INK }}>Actions</th>
@@ -151,6 +167,13 @@ export default function SuperAdminPages() {
                       </div>
                     </td>
                     <td style={{ padding: "12px 16px", fontFamily: "monospace", fontSize: 12, color: MUTED }}>{page.path}</td>
+                    <td style={{ padding: "12px 16px" }}>
+                      {isPathImplemented(page.path) ? (
+                        <span style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: "#E3F0E4", color: "#2E6B3C" }}>Implémentée</span>
+                      ) : (
+                        <span title="Déclarée dans la base, aucune route correspondante dans le registre frontend" style={{ fontSize: 11, padding: "2px 8px", borderRadius: 999, background: "#FEF3E2", color: "#B5652E" }}>Déclarée</span>
+                      )}
+                    </td>
                     <td style={{ padding: "12px 16px", color: MUTED, maxWidth: 300, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{page.description || "—"}</td>
                     <td style={{ padding: "12px 16px" }}>
                       {page.is_system ? (

@@ -9,6 +9,7 @@ import {
   updateUserActive,
 } from "../services/auth/users/index.js";
 import { listAssignableRoles } from "../services/rbac/assignableRoles/index.js";
+import { listRoles } from "../services/rbac/roles/index.js";
 import { userActions } from "../services/auth/users/actionAccess.js";
 import AppShell from "../components/layout/AppShell.jsx";
 import AppSidebar from "../components/layout/AppSidebar.jsx";
@@ -18,7 +19,6 @@ import Field from "../components/ui/Field.jsx";
 import { NAVY, MUTED, LINE, INK } from "../lib/theme.js";
 import AdminUserDetail from "./AdminUserDetail.jsx";
 
-const ROLE_LABELS = { candidate: "Candidat", admin: "Administrateur", super_admin: "Super Administrateur" };
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
 
@@ -26,6 +26,7 @@ export default function AdminUsers() {
   const { loading: adminLoading } = useAdminAuth();
   const { loading: authorityLoading, can } = useEffectiveAuthority();
   const [users, setUsers] = useState([]);
+  const [roles, setRoles] = useState([]);
   const [assignableRoleIds, setAssignableRoleIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -34,12 +35,16 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [message, setMessage] = useState(null);
 
+  const roleById = useMemo(() => new Map(roles.map((r) => [r.id, r])), [roles]);
+  const roleName = (roleId) => roleById.get(roleId)?.name ?? roleId;
+
   const fetchUsers = useCallback(async () => {
     setLoading(true);
     try {
-      const [userData, assignable] = await Promise.all([listUsers(), listAssignableRoles()]);
+      const [userData, assignable, roleData] = await Promise.all([listUsers(), listAssignableRoles(), listRoles()]);
       setUsers(userData);
       setAssignableRoleIds((assignable ?? []).map((r) => r.assignable_role_id));
+      setRoles(roleData);
     } catch (e) {
       console.error("Erreur chargement utilisateurs:", e);
       setMessage({ type: "error", text: "Impossible de charger les utilisateurs." });
@@ -154,11 +159,11 @@ export default function AdminUsers() {
               <option value="suspended">Suspendu</option>
             </select>
             <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} style={{ padding: "10px 12px", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 13, background: "#fff", minWidth: 160 }}>
-              <option value="all">Tous les rôles</option>
-              <option value="candidate">Candidat</option>
-              <option value="admin">Administrateur</option>
-              <option value="super_admin">Super Administrateur</option>
-            </select>
+                <option value="all">Tous les rôles</option>
+                {roles.map((r) => (
+                  <option key={r.id} value={r.id}>{r.name}</option>
+                ))}
+              </select>
           </div>
         </div>
       </div>
@@ -171,6 +176,7 @@ export default function AdminUsers() {
           onRoleChange={handleRoleChange}
           canManageRoles={userActions.canChangeRole(can)}
           assignableRoles={assignableRoleIds}
+          roles={roles}
         />
       ) : !canViewUsers ? (
         <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "40px", textAlign: "center", color: MUTED }}>
@@ -193,7 +199,7 @@ export default function AdminUsers() {
               }}
             >
               <div style={{ width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
-                background: (u.role_ids?.includes("admin") || u.role_ids?.includes("super_admin")) ? "linear-gradient(135deg, #1B2A4A, #B8862B)" : NAVY,
+                background: (u.role_ids || []).some((r) => roleById.get(r)?.is_system) ? "linear-gradient(135deg, #1B2A4A, #B8862B)" : NAVY,
                 color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
                 fontWeight: 700, fontSize: 14 }}>
                 {(u.first_name?.[0] || "") + (u.last_name?.[0] || "") || u.email?.[0]?.toUpperCase() || "U"}
@@ -208,15 +214,18 @@ export default function AdminUsers() {
                 <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20,
                   background: STATUS_TONES[u.status] === "success" ? "#E3F0E4" : STATUS_TONES[u.status] === "warning" ? "#FEF3C7" : "#F3F4F6",
                   color: STATUS_TONES[u.status] === "success" ? "#2E6B3C" : STATUS_TONES[u.status] === "warning" ? "#92400E" : "#6B7280" }}>
-                  {STATUS_LABELS[u.status] || u.status}
+                  {STATUS_LABELS[u.status] || "—"}
                 </span>
-                {u.role_ids?.map((r) => (
-                  <span key={r} style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20,
-                    background: r === "admin" || r === "super_admin" ? "#EDE9DC" : "#F3F4F6",
-                    color: r === "admin" || r === "super_admin" ? "#7A5A15" : "#374151", fontWeight: 600 }}>
-                    {ROLE_LABELS[r] || r}
-                  </span>
-                ))}
+                {u.role_ids?.map((r) => {
+                  const isSystem = !!roleById.get(r)?.is_system;
+                  return (
+                    <span key={r} style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20,
+                      background: isSystem ? "#EDE9DC" : "#F3F4F6",
+                      color: isSystem ? "#7A5A15" : "#374151", fontWeight: 600 }}>
+                      {roleName(r)}
+                    </span>
+                  );
+                })}
               </div>
               <MoreHorizontal size={16} color={MUTED} />
             </button>

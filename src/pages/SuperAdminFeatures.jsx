@@ -37,7 +37,10 @@ export default function SuperAdminFeatures() {
     }
   }, []);
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => {
+    const t = setTimeout(() => { fetchData(); }, 0);
+    return () => clearTimeout(t);
+  }, [fetchData]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,9 +76,9 @@ export default function SuperAdminFeatures() {
     }
   };
 
-  const openCreateModal = () => {
+  const openCreateModal = (pageId) => {
     setEditingFeature(null);
-    setFormData({ id: "", name: "", description: "", page_id: pages[0]?.id || "", category: "", is_system: false });
+    setFormData({ id: "", name: "", description: "", page_id: (pageId ?? pages[0]?.id) || "", category: "", is_system: false });
     setShowModal(true);
   };
 
@@ -158,7 +161,7 @@ export default function SuperAdminFeatures() {
                       {pageFeats.length === 0 ? (
                         <div style={{ textAlign: "center", color: MUTED, padding: "24px" }}>
                           Aucune fonctionnalité pour cette page.
-                          <Button size="sm" variant="outline" onClick={() => { setFormData(f => ({ ...f, page_id: page.id })); openCreateModal(); }} style={{ marginLeft: 12 }}>
+                          <Button size="sm" variant="outline" onClick={() => openCreateModal(page.id)} style={{ marginLeft: 12 }}>
                             <Plus size={14} /> Ajouter
                           </Button>
                         </div>
