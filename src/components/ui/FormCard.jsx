@@ -1,10 +1,18 @@
-import { LINE } from "../../lib/theme.js";
+import { colors, radius, shadows } from "../../lib/theme.js";
 
-export default function FormCard({ children, onSubmit }) {
+export default function FormCard({ children, onSubmit, style, ...props }) {
   return (
     <form
       onSubmit={onSubmit}
-      style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 14, padding: "26px 26px 24px", boxShadow: "0 8px 30px rgba(27,42,74,0.08)" }}
+      {...props}
+      style={{
+        background: colors.surface,
+        border: `1px solid ${colors.border}`,
+        borderRadius: radius.xl,
+        padding: "26px 26px 24px",
+        boxShadow: shadows.card,
+        ...style,
+      }}
     >
       {children}
     </form>

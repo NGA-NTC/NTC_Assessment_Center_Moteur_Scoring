@@ -1,0 +1,187 @@
+/* ===========================================================================
+   NTC Assessment — Design Tokens (miroir CSS de src/lib/theme.js)
+   Source unique des valeurs : src/lib/theme.js (JS)
+   Ces variables servent au CSS global et au responsive de base.
+   =========================================================================== */
+
+/* ---- Palette fondatrice (identité conservée) ---- */
+:root {
+  --ntc-navy: #1B2A4A;
+  --ntc-gold: #B8862B;
+  --ntc-gold2: #D9A94A;
+  --ntc-cream: #F7F4EC;
+  --ntc-ink: #2A2A28;
+  --ntc-muted: #8A8578;
+  --ntc-line: #E4DFD0;
+
+  /* Rôles */
+  --ntc-background: var(--ntc-cream);
+  --ntc-foreground: var(--ntc-ink);
+  --ntc-muted-foreground: var(--ntc-muted);
+  --ntc-border: var(--ntc-line);
+  --ntc-surface: #FFFFFF;
+
+  /* Sémantique */
+  --ntc-primary: var(--ntc-navy);
+  --ntc-secondary: var(--ntc-gold);
+  --ntc-accent: var(--ntc-gold2);
+  --ntc-success: #2E6B3C;
+  --ntc-success-soft: #E3F0E4;
+  --ntc-warning: #B5652E;
+  --ntc-warning-soft: #FEF3E2;
+  --ntc-destructive: #8A2B22;
+  --ntc-destructive-soft: #FAE8E6;
+  --ntc-info: #1A3D5C;
+  --ntc-info-soft: #E7EDF7;
+
+  /* Sidebar navy */
+  --ntc-navy-pale: #B8C0D4;
+  --ntc-navy-pale-2: #9AA6C0;
+  --ntc-sidebar-divider: rgba(255, 255, 255, 0.12);
+  --ntc-sidebar-item: rgba(255, 255, 255, 0.14);
+  --ntc-sidebar-hover: rgba(255, 255, 255, 0.08);
+
+  /* Typo */
+  --ntc-font-sans: 'IBM Plex Sans', system-ui, sans-serif;
+  --ntc-font-serif: 'Fraunces', serif;
+
+  /* Rayons */
+  --ntc-radius-sm: 8px;
+  --ntc-radius-md: 10px;
+  --ntc-radius-lg: 12px;
+  --ntc-radius-xl: 14px;
+  --ntc-radius-full: 999px;
+
+  /* Ombres */
+  --ntc-shadow-card: 0 8px 30px rgba(27, 42, 74, 0.08);
+  --ntc-shadow-menu: 0 6px 24px rgba(27, 42, 74, 0.12);
+  --ntc-shadow-dropdown: 0 10px 30px rgba(0, 0, 0, 0.2);
+  --ntc-shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.25);
+  --ntc-shadow-drawer: 0 14px 36px rgba(0, 0, 0, 0.35);
+
+  /* Espacements */
+  --ntc-space-1: 4px;
+  --ntc-space-2: 8px;
+  --ntc-space-3: 12px;
+  --ntc-space-4: 16px;
+  --ntc-space-5: 20px;
+  --ntc-space-6: 24px;
+  --ntc-space-7: 28px;
+  --ntc-space-8: 32px;
+
+  /* Contrôles */
+  --ntc-control-height: 44px;
+  --ntc-control-height-sm: 36px;
+
+  /* Conteneurs */
+  --ntc-container-sm: 720px;
+  --ntc-container-md: 900px;
+  --ntc-container-lg: 1000px;
+
+  /* Breakpoints */
+  --ntc-bp-lg: 1024px;
+  --ntc-bp-md: 768px;
+  --ntc-bp-sm: 480px;
+}
+
+/* ---- Spinner global (les pages référencent `animation: spin …`) ---- */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ntc-spin,
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ---- Focus / accessibilité ---- */
+::selection {
+  background: rgba(184, 134, 43, 0.28);
+}
+
+/* ---- Boutons (.button posé par components/ui/Button.jsx) ---- */
+.button {
+  transition: filter 0.15s, background 0.15s, border-color 0.15s, transform 0.05s, opacity 0.15s;
+}
+.button:not(:disabled):hover {
+  filter: brightness(0.96);
+}
+.button:not(:disabled):active {
+  transform: translateY(0.5px);
+}
+.button[data-variant="ghost"]:not(:disabled):hover {
+  background: rgba(27, 42, 74, 0.06);
+  border-color: rgba(27, 42, 74, 0.22);
+}
+.button[data-variant="outline"]:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+.button[data-variant="primary"]:not(:disabled):hover {
+  background: #20365e;
+}
+.button[data-variant="gold"]:not(:disabled):hover {
+  background: #a37a24;
+}
+.button[data-variant="danger"]:not(:disabled):hover {
+  background: #7d261f;
+}
+.button:focus-visible {
+  outline: 2px solid var(--ntc-gold);
+  outline-offset: 1px;
+}
+
+/* ---- Champs (Field / SearchInput) : focus et disable ---- */
+select:disabled,
+input:disabled,
+textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ---- Cartes interactives ---- */
+.ntc-card-interactive {
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.ntc-card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 34px rgba(27, 42, 74, 0.12);
+}
+
+/* ---- Tableaux ---- */
+.ntc-table-row:hover {
+  background: rgba(27, 42, 74, 0.04);
+}
+
+/* ---- Modales ---- */
+.ntc-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(20, 26, 40, 0.45);
+}
+.ntc-modal-panel {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+  max-height: calc(100dvh - 40px);
+  overflow-y: auto;
+}
+@media (max-width: 768px) {
+  .ntc-modal-overlay {
+    align-items: flex-start;
+    padding: 14px;
+    overflow-y: auto;
+  }
+  .ntc-modal-panel {
+    max-height: calc(100dvh - 28px);
+  }
+}

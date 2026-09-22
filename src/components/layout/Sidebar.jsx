@@ -45,6 +45,7 @@ export default function Sidebar({
                     key={item.key}
                     type="button"
                     onClick={() => onNavigate?.(item.path)}
+                    aria-current={isActive ? "page" : undefined}
                     style={{
                       width: "100%", display: "flex", alignItems: "center", gap: 11, padding: "10px 12px", marginBottom: 2,
                       borderRadius: 8, border: "none", cursor: "pointer", textAlign: "left", background: isActive ? "rgba(255,255,255,0.14)" : "transparent",

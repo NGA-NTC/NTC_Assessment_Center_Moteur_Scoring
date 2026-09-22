@@ -1,3 +1,4 @@
+@import "./styles/tokens.css";
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
 
 :root {
@@ -76,6 +77,10 @@ svg {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.app-sidebar nav button:not(:disabled):hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* ---- Tiroirs / topbar mobile (masqués sur desktop) ---- */
 .app-mobile-topbar,
 .app-sidebar-backdrop,
@@ -115,7 +120,71 @@ button:focus-visible {
     width: 100%;
   }
 
-  .app-shell__content {
+  /* Super-admin : sidebar passe au-dessus du contenu */
+  .super-admin-shell {
+    flex-direction: column;
+  }
+
+  .super-admin-shell__sidebar {
+    position: static;
+    height: auto;
+    width: 100%;
+  }
+
+  .super-admin-shell__sidebar .app-sidebar {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    flex-direction: column;
+  }
+
+  /* Navigation → barre horizontale scrollable (nav générique uniquement) */
+  .app-shell__sidebar .app-sidebar > nav,
+  .super-admin-shell__sidebar .app-sidebar > nav {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    overflow-x: auto;
+    padding: 8px 10px;
+    flex: none;
+    scrollbar-width: thin;
+  }
+
+  .app-shell__sidebar .app-sidebar > nav > div,
+  .super-admin-shell__sidebar .app-sidebar > nav > div {
+    display: contents;
+  }
+
+  .app-shell__sidebar .app-sidebar > nav > div > div,
+  .super-admin-shell__sidebar .app-sidebar > nav > div > div {
+    font-size: 10px;
+    color: var(--ntc-navy-pale);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0 6px;
+    white-space: nowrap;
+  }
+
+  .app-shell__sidebar .app-sidebar > nav button,
+  .super-admin-shell__sidebar .app-sidebar > nav button {
+    width: auto !important;
+    white-space: nowrap;
+    margin: 0;
+    padding: 8px 10px !important;
+  }
+
+  .app-shell__sidebar .app-sidebar__brand,
+  .super-admin-shell__sidebar .app-sidebar__brand {
+    display: none;
+  }
+
+  .app-shell__sidebar .app-sidebar > div:last-child,
+  .super-admin-shell__sidebar .app-sidebar > div:last-child {
+    padding: 6px 10px;
+  }
+
+  .app-shell__content,
+  .super-admin-shell__content {
     padding: 22px 18px !important;
     width: 100%;
   }
@@ -225,8 +294,9 @@ button:focus-visible {
 
 /* ================= Mobile (<= 768) ================= */
 @media (max-width: 768px) {
-  .app-shell__content {
-    padding: 16px 12px !important;
+  .app-shell__content,
+  .super-admin-shell__content {
+    padding: 16px 14px !important;
   }
 
   .admin-toolbar > * {
@@ -302,7 +372,8 @@ button:focus-visible {
 
 /* ================= Petits écrans (<= 480) ================= */
 @media (max-width: 480px) {
-  .app-shell__content {
+  .app-shell__content,
+  .super-admin-shell__content {
     padding: 14px 10px !important;
   }
 

@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, ChevronDown, SlidersHorizontal } from "lucide-react";
-import { INK, LINE, MUTED } from "../../lib/theme.js";
+import { INK, LINE, MUTED, NAVY, colors, overlays, radius, shadows } from "../../lib/theme.js";
 
 function OptionRow({ label, active, onClick }) {
   return (
     <button type="button" onClick={onClick} style={{
       width: "100%", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8,
       padding: "8px 10px", borderRadius: 7, border: "none", cursor: "pointer", fontFamily: "inherit",
-      background: active ? "#1B2A4A" : "transparent", color: active ? "#fff" : INK, fontSize: 13, textAlign: "left",
+      background: active ? NAVY : "transparent", color: active ? "#fff" : INK, fontSize: 13, textAlign: "left",
     }}>
       {label}
       {active && <Check size={14} />}
@@ -19,7 +19,7 @@ function Chip({ label, active, onClick }) {
   return (
     <button type="button" onClick={onClick} style={{
       padding: "5px 9px", borderRadius: 999, border: active ? "1.5px solid #1B2A4A" : `1px solid ${LINE}`,
-      background: active ? "#1B2A4A" : "#fff", color: active ? "#fff" : INK, fontSize: 11.5, cursor: "pointer",
+      background: active ? NAVY : "#fff", color: active ? "#fff" : INK, fontSize: 11.5, cursor: "pointer",
       fontFamily: "inherit", whiteSpace: "nowrap",
     }}>
       {label}
@@ -73,21 +73,21 @@ export default function FilterDropdown({
     <div className="filter-dropdown" ref={ref} style={{ position: "relative", flexGrow: full ? 1 : 0 }}>
       <button type="button" onClick={() => setOpen((o) => !o)} style={{
         display: "inline-flex", alignItems: "center", gap: 8, width: full ? "100%" : "auto",
-        padding: "9px 12px", borderRadius: 8, fontFamily: "inherit", cursor: "pointer",
+        padding: "9px 12px", borderRadius: radius.sm, fontFamily: "inherit", cursor: "pointer",
         fontSize: 13, fontWeight: 600,
-        background: dark ? (open ? "rgba(255,255,255,0.12)" : "transparent") : "#fff",
-        border: dark ? "1px solid rgba(255,255,255,0.22)" : `1px solid ${LINE}`,
+        background: dark ? (open ? overlays.sidebarItem : "transparent") : "#fff",
+        border: dark ? `1px solid ${overlays.sidebarOutline}` : `1px solid ${LINE}`,
         color: dark ? "#fff" : INK,
       }}>
         <SlidersHorizontal size={15} /> Filtres
-        {activeSummary && <span style={{ fontSize: 11, fontWeight: 500, color: dark ? "#B8C0D4" : MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "min(42vw, 170px)" }}>{activeSummary}</span>}
+        {activeSummary && <span style={{ fontSize: 11, fontWeight: 500, color: dark ? colors.navyPale : MUTED, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "min(42vw, 170px)" }}>{activeSummary}</span>}
         <ChevronDown size={14} style={{ marginLeft: "auto", transform: open ? "rotate(180deg)" : "none", transition: "transform .15s", flexShrink: 0 }} />
       </button>
 
       {open && (
         <div className="filter-dropdown__panel" style={{
           position: "absolute", left: 0, top: "calc(100% + 6px)", zIndex: 30, width: "min(92vw, 320px)", minWidth: 0,
-          background: "#fff", color: INK, borderRadius: 10, padding: 8, boxShadow: "0 10px 30px rgba(0,0,0,0.20)",
+          background: "#fff", color: INK, borderRadius: radius.md, padding: 8, boxShadow: shadows.dropdown,
           maxHeight: "70vh", overflowY: "auto",
         }}>
           <div style={{ fontSize: 10.5, fontWeight: 700, textTransform: "uppercase", letterSpacing: 0.5, color: MUTED, padding: "6px 10px 4px" }}>Type de réponse</div>

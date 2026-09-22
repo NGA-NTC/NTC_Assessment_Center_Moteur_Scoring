@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { Search, Loader2, MoreHorizontal, CheckCircle2, AlertCircle } from "lucide-react";
+import { MoreHorizontal } from "lucide-react";
 import { useAdminAuth } from "../context/AdminAuthContext.jsx";
 import { useEffectiveAuthority } from "../hooks/auth/useEffectiveAuthority.js";
 import {
@@ -15,12 +15,17 @@ import AppShell from "../components/layout/AppShell.jsx";
 import AppSidebar from "../components/layout/AppSidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
-import Field from "../components/ui/Field.jsx";
-import { NAVY, MUTED, LINE, INK } from "../lib/theme.js";
+import Avatar from "../components/ui/Avatar.jsx";
+import Badge from "../components/ui/Badge.jsx";
+import Alert from "../components/ui/Alert.jsx";
+import StatusBadge from "../components/common/StatusBadge.jsx";
+import SearchInput from "../components/common/SearchInput.jsx";
+import { LoadingState } from "../components/ui/States.jsx";
+import { colors, radius, type } from "../lib/theme.js";
 import AdminUserDetail from "./AdminUserDetail.jsx";
 
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
-const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
+const STATUS_TONES = { active: "success", inactive: "neutral", suspended: "warning" };
 
 export default function AdminUsers() {
   const { loading: adminLoading } = useAdminAuth();
@@ -106,9 +111,7 @@ export default function AdminUsers() {
   if (adminLoading || authorityLoading) {
     return (
       <AppShell maxWidth={1000} sidebar={<AppSidebar />}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-          <Loader2 size={24} className="animate-spin" color={NAVY} />
-        </div>
+        <LoadingState minHeight="60vh" />
       </AppShell>
     );
   }
@@ -121,49 +124,45 @@ export default function AdminUsers() {
         title="Administration des utilisateurs"
         subtitle={`${filteredUsers.length} utilisateur${filteredUsers.length > 1 ? "s" : ""}`}
         right={
-          <Button variant="outline" size="sm" onClick={fetchUsers} disabled={loading || !canViewUsers}>
-            <Loader2 size={14} className={loading ? "animate-spin" : ""} /> Actualiser
+          <Button variant="outlineDark" size="sm" onClick={fetchUsers} disabled={loading || !canViewUsers}>
+            {loading ? "Actualisation…" : "Actualiser"}
           </Button>
         }
       />
       {message && (
-        <div style={{
-          marginBottom: 16, padding: "10px 14px", borderRadius: 8, fontSize: 13,
-          background: message.type === "success" ? "#E3F0E4" : "#FAE8E6",
-          border: `1px solid ${message.type === "success" ? "#BFE0C4" : "#F5C6C3"}`,
-          color: message.type === "success" ? "#2E6B3C" : "#8A2B22",
-          display: "flex", alignItems: "center", gap: 8
-        }}>
-          {message.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+        <Alert type={message.type} onDismiss={() => setMessage(null)}>
           {message.text}
-          <button onClick={() => setMessage(null)} style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "inherit" }}>✕</button>
-        </div>
+        </Alert>
       )}
 
-      <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "16px", marginBottom: 20 }}>
+      <div style={{ background: "#fff", border: `1px solid ${colors.border}`, borderRadius: radius.lg, padding: "16px", marginBottom: 20 }}>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "center" }}>
           <div style={{ flex: 1, minWidth: 240 }}>
-            <Field
-              label="Rechercher"
-              placeholder="Email, nom, prénom…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              icon={<Search size={16} color={MUTED} />}
-            />
+            <SearchInput value={search} onChange={setSearch} placeholder="Email, nom, prénom…" />
           </div>
           <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} style={{ padding: "10px 12px", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 13, background: "#fff", minWidth: 160 }}>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              aria-label="Filtrer par statut"
+              style={{ padding: "10px 12px", minHeight: 44, border: `1px solid ${colors.border}`, borderRadius: radius.sm, fontSize: 13, background: "#fff", minWidth: 160, fontFamily: "inherit", color: colors.foreground }}
+            >
               <option value="all">Tous les statuts</option>
               <option value="active">Actif</option>
               <option value="inactive">Inactif</option>
               <option value="suspended">Suspendu</option>
             </select>
-            <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} style={{ padding: "10px 12px", border: `1px solid ${LINE}`, borderRadius: 8, fontSize: 13, background: "#fff", minWidth: 160 }}>
-                <option value="all">Tous les rôles</option>
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>{r.name}</option>
-                ))}
-              </select>
+            <select
+              value={roleFilter}
+              onChange={(e) => setRoleFilter(e.target.value)}
+              aria-label="Filtrer par rôle"
+              style={{ padding: "10px 12px", minHeight: 44, border: `1px solid ${colors.border}`, borderRadius: radius.sm, fontSize: 13, background: "#fff", minWidth: 160, fontFamily: "inherit", color: colors.foreground }}
+            >
+              <option value="all">Tous les rôles</option>
+              {roles.map((r) => (
+                <option key={r.id} value={r.id}>{r.name}</option>
+              ))}
+            </select>
           </div>
         </div>
       </div>
@@ -179,11 +178,11 @@ export default function AdminUsers() {
           roles={roles}
         />
       ) : !canViewUsers ? (
-        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "40px", textAlign: "center", color: MUTED }}>
+        <div style={{ background: "#fff", border: `1px solid ${colors.border}`, borderRadius: radius.lg, padding: "40px", textAlign: "center", color: colors.mutedForeground }}>
           Vous n'avez pas la permission de consulter les utilisateurs (users.view requis).
         </div>
       ) : filteredUsers.length === 0 ? (
-        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "40px", textAlign: "center", color: MUTED }}>
+        <div style={{ background: "#fff", border: `1px solid ${colors.border}`, borderRadius: radius.lg, padding: "40px", textAlign: "center", color: colors.mutedForeground }}>
           Aucun utilisateur ne correspond aux critères.
         </div>
       ) : (
@@ -193,41 +192,41 @@ export default function AdminUsers() {
               key={u.id}
               onClick={() => setSelectedUser(u)}
               style={{
-                display: "flex", alignItems: "center", gap: 14, width: "100%", padding: "14px 16px",
-                border: `1px solid ${LINE}`, borderRadius: 10, background: "#fff",
-                cursor: "pointer", textAlign: "left", fontFamily: "inherit", transition: "border-color .15s",
+                display: "flex",
+                alignItems: "center",
+                gap: 14,
+                width: "100%",
+                padding: "14px 16px",
+                border: `1px solid ${colors.border}`,
+                borderRadius: radius.md,
+                background: "#fff",
+                cursor: "pointer",
+                textAlign: "left",
+                fontFamily: type.fontFamily.sans,
+                transition: "border-color .15s",
               }}
+              onMouseEnter={(e) => { e.currentTarget.style.borderColor = colors.gold2; }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; }}
             >
-              <div style={{ width: 42, height: 42, borderRadius: "50%", flexShrink: 0,
-                background: (u.role_ids || []).some((r) => roleById.get(r)?.is_system) ? "linear-gradient(135deg, #1B2A4A, #B8862B)" : NAVY,
-                color: "#fff", display: "flex", alignItems: "center", justifyContent: "center",
-                fontWeight: 700, fontSize: 14 }}>
-                {(u.first_name?.[0] || "") + (u.last_name?.[0] || "") || u.email?.[0]?.toUpperCase() || "U"}
-              </div>
+              <Avatar
+                name={`${u.first_name || ""} ${u.last_name || ""}`.trim()}
+                email={u.email}
+                size={42}
+                gradient={(u.role_ids || []).some((r) => roleById.get(r)?.is_system)}
+              />
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontSize: 14, fontWeight: 600, color: INK, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ fontSize: 14, fontWeight: 600, color: colors.foreground, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   {u.first_name || u.last_name ? `${u.first_name || ""} ${u.last_name || ""}`.trim() : u.email}
                 </div>
-                <div style={{ fontSize: 12, color: MUTED, marginTop: 2 }}>{u.email}</div>
+                <div style={{ fontSize: 12, color: colors.mutedForeground, marginTop: 2 }}>{u.email}</div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-                <span style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20,
-                  background: STATUS_TONES[u.status] === "success" ? "#E3F0E4" : STATUS_TONES[u.status] === "warning" ? "#FEF3C7" : "#F3F4F6",
-                  color: STATUS_TONES[u.status] === "success" ? "#2E6B3C" : STATUS_TONES[u.status] === "warning" ? "#92400E" : "#6B7280" }}>
-                  {STATUS_LABELS[u.status] || "—"}
-                </span>
-                {u.role_ids?.map((r) => {
-                  const isSystem = !!roleById.get(r)?.is_system;
-                  return (
-                    <span key={r} style={{ fontSize: 11, padding: "3px 8px", borderRadius: 20,
-                      background: isSystem ? "#EDE9DC" : "#F3F4F6",
-                      color: isSystem ? "#7A5A15" : "#374151", fontWeight: 600 }}>
-                      {roleName(r)}
-                    </span>
-                  );
-                })}
+                <StatusBadge status={u.status} labels={STATUS_LABELS} tones={STATUS_TONES} />
+                {u.role_ids?.map((r) => (
+                  <Badge key={r} tone={roleById.get(r)?.is_system ? "system" : "muted"}>{roleName(r)}</Badge>
+                ))}
               </div>
-              <MoreHorizontal size={16} color={MUTED} />
+              <MoreHorizontal size={16} color={colors.mutedForeground} style={{ flexShrink: 0 }} />
             </button>
           ))}
         </div>

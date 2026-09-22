@@ -1,37 +1,60 @@
-import { NAVY, GOLD } from "../../lib/theme.js";
+import { Loader2 } from "lucide-react";
+import { NAVY, colors, radius, type, controls } from "../../lib/theme.js";
 
 const variants = {
-  primary: { background: NAVY, color: "#fff" },
-  gold: { background: GOLD, color: NAVY },
-  ghost: { background: "transparent", color: NAVY, border: "1px solid #E4DFD0" },
+  primary: { background: colors.primary, color: "#fff" },
+  gold: { background: colors.secondary, color: NAVY },
+  ghost: { background: "transparent", color: NAVY, border: `1px solid ${colors.border}` },
   outline: { background: "rgba(255,255,255,0.05)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" },
+  danger: { background: colors.destructive, color: "#fff" },
+  outlineDark: { background: "#fff", color: NAVY, border: `1px solid ${colors.border}` },
 };
 
-export default function Button({ children, variant = "primary", size = "md", full = false, style, className, ...props }) {
-  const pad = size === "sm" ? "9px 14px" : size === "lg" ? "12px 18px" : "10px 18px";
-  const font = size === "sm" ? 12.5 : 13.5;
+const sizes = {
+  sm: { padding: "9px 14px", fontSize: type.fontSize.smMd, height: controls.heightSm },
+  md: { padding: "10px 18px", fontSize: type.fontSize.baseMd, height: controls.height },
+  lg: { padding: "12px 18px", fontSize: type.fontSize.md, height: controls.heightLg },
+};
+
+export default function Button({
+  children,
+  variant = "primary",
+  size = "md",
+  full = false,
+  loading = false,
+  style,
+  className,
+  disabled,
+  ...props
+}) {
+  const pad = sizes[size];
+  const isBusy = loading || disabled;
   return (
     <button
       {...props}
+      data-variant={variant}
       className={className ? `button ${className}` : "button"}
+      disabled={isBusy}
       style={{
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
         gap: 8,
+        minHeight: pad.height,
         width: full ? "100%" : "auto",
-        padding: pad,
-        borderRadius: 8,
-        fontSize: font,
-        fontWeight: 600,
-        fontFamily: "inherit",
+        padding: pad.padding,
+        borderRadius: radius.sm,
+        fontSize: pad.fontSize,
+        fontWeight: type.fontWeight.semibold,
+        fontFamily: type.fontFamily.sans,
         border: "none",
-        cursor: props.disabled ? "not-allowed" : "pointer",
-        opacity: props.disabled ? 0.5 : 1,
+        cursor: isBusy ? "not-allowed" : "pointer",
+        opacity: isBusy && !loading ? 0.5 : 1,
         ...variants[variant],
         ...style,
       }}
     >
+      {loading && <Loader2 size={size === "sm" ? 14 : 16} className="ntc-spin" />}
       {children}
     </button>
   );

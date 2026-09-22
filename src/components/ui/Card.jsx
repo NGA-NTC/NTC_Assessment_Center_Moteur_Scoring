@@ -1,17 +1,22 @@
-import { LINE } from "../../lib/theme.js";
+import { colors, radius, shadows } from "../../lib/theme.js";
 
-export default function Card({ children, onClick, style, ...props }) {
+export default function Card({ children, onClick, style, variant = "default", ...props }) {
   const baseStyle = {
-    background: "#fff",
-    border: `1px solid ${LINE}`,
-    borderRadius: 14,
-    boxShadow: "0 8px 30px rgba(27,42,74,0.08)",
+    background: variant === "flat" ? colors.background : colors.surface,
+    border: `1px solid ${colors.border}`,
+    borderRadius: radius.xl,
+    boxShadow: variant === "flat" ? "none" : shadows.card,
     ...style,
   };
 
   if (onClick) {
     return (
-      <div {...props} onClick={onClick} style={{ ...baseStyle, cursor: "pointer", transition: "transform .15s, box-shadow .15s" }}>
+      <div
+        {...props}
+        onClick={onClick}
+        className="ntc-card-interactive"
+        style={baseStyle}
+      >
         {children}
       </div>
     );

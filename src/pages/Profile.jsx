@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { Save, CheckCircle2, AlertCircle, Shield, Mail, Link, Lock, User } from "lucide-react";
+import { Save, Shield, Mail, Link, User, Lock } from "lucide-react";
 import { useUserAuth } from "../context/UserAuthContext.jsx";
 import { useEffectiveAuthority } from "../hooks/auth/useEffectiveAuthority.js";
 import AppShell from "../components/layout/AppShell.jsx";
@@ -8,7 +8,10 @@ import AppSidebar from "../components/layout/AppSidebar.jsx";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Field from "../components/ui/Field.jsx";
 import Button from "../components/ui/Button.jsx";
-import { NAVY, GOLD, MUTED, LINE, CREAM, INK } from "../lib/theme.js";
+import Alert from "../components/ui/Alert.jsx";
+import Tabs from "../components/ui/Tabs.jsx";
+import { LoadingState } from "../components/ui/States.jsx";
+import { GOLD, MUTED, LINE, CREAM, INK, radius, type } from "../lib/theme.js";
 
 const SECTIONS = [
   { id: "personal", label: "Informations personnelles", icon: User },
@@ -39,6 +42,20 @@ const EMPTY_FORM = {
   bio: "",
 };
 
+function InfoBox({ icon: Icon, iconColor, label, children }) {
+  return (
+    <div style={{ background: CREAM, border: `1px solid ${LINE}`, borderRadius: radius.md, padding: "16px" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+        <Icon size={18} color={iconColor ?? MUTED} style={{ flexShrink: 0 }} />
+        <div>
+          <div style={{ fontSize: type.fontSize.xs, color: MUTED, textTransform: "uppercase", fontWeight: type.fontWeight.semibold }}>{label}</div>
+          <div style={{ fontWeight: type.fontWeight.semibold, fontSize: type.fontSize.base }}>{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Profile() {
   const { user, profile, roles, updateProfile, loading: authLoading } = useUserAuth();
   const { can } = useEffectiveAuthority();
@@ -67,9 +84,7 @@ export default function Profile() {
   if (authLoading) {
     return (
       <AppShell maxWidth={720}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-          <div style={{ fontSize: 14, color: MUTED }}>Chargement…</div>
-        </div>
+        <LoadingState minHeight="60vh" />
       </AppShell>
     );
   }
@@ -125,37 +140,23 @@ export default function Profile() {
 
   const renderAccount = () => (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div style={{ background: CREAM, border: `1px solid ${LINE}`, borderRadius: 10, padding: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 12 }}>
-          <Mail size={18} color={MUTED} />
-          <div>
-            <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase" }}>Email (Supabase Auth)</div>
-            <div style={{ fontWeight: 600, fontSize: 13 }}>{user?.email}</div>
-          </div>
-        </div>
-        <div style={{ fontSize: 12, color: MUTED }}>
+      <InfoBox icon={Mail} label="Email (Supabase Auth)">
+        {user?.email}
+        <div style={{ fontSize: type.fontSize.sm, color: MUTED, fontWeight: type.fontWeight.regular, marginTop: 4, lineHeight: 1.6 }}>
           L'email est géré par Supabase Auth. Pour le modifier, utilisez la fonctionnalité de changement d'email dans les paramètres de sécurité Supabase.
         </div>
-      </div>
-      <div style={{ background: CREAM, border: `1px solid ${LINE}`, borderRadius: 10, padding: "16px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-          <Shield size={18} color={roleColor} />
-          <div>
-            <div style={{ fontSize: 11, color: MUTED, textTransform: "uppercase" }}>Rôle</div>
-            <div style={{ fontWeight: 600, fontSize: 13, color: roleColor }}>
-              {roleDisplay}
-            </div>
-          </div>
+      </InfoBox>
+      <InfoBox icon={Shield} iconColor={roleColor} label="Rôle">
+        <span style={{ color: roleColor }}>{roleDisplay}</span>
+        <div style={{ fontSize: type.fontSize.sm, color: MUTED, fontWeight: type.fontWeight.regular, marginTop: 4 }}>
+          {isPrivileged ? "Vous avez accès à l'espace administrateur." : "Rôle attribué automatiquement à la création du compte."}
         </div>
-        {isPrivileged ? (
-          <div style={{ fontSize: 12, color: MUTED }}>Vous avez accès à l'espace administrateur.</div>
-        ) : (
-          <div style={{ fontSize: 12, color: MUTED }}>Rôle attribué automatiquement à la création du compte.</div>
-        )}
+      </InfoBox>
+      <div style={{ marginTop: 4 }}>
+        <Button variant="outlineDark" size="sm" onClick={() => goTo("/modifier-mot-de-passe")} style={{ maxWidth: 280 }}>
+          <Lock size={16} /> Modifier le mot de passe
+        </Button>
       </div>
-      <Button variant="outline" size="sm" onClick={() => goTo("/modifier-mot-de-passe")} style={{ maxWidth: 280 }}>
-        <Lock size={16} /> Modifier le mot de passe
-      </Button>
     </div>
   );
 
@@ -172,41 +173,28 @@ export default function Profile() {
     <AppShell maxWidth={720} sidebar={<AppSidebar />}>
       <PageTitle title="Mon compte" subtitle={roleDisplay} />
       {message && (
-        <div style={{
-          marginBottom: 20, padding: "12px 16px", borderRadius: 8, fontSize: 13,
-          background: message.type === "success" ? "#E3F0E4" : "#FAE8E6",
-          border: `1px solid ${message.type === "success" ? "#BFE0C4" : "#F5C6C3"}`,
-          color: message.type === "success" ? "#2E6B3C" : "#8A2B22",
-          display: "flex", alignItems: "center", gap: 8
-        }}>
-          {message.type === "success" ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+        <Alert type={message.type} onDismiss={() => setMessage(null)}>
           {message.text}
-        </div>
+        </Alert>
       )}
       {!canViewProfile ? (
-        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "40px", textAlign: "center", color: MUTED }}>
+        <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: radius.lg, padding: "40px", textAlign: "center", color: MUTED }}>
           Vous n'avez pas la permission de consulter votre profil (profile.view requis).
         </div>
       ) : (
         <>
-          <div style={{ display: "flex", gap: 8, marginBottom: 20, borderBottom: `1px solid ${LINE}`, paddingBottom: 12 }}>
-            {SECTIONS.map((s) => (
-              <button key={s.id} onClick={() => setActiveSection(s.id)} style={{
-                display: "flex", alignItems: "center", gap: 6, padding: "10px 16px",
-                background: activeSection === s.id ? NAVY : "transparent",
-                color: activeSection === s.id ? "#fff" : MUTED,
-                border: "none", borderRadius: 8, cursor: "pointer",
-                fontFamily: "inherit", fontSize: 12.5, fontWeight: 600, transition: "all .15s",
-              }}>
-                <s.icon size={14} /> {s.label}
-              </button>
-            ))}
-          </div>
-          <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: 12, padding: "24px" }}>
+          <Tabs
+            items={SECTIONS}
+            active={activeSection}
+            onChange={setActiveSection}
+            variant="pills"
+            style={{ marginBottom: 20, background: "transparent" }}
+          />
+          <div style={{ background: "#fff", border: `1px solid ${LINE}`, borderRadius: radius.lg, padding: "24px", boxShadow: "0 8px 30px rgba(27,42,74,0.08)" }}>
             {renderSection()}
             {canEditProfile && (
               <div style={{ marginTop: 24, display: "flex", justifyContent: "flex-end" }}>
-                <Button onClick={handleSave} disabled={saving} size="lg">
+                <Button onClick={handleSave} disabled={saving} size="lg" loading={saving}>
                   <Save size={16} /> {saving ? "Sauvegarde…" : "Enregistrer les modifications"}
                 </Button>
               </div>
