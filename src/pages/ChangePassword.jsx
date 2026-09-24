@@ -10,14 +10,14 @@ import Button from "../components/ui/Button.jsx";
 import { MUTED, NAVY } from "../lib/theme.js";
 
 export default function ChangePassword() {
-  const { currentUser, updatePassword, logout } = useUserAuth();
+  const { user, updatePassword, logout } = useUserAuth();
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  if (!currentUser) {
+  if (!user) {
     return <Navigate to="/connexion" replace />;
   }
 

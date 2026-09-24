@@ -78,6 +78,7 @@ export function UserAuthProvider({ children }) {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
+        setLoading(true);
         await fetchProfile(session.user.id);
         await fetchRoles(session.user.id);
       } else {

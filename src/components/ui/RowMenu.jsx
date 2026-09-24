@@ -1,6 +1,6 @@
 import { MoreVertical } from "lucide-react";
 import DropdownMenu from "./DropdownMenu.jsx";
-import { colors, radius } from "../../lib/theme.js";
+import { cn } from "@/lib/utils";
 
 function prevent(e) {
   e.stopPropagation();
@@ -12,29 +12,19 @@ export default function RowMenu({ items }) {
     <DropdownMenu
       items={items}
       width={220}
-      trigger={({ open, toggle }) => (
+      trigger={({ open }) => (
         <button
           type="button"
           aria-label="Options"
           aria-expanded={open}
           onClick={(e) => {
             prevent(e);
-            toggle();
           }}
           onMouseDown={prevent}
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 30,
-            height: 30,
-            borderRadius: radius.sm,
-            border: "none",
-            background: "transparent",
-            color: colors.mutedForeground,
-            cursor: "pointer",
-            flexShrink: 0,
-          }}
+          className={cn(
+            "inline-flex h-[30px] w-[30px] shrink-0 cursor-pointer items-center justify-center rounded-sm border-none bg-transparent text-muted-foreground hover:text-foreground",
+            open && "text-foreground"
+          )}
         >
           <MoreVertical size={17} />
         </button>

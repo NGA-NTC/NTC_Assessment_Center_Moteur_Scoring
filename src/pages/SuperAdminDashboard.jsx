@@ -127,7 +127,7 @@ export default function SuperAdminDashboard() {
         ))}
       </div>
 
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(380px,1fr))] gap-5">
+      <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-5">
         <CardSection title="Accès rapides">
           <div className="grid gap-2.5">
             {QUICK_ACTIONS.map((item) => (

@@ -94,12 +94,11 @@ export default function UserAvatar({ onNavigate, variant = "responsive" }) {
       width={240}
       header={<span>Compte</span>}
       className={isSidebar ? "w-full" : undefined}
-      trigger={({ open, toggle }) => (
+      trigger={({ open }) => (
         <button
           type="button"
-          onClick={toggle}
-          aria-expanded={open}
           aria-haspopup="menu"
+          aria-expanded={open}
           className={cn(
             "flex w-full cursor-pointer items-center gap-2.5 bg-transparent font-sans",
             isSidebar

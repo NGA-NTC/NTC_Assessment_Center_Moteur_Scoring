@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   DropdownMenu as Menu,
+  DropdownMenuTrigger as MenuTrigger,
   DropdownMenuContent as MenuContent,
   DropdownMenuItem as MenuItem,
 } from "./primitives/dropdown-menu.jsx";
@@ -20,8 +21,10 @@ export default function DropdownMenu({
 
   return (
     <div id={id} className={cn("relative inline-flex shrink-0", className)}>
-      {trigger({ open, toggle: () => setOpen((o) => !o), close: () => setOpen(false) })}
       <Menu open={open} onOpenChange={setOpen} modal={false}>
+        <MenuTrigger asChild>
+          {trigger({ open, close: () => setOpen(false) })}
+        </MenuTrigger>
         <MenuContent
           align={align === "right" ? "end" : "start"}
           side={side}

@@ -1,3 +1,4 @@
+import { Avatar as AvatarRoot, AvatarFallback } from "./primitives/avatar.jsx";
 import { cn } from "@/lib/utils";
 
 function resolveInitials(name, email) {
@@ -19,18 +20,21 @@ export default function Avatar({
 }) {
   const initials = initialsProp ?? resolveInitials(name, email);
   return (
-    <div
+    <AvatarRoot
       {...props}
       aria-hidden="true"
-      className={cn(
-        "flex shrink-0 items-center justify-center rounded-full font-bold text-white select-none",
-        gradient ? "bg-gradient-to-br from-navy to-gold" : "bg-navy",
-        size >= 40 ? "text-sm" : "text-[13px]",
-        className
-      )}
+      className={cn("size-9", className)}
       style={{ width: size, height: size, ...style }}
     >
-      {initials}
-    </div>
+      <AvatarFallback
+        className={cn(
+          "font-bold text-white select-none",
+          gradient ? "bg-gradient-to-br from-navy to-gold" : "bg-navy",
+          size >= 40 ? "text-sm" : "text-[13px]"
+        )}
+      >
+        {initials}
+      </AvatarFallback>
+    </AvatarRoot>
   );
 }

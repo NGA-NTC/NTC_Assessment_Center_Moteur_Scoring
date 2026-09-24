@@ -1,4 +1,5 @@
 import { Search } from "lucide-react";
+import { Input } from "../ui/primitives/input.jsx";
 import { cn } from "@/lib/utils";
 
 export default function SearchInput({
@@ -18,7 +19,7 @@ export default function SearchInput({
         size={isSmall ? 14 : 15}
         className="pointer-events-none absolute top-1/2 left-[11px] -translate-y-1/2 text-muted-foreground"
       />
-      <input
+      <Input
         type="search"
         value={value}
         onChange={(e) => onChange?.(e.target.value)}
@@ -27,8 +28,8 @@ export default function SearchInput({
         autoFocus={autoFocus}
         aria-label={placeholder}
         className={cn(
-          "w-full rounded-sm border border-border bg-surface pr-3 font-sans text-[13.5px] text-foreground outline-none",
-          isSmall ? "h-9 pl-[34px]" : "h-11 pl-[34px]",
+          "h-11 rounded-sm border-border bg-surface pl-[34px] pr-3 font-sans text-[13.5px] text-foreground",
+          isSmall && "h-9",
           className
         )}
       />

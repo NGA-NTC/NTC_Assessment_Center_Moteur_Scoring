@@ -5,6 +5,7 @@ import {
   SidebarTrigger,
 } from "../ui/Sidebar.jsx";
 import UserAvatar from "./UserAvatar.jsx";
+import useFocusReset from "../../hooks/ui/useFocusReset.js";
 import { cn } from "@/lib/utils";
 
 export default function AppShell({
@@ -14,6 +15,8 @@ export default function AppShell({
   header = true,
 }) {
   const navigate = useNavigate();
+
+  useFocusReset();
 
   return (
     <SidebarProvider defaultOpen>
