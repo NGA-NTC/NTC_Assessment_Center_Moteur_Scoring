@@ -10,24 +10,28 @@ import {
   User,
   Users,
 } from "lucide-react";
-import UserLogin from "../../pages/UserLogin.jsx";
-import Register from "../../pages/Register.jsx";
-import ForgotPassword from "../../pages/ForgotPassword.jsx";
-import ResetPassword from "../../pages/ResetPassword.jsx";
-import Login from "../../pages/Login.jsx";
-import TestApp from "../../pages/TestApp.jsx";
-import ChangePassword from "../../pages/ChangePassword.jsx";
-import Profile from "../../pages/Profile.jsx";
-import AdminResultats from "../../pages/AdminResultats.jsx";
-import AdminUsers from "../../pages/AdminUsers.jsx";
-import ModeTest from "../../pages/ModeTest.jsx";
+
+// Pages en code splitting — déclarations centralisées dans ./pages.js (react-refresh friendly).
+import {
+  UserLogin,
+  Register,
+  ForgotPassword,
+  ResetPassword,
+  Login,
+  TestApp,
+  ChangePassword,
+  Profile,
+  AdminResultats,
+  AdminUsers,
+  ModeTest,
+  SuperAdminDashboard,
+  SuperAdminAccounts,
+  SuperAdminRoles,
+  SuperAdminAccess,
+  SuperAdminPages,
+  SuperAdminFeatures,
+} from "./pages.js";
 import ApplicationLayout from "../../components/layout/ApplicationLayout.jsx";
-import SuperAdminDashboard from "../../pages/SuperAdminDashboard.jsx";
-import SuperAdminAccounts from "../../pages/SuperAdminAccounts.jsx";
-import SuperAdminRoles from "../../pages/SuperAdminRoles.jsx";
-import SuperAdminAccess from "../../pages/SuperAdminAccess.jsx";
-import SuperAdminPages from "../../pages/SuperAdminPages.jsx";
-import SuperAdminFeatures from "../../pages/SuperAdminFeatures.jsx";
 
 /**
  * Modèle de définition :

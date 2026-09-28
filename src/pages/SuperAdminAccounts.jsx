@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { UserPlus, Shield } from "lucide-react";
+import { toast } from "sonner";
 import {
   listUsers,
   createUserAccount,
@@ -15,8 +16,8 @@ import Field from "../components/ui/Field.jsx";
 import Badge from "../components/ui/Badge.jsx";
 import Avatar from "../components/ui/Avatar.jsx";
 import Modal from "../components/ui/Modal.jsx";
-import Alert from "../components/ui/Alert.jsx";
-import DataTable from "../components/common/DataTable.jsx";
+import ResponsiveDataTable from "../components/common/ResponsiveDataTable.jsx";
+import FilterSelect from "../components/common/FilterSelect.jsx";
 import StatusBadge from "../components/common/StatusBadge.jsx";
 import SearchInput from "../components/common/SearchInput.jsx";
 import ConfirmDialog from "../components/common/ConfirmDialog.jsx";
@@ -27,8 +28,12 @@ import AdminUserDetail from "./AdminUserDetail.jsx";
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "neutral", suspended: "warning" };
 
-const FILTER_SELECT_CLASS =
-  "h-11 w-full cursor-pointer rounded-sm border border-border bg-surface px-3 font-sans text-[14px] text-foreground outline-none";
+const STATUS_OPTIONS = [
+  { value: "all", label: "Tous les statuts" },
+  { value: "active", label: "Actif" },
+  { value: "inactive", label: "Inactif" },
+  { value: "suspended", label: "Suspendu" },
+];
 
 export default function SuperAdminAccounts() {
   const { can } = useEffectiveAuthority();
@@ -43,7 +48,6 @@ export default function SuperAdminAccounts() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [message, setMessage] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [confirmTarget, setConfirmTarget] = useState(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
@@ -65,7 +69,7 @@ export default function SuperAdminAccounts() {
       setRoles(roleData);
     } catch (e) {
       console.error("Erreur chargement utilisateurs:", e);
-      setMessage({ type: "error", text: "Impossible de charger les utilisateurs." });
+      toast.error("Impossible de charger les utilisateurs.");
     } finally {
       setLoading(false);
     }
@@ -104,12 +108,12 @@ export default function SuperAdminAccounts() {
         status: createForm.status,
       });
 
-      setMessage({ type: "success", text: "Utilisateur créé avec succès." });
+      toast.success("Utilisateur créé avec succès.");
       setShowCreateModal(false);
       setCreateForm({ email: "", password: "", first_name: "", last_name: "", role: "candidate", status: "active" });
       fetchUsers();
     } catch (e) {
-      setMessage({ type: "error", text: e.message || "Erreur lors de la création." });
+      toast.error(e.message || "Erreur lors de la création.");
     }
   };
 
@@ -124,11 +128,11 @@ export default function SuperAdminAccounts() {
     try {
       const newStatus = confirmTarget.status === "active" ? "inactive" : "active";
       await updateUserActive(confirmTarget.id, newStatus !== "inactive");
-      setMessage({ type: "success", text: `Utilisateur ${newStatus === "inactive" ? "suspendu" : "réactivé"}.` });
+      toast.success(`Utilisateur ${newStatus === "inactive" ? "suspendu" : "réactivé"}.`);
       setConfirmTarget(null);
       fetchUsers();
     } catch {
-      setMessage({ type: "error", text: "Erreur lors du changement de statut." });
+      toast.error("Erreur lors du changement de statut.");
     } finally {
       setConfirmBusy(false);
     }
@@ -142,10 +146,10 @@ export default function SuperAdminAccounts() {
       } else {
         await removeRole(userId, roleId);
       }
-      setMessage({ type: "success", text: `Rôle ${add ? "ajouté" : "retiré"}.` });
+      toast.success(`Rôle ${add ? "ajouté" : "retiré"}.`);
       fetchUsers();
     } catch (e) {
-      setMessage({ type: "error", text: e.message || "Erreur lors de la mise à jour du rôle." });
+      toast.error(e.message || "Erreur lors de la mise à jour du rôle.");
     }
   };
 
@@ -216,36 +220,31 @@ export default function SuperAdminAccounts() {
           )
         }
       />
-
-      {message && (
-        <Alert type={message.type} onDismiss={() => setMessage(null)}>
-          {message.text}
-        </Alert>
-      )}
-
       <div className="mb-5 flex flex-wrap items-center gap-4 rounded-xl border border-border bg-surface p-5 shadow-card">
         <div className="min-w-[220px] flex-1">
           <SearchInput value={search} onChange={setSearch} placeholder="Rechercher par nom, email…" />
         </div>
         <div className="min-w-[170px] max-w-[220px] flex-1">
-          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className={FILTER_SELECT_CLASS}>
-            <option value="all">Tous les statuts</option>
-            <option value="active">Actif</option>
-            <option value="inactive">Inactif</option>
-            <option value="suspended">Suspendu</option>
-          </select>
+          <FilterSelect
+            value={statusFilter}
+            onValueChange={setStatusFilter}
+            options={STATUS_OPTIONS}
+            ariaLabel="Filtrer par statut"
+            triggerClass="w-full"
+          />
         </div>
         <div className="min-w-[170px] max-w-[220px] flex-1">
-          <select value={roleFilter} onChange={(e) => setRoleFilter(e.target.value)} className={FILTER_SELECT_CLASS}>
-            <option value="all">Tous les rôles</option>
-            {roles.map((r) => (
-              <option key={r.id} value={r.id}>{r.name}</option>
-            ))}
-          </select>
+          <FilterSelect
+            value={roleFilter}
+            onValueChange={setRoleFilter}
+            options={[{ value: "all", label: "Tous les rôles" }, ...roles.map((r) => ({ value: r.id, label: r.name }))]}
+            ariaLabel="Filtrer par rôle"
+            triggerClass="w-full"
+          />
         </div>
       </div>
 
-      <DataTable
+      <ResponsiveDataTable
         columns={columns}
         rows={filteredUsers}
         keyFor={(u) => u.id}
@@ -253,6 +252,7 @@ export default function SuperAdminAccounts() {
         loading={loading}
         emptyTitle="Aucun utilisateur trouvé"
         emptyDescription="Modifiez vos filtres ou créez un nouvel utilisateur."
+        cardTitleKey="user"
       />
 
       {selectedUser && (

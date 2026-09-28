@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { getEffectiveAuthority } from "../../services/auth/authority/index.js";
-import { useUserAuth } from "../../context/UserAuthContext.jsx";
+import { useUserAuth } from "../../context/user-auth-hooks.js";
 
 /**
  * Autorité effective de l'utilisateur connecté (couche UX navigation).

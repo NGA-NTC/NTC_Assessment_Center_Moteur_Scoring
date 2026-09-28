@@ -1,24 +1,38 @@
 import { useState, useEffect } from "react";
 import { Navigate, useNavigate, Link } from "react-router-dom";
 import { Lock, CheckCircle2 } from "lucide-react";
-import { useUserAuth } from "../context/UserAuthContext.jsx";
+import { useUserAuth } from "../context/user-auth-hooks.js";
+import { supabase } from "../lib/supabaseClient.js";
 import AuthShell from "../components/layout/AuthShell.jsx";
 import BrandHeader from "../components/ui/BrandHeader.jsx";
 import FormCard from "../components/ui/FormCard.jsx";
 import PasswordField from "../components/ui/PasswordField.jsx";
 import Button from "../components/ui/Button.jsx";
-import { MUTED, NAVY } from "../lib/theme.js";
 
 export default function ResetPassword() {
-  const { currentUser, updatePassword } = useUserAuth();
+  const { user, updatePassword } = useUserAuth();
   const navigate = useNavigate();
+  // Un lien de réinitialisation Supabase arrive en `type=recovery` dans l'URL :
+  // la session de récupération est détectée à la fois par la présence du paramètre
+  // et par l'événement PASSWORD_RECOVERY (pour couvrir le nettoyage de l'URL par le client).
+  const [recovery, setRecovery] = useState(() => {
+    const raw = window.location.hash.slice(1) || window.location.search.slice(1);
+    return new URLSearchParams(raw).get("type") === "recovery";
+  });
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  if (currentUser) {
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setRecovery(true);
+    });
+    return () => subscription.unsubscribe();
+  }, []);
+
+  if (user && !recovery) {
     return <Navigate to="/test" replace />;
   }
 
@@ -44,10 +58,10 @@ export default function ResetPassword() {
       <AuthShell>
         <BrandHeader subtitle="Mot de passe réinitialisé" />
         <FormCard>
-          <div style={{ textAlign: "center", padding: "20px 0" }}>
-            <CheckCircle2 size={48} color="#2E6B3C" style={{ marginBottom: 16 }} />
-            <div style={{ fontSize: 18, fontWeight: 600, color: "#1B2A4A", marginBottom: 8 }}>Votre mot de passe a été mis à jour</div>
-            <div style={{ fontSize: 13.5, color: MUTED, marginBottom: 24 }}>Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</div>
+          <div className="py-5 text-center">
+            <CheckCircle2 size={48} className="mb-4 text-success" />
+            <div className="mb-2 text-lg font-semibold text-primary">Votre mot de passe a été mis à jour</div>
+            <div className="mb-6 text-[13.5px] text-muted-foreground">Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.</div>
             <Button full size="lg" onClick={() => navigate("/connexion", { replace: true })}>
               <Lock size={16} /> Se connecter
             </Button>
@@ -61,17 +75,17 @@ export default function ResetPassword() {
     <AuthShell>
       <BrandHeader subtitle="Réinitialiser le mot de passe" />
       <FormCard onSubmit={handleSubmit}>
-        <div style={{ fontSize: 13.5, color: MUTED, marginBottom: 20, textAlign: "center", lineHeight: 1.6 }}>
+        <div className="mb-5 text-center text-[13.5px] leading-[1.6] text-muted-foreground">
           Définissez votre nouveau mot de passe.
         </div>
         <PasswordField label="Nouveau mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Au moins 4 caractères" autoComplete="new-password" />
         <PasswordField label="Confirmer le nouveau mot de passe" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirmez le mot de passe" autoComplete="new-password" />
-        {error && <div style={{ fontSize: 12.5, color: "#B5652E", marginBottom: 12 }}>{error}</div>}
+        {error && <div className="mb-3 text-[12.5px] text-warning">{error}</div>}
         <Button full size="lg" type="submit" disabled={loading}>
           <Lock size={16} /> {loading ? "Mise à jour…" : "Enregistrer le nouveau mot de passe"}
         </Button>
-        <div style={{ textAlign: "center", marginTop: 14, fontSize: 12.5, color: MUTED }}>
-          <Link to="/connexion" style={{ color: NAVY, fontWeight: 600 }}>Annuler</Link>
+        <div className="mt-3.5 text-center text-[12.5px] text-muted-foreground">
+          <Link to="/connexion" className="font-semibold text-primary">Annuler</Link>
         </div>
       </FormCard>
     </AuthShell>

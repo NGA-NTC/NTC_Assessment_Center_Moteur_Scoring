@@ -1,18 +1,16 @@
 import { useState } from "react";
-import { Navigate, useNavigate, Link } from "react-router-dom";
+import { Navigate, Link } from "react-router-dom";
 import { Mail, UserPlus } from "lucide-react";
-import { useUserAuth } from "../context/UserAuthContext.jsx";
+import { useUserAuth } from "../context/user-auth-hooks.js";
 import AuthShell from "../components/layout/AuthShell.jsx";
 import BrandHeader from "../components/ui/BrandHeader.jsx";
 import FormCard from "../components/ui/FormCard.jsx";
 import Field from "../components/ui/Field.jsx";
 import PasswordField from "../components/ui/PasswordField.jsx";
 import Button from "../components/ui/Button.jsx";
-import { MUTED, NAVY } from "../lib/theme.js";
 
 export default function Register() {
-  const { currentUser, register } = useUserAuth();
-  const navigate = useNavigate();
+  const { user, register } = useUserAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -20,7 +18,7 @@ export default function Register() {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  if (currentUser) {
+  if (user) {
     return <Navigate to="/test" replace />;
   }
 
@@ -48,16 +46,16 @@ export default function Register() {
     <AuthShell>
       <BrandHeader subtitle="Inscription — Passez l'évaluation" />
       <FormCard onSubmit={handleSubmit}>
-        <Field label="Email" icon={<Mail size={16} color={MUTED} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" autoFocus autoComplete="email" />
+        <Field label="Email" icon={<Mail size={16} color="var(--muted-foreground)" />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" autoFocus autoComplete="email" />
         <PasswordField label="Mot de passe" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Au moins 4 caractères" autoComplete="new-password" />
         <PasswordField label="Confirmer le mot de passe" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Confirmez le mot de passe" autoComplete="new-password" />
-        {error && <div style={{ fontSize: 12.5, color: "#B5652E", marginBottom: 12 }}>{error}</div>}
-        {success && <div style={{ fontSize: 12.5, color: "#2E6B3C", marginBottom: 12, background: "#E3F0E4", border: "1px solid #BFE0C4", borderRadius: 8, padding: "10px 14px" }}>{success}</div>}
+        {error && <div className="mb-3 text-[12.5px] text-warning">{error}</div>}
+        {success && <div className="mb-3 rounded-lg border border-success-border bg-success-soft p-2.5 text-[12.5px] text-success">{success}</div>}
         <Button full size="lg" type="submit" disabled={loading}>
           <UserPlus size={16} /> {loading ? "Création…" : "Créer mon compte"}
         </Button>
-        <div style={{ textAlign: "center", marginTop: 14, fontSize: 12.5, color: MUTED }}>
-          Déjà inscrit ? <Link to="/connexion" style={{ color: NAVY, fontWeight: 600 }}>Se connecter</Link>
+        <div className="mt-3.5 text-center text-[12.5px] text-muted-foreground">
+          Déjà inscrit ? <Link to="/connexion" className="font-semibold text-primary">Se connecter</Link>
         </div>
       </FormCard>
     </AuthShell>

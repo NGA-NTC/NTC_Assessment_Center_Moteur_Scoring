@@ -1,16 +1,13 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useUserAuth } from "../../context/UserAuthContext.jsx";
+import { useUserAuth } from "../../context/user-auth-hooks.js";
+import { LoadingState } from "../../components/ui/States.jsx";
 
 export default function UserRoute({ children }) {
   const { user, loading } = useUserAuth();
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F7F4EC" }}>
-        <div style={{ fontSize: 14, color: "#8A8578" }}>Chargement…</div>
-      </div>
-    );
+    return <LoadingState minHeight={480} label="Vérification de la session…" />;
   }
 
   if (!user) {

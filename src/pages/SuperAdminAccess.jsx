@@ -1,12 +1,14 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { Shield, Save, AlertCircle } from "lucide-react";
+import { toast } from "sonner";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card from "../components/ui/Card.jsx";
-import Alert from "../components/ui/Alert.jsx";
-import { EmptyState, LoadingState } from "../components/ui/States.jsx";
+import { EmptyState, RowListSkeleton, TableSkeleton } from "../components/ui/States.jsx";
 import { useAccessControl } from "../hooks/rbac/useAccessControl.js";
 import RoleAssignabilityMatrix from "../components/admin/RoleAssignabilityMatrix.jsx";
+import CheckboxField from "../components/common/CheckboxField.jsx";
+import useMediaQuery from "../hooks/ui/useMediaQuery.js";
 
 const CAPABILITY_COLUMNS = [
   { key: "use", label: "USE", hint: "Utilisation (consultation / exécution)" },
@@ -38,6 +40,14 @@ export default function SuperAdminAccess() {
     await save();
   };
 
+  useEffect(() => {
+    if (success) toast.success(success);
+  }, [success]);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error]);
+
   const permissionsByCategory = useMemo(() => {
     const grouped = {};
     permissions.forEach((p) => {
@@ -52,7 +62,71 @@ export default function SuperAdminAccess() {
   const lockedCap = (permId) =>
     selectedRoleId === "super_admin" && permId.startsWith("rbac.") ? ["grant", "delegate"] : [];
 
-  const statusMessage = success ?? error;
+  // Desktop ≥768px : grille USE/MANAGE/GRANT/DELEGATE. Mobile : bloc empilé
+  // par permission (aucun scroll horizontal).
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
+  const renderPermRow = (perm) => {
+    const caps = selectedRolePerms[perm.id] ?? {};
+    const locked = lockedCap(perm.id);
+    return (
+      <div key={perm.id} className={`${CAP_GRID_CLASS} border-b border-border py-1.5 last:border-b-0`}>
+        <div className="min-w-0">
+          <div className="truncate text-[13px] font-medium text-foreground" title={perm.description || perm.id}>
+            {perm.name}
+          </div>
+          <div className="font-mono text-[10px] text-muted-foreground">{perm.id}</div>
+        </div>
+        {CAPABILITY_COLUMNS.map((col) => {
+          const isLocked = locked.includes(col.key);
+          const checked = !!caps[col.key];
+          return (
+            <div key={col.key} className="flex justify-center">
+              <CheckboxField
+                ariaLabel={`${col.label} — ${perm.name}`}
+                checked={checked}
+                disabled={isLocked}
+                title={isLocked ? "Protégé par le backend (anti-élévation) pour ce rôle" : col.hint}
+                onCheckedChange={() => toggleCapability(selectedRoleId, perm.id, col.key)}
+              />
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderPermCard = (perm) => {
+    const caps = selectedRolePerms[perm.id] ?? {};
+    const locked = lockedCap(perm.id);
+    return (
+      <div key={perm.id} className="mb-4 border-b border-border pb-4 last:mb-0 last:border-b-0 last:pb-0">
+        <div className="min-w-0">
+          <div className="truncate text-[13px] font-medium text-foreground" title={perm.description || perm.id}>
+            {perm.name}
+          </div>
+          <div className="font-mono text-[10px] text-muted-foreground">{perm.id}</div>
+        </div>
+        <div className="mt-2.5 grid grid-cols-4 gap-2">
+          {CAPABILITY_COLUMNS.map((col) => {
+            const isLocked = locked.includes(col.key);
+            return (
+              <div key={col.key} className="flex flex-col items-center gap-1.5">
+                <span className="text-[10px] font-bold text-muted-foreground" title={col.hint}>{col.label}</span>
+                <CheckboxField
+                  ariaLabel={`${col.label} — ${perm.name}`}
+                  checked={!!caps[col.key]}
+                  disabled={isLocked}
+                  title={isLocked ? "Protégé par le backend (anti-élévation) pour ce rôle" : col.hint}
+                  onCheckedChange={() => toggleCapability(selectedRoleId, perm.id, col.key)}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div>
@@ -74,13 +148,7 @@ export default function SuperAdminAccess() {
         }
       />
 
-      {statusMessage && (
-        <Alert type={success ? "success" : "error"}>
-          {statusMessage}
-        </Alert>
-      )}
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,280px)_minmax(0,1fr)]">
         <Card className="h-fit overflow-hidden lg:sticky lg:top-[100px]">
           <div className="flex items-center justify-between border-b border-border bg-cream px-6 py-5">
             <div className="text-[16px] font-semibold text-foreground">Rôles</div>
@@ -88,7 +156,7 @@ export default function SuperAdminAccess() {
           </div>
           <div className="max-h-[60vh] overflow-y-auto">
             {loading ? (
-              <LoadingState minHeight={200} label="Chargement…" />
+              <RowListSkeleton count={5} />
             ) : roles.length === 0 ? (
               <EmptyState title="Aucun rôle" description="Aucun rôle n'est configuré." />
             ) : (
@@ -104,7 +172,7 @@ export default function SuperAdminAccess() {
                           "w-full cursor-pointer border-none px-5 py-3.5 text-left font-sans text-[14px] transition-colors duration-150 " +
                           "border-l-[3px] " +
                           (isActive
-                            ? "border-l-gold bg-[#F5F5F5] font-semibold text-navy"
+                            ? "border-l-gold bg-muted font-semibold text-primary"
                             : "border-l-transparent bg-transparent font-medium text-ink")
                         }
                       >
@@ -127,9 +195,7 @@ export default function SuperAdminAccess() {
 
         <div>
           {loading ? (
-            <Card className="p-12 text-center">
-              <LoadingState minHeight={160} label="Chargement des permissions…" />
-            </Card>
+            <TableSkeleton columnCount={5} minHeight={240} />
           ) : !selectedRole ? (
             <Card className="p-12 text-center text-muted-foreground">
               <Shield size={48} className="mx-auto mb-4 opacity-30" />
@@ -147,68 +213,42 @@ export default function SuperAdminAccess() {
               </div>
 
               <div className="max-h-[70vh] overflow-y-auto px-6 py-5">
-                <div className={`${CAP_GRID_CLASS} mb-3 border-b border-border pb-2.5`}>
-                  <div className="text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase">
-                    Permission
-                  </div>
-                  {CAPABILITY_COLUMNS.map((col) => (
-                    <div key={col.key} className="text-center text-[12px] font-bold text-navy" title={col.hint}>
-                      {col.label}
-                    </div>
-                  ))}
-                </div>
-
-                {permissions.length === 0 && (
+                {permissions.length === 0 ? (
                   <div className="p-12 text-center text-muted-foreground">
                     <AlertCircle size={32} className="mx-auto mb-3 opacity-30" />
                     <p className="m-0">Aucune permission définie dans le système.</p>
                   </div>
-                )}
-
-                <div className="overflow-x-auto">
-                  <div className="min-w-[520px]">
+                ) : isDesktop ? (
+                  <>
+                    <div className={`${CAP_GRID_CLASS} mb-3 border-b border-border pb-2.5`}>
+                      <div className="text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase">
+                        Permission
+                      </div>
+                      {CAPABILITY_COLUMNS.map((col) => (
+                        <div key={col.key} className="text-center text-[12px] font-bold text-navy" title={col.hint}>
+                          {col.label}
+                        </div>
+                      ))}
+                    </div>
                     {Object.entries(permissionsByCategory).map(([category, perms]) => (
                       <div key={category} className="mb-5">
                         <div className="mb-2 border-b border-border pb-1.5 text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase">
                           {category}
                         </div>
-                        {perms.map((perm) => {
-                          const caps = selectedRolePerms[perm.id] ?? {};
-                          const locked = lockedCap(perm.id);
-                          return (
-                            <div key={perm.id} className={`${CAP_GRID_CLASS} border-b border-border py-1.5 last:border-b-0`}>
-                              <div className="min-w-0">
-                                <div className="truncate text-[13px] font-medium text-foreground" title={perm.description || perm.id}>
-                                  {perm.name}
-                                </div>
-                                <div className="font-mono text-[10px] text-muted-foreground">{perm.id}</div>
-                              </div>
-                              {CAPABILITY_COLUMNS.map((col) => {
-                                const isLocked = locked.includes(col.key);
-                                const checked = !!caps[col.key];
-                                return (
-                                  <div key={col.key} className="text-center">
-                                    <input
-                                      type="checkbox"
-                                      checked={checked}
-                                      disabled={isLocked}
-                                      title={isLocked ? "Protégé par le backend (anti-élévation) pour ce rôle" : col.hint}
-                                      onChange={() => toggleCapability(selectedRoleId, perm.id, col.key)}
-                                      className={
-                                        "h-[18px] w-[18px] accent-gold " +
-                                        (isLocked ? "cursor-not-allowed opacity-40" : "cursor-pointer")
-                                      }
-                                    />
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          );
-                        })}
+                        {perms.map(renderPermRow)}
                       </div>
                     ))}
-                  </div>
-                </div>
+                  </>
+                ) : (
+                  Object.entries(permissionsByCategory).map(([category, perms]) => (
+                    <div key={category} className="mb-5">
+                      <div className="mb-2 border-b border-border pb-1.5 text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase">
+                        {category}
+                      </div>
+                      {perms.map(renderPermCard)}
+                    </div>
+                  ))
+                )}
               </div>
 
               <div className="flex items-center justify-end gap-3 border-t border-border bg-cream px-6 py-4">

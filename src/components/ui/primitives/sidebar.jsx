@@ -230,7 +230,7 @@ const SidebarInset = forwardRef(function SidebarInset({ className, ...props }, r
       ref={ref}
       data-slot="sidebar-inset"
       className={cn(
-        "bg-background relative flex w-full flex-1 flex-col",
+        "bg-background relative flex min-w-0 w-full flex-1 flex-col",
         className
       )}
       {...props}

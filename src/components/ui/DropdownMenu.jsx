@@ -32,7 +32,7 @@ export default function DropdownMenu({
           style={{ width: `min(92vw, ${width}px)`, zIndex: 50 }}
         >
           {header && (
-            <div className="border-b border-line bg-cream px-3 py-2.5 text-[11px] uppercase tracking-[0.5px] text-muted">
+            <div className="border-b border-border bg-background px-3 py-2.5 text-[11px] uppercase tracking-[0.5px] text-muted-foreground">
               {header}
             </div>
           )}
@@ -48,7 +48,7 @@ export default function DropdownMenu({
                 "cursor-pointer",
                 it.danger
                   ? "text-destructive-strong data-[highlighted]:bg-destructive-soft data-[highlighted]:text-destructive-strong focus:text-destructive-strong"
-                  : "text-foreground data-[highlighted]:bg-line-soft",
+                  : "text-foreground data-[highlighted]:bg-muted",
                 it.className
               )}
             >

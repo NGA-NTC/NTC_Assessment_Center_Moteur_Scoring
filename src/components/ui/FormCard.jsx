@@ -5,7 +5,7 @@ export default function FormCard({ children, onSubmit, style, className, ...prop
     <form
       onSubmit={onSubmit}
       {...props}
-      className={cn("rounded-xl border border-border bg-surface px-[26px] pt-[26px] pb-6 shadow-card", className)}
+      className={cn("rounded-xl border border-border bg-card px-[26px] pt-[26px] pb-6 shadow-card", className)}
       style={style}
     >
       {children}

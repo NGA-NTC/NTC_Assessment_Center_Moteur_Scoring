@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Navigate, useLocation, Link } from "react-router-dom";
 import { Mail, LogIn } from "lucide-react";
-import { useUserAuth } from "../context/UserAuthContext.jsx";
+import { useUserAuth } from "../context/user-auth-hooks.js";
 import AuthShell from "../components/layout/AuthShell.jsx";
 import BrandHeader from "../components/ui/BrandHeader.jsx";
 import FormCard from "../components/ui/FormCard.jsx";
 import Field from "../components/ui/Field.jsx";
 import PasswordField from "../components/ui/PasswordField.jsx";
 import Button from "../components/ui/Button.jsx";
-import { MUTED, NAVY } from "../lib/theme.js";
+import { LoadingState } from "../components/ui/States.jsx";
 
 export default function UserLogin() {
   const { user, login, loading: authLoading, hasRole } = useUserAuth();
@@ -24,9 +24,7 @@ export default function UserLogin() {
   if (authLoading) {
     return (
       <AuthShell>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "60vh" }}>
-          <div style={{ fontSize: 14, color: MUTED }}>Chargement de votre espace…</div>
-        </div>
+        <LoadingState minHeight={340} label="Chargement de votre espace…" />
       </AuthShell>
     );
   }
@@ -53,20 +51,20 @@ export default function UserLogin() {
     <AuthShell>
       <BrandHeader subtitle="Connexion — Accès à l'évaluation" />
       <FormCard onSubmit={handleSubmit}>
-        <Field label="Email" icon={<Mail size={16} color={MUTED} />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" autoFocus autoComplete="email" />
+        <Field label="Email" icon={<Mail size={16} color="var(--muted-foreground)" />} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="votre@email.com" autoFocus autoComplete="email" />
         <PasswordField value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Votre mot de passe" autoComplete="current-password" />
-        {error && <div style={{ fontSize: 12.5, color: "#B5652E", marginBottom: 12 }}>{error}</div>}
-        <Button full size="lg" type="submit" disabled={loading}>
-          <LogIn size={16} /> {loading ? "Connexion…" : "Se connecter"}
+        {error && <div className="mb-3 text-[12.5px] text-warning">{error}</div>}
+        <Button full size="lg" type="submit" loading={loading}>
+          <LogIn size={16} /> Se connecter
         </Button>
-        <div style={{ textAlign: "center", marginTop: 14, fontSize: 12.5, color: MUTED }}>
-          Pas encore de compte ? <Link to="/inscription" style={{ color: NAVY, fontWeight: 600 }}>S'inscrire</Link>
+        <div className="mt-3.5 text-center text-[12.5px] text-muted-foreground">
+          Pas encore de compte ? <Link to="/inscription" className="font-semibold text-primary">S'inscrire</Link>
         </div>
-        <div style={{ textAlign: "center", marginTop: 14 }}>
-          <Link to="/mot-de-passe-oublie" style={{ fontSize: 11.5, color: MUTED, textDecoration: "underline" }}>Mot de passe oublié ?</Link>
+        <div className="mt-3.5 text-center">
+          <Link to="/mot-de-passe-oublie" className="text-[11.5px] text-muted-foreground underline">Mot de passe oublié ?</Link>
         </div>
-        <div style={{ textAlign: "center", marginTop: 14 }}>
-          <Link to="/login" style={{ fontSize: 11.5, color: MUTED, textDecoration: "underline" }}>Espace administrateur</Link>
+        <div className="mt-3.5 text-center">
+          <Link to="/login" className="text-[11.5px] text-muted-foreground underline">Espace administrateur</Link>
         </div>
       </FormCard>
     </AuthShell>

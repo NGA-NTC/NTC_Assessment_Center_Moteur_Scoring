@@ -1,13 +1,12 @@
 import Card from "../ui/Card.jsx";
 
-export default function StatCard({ label, value, icon: Icon, color = "#1B2A4A", path, onClick, hint, style }) {
+export default function StatCard({ label, value, icon: Icon, color = "var(--primary)", path, onClick, hint, style }) {
   const handleClick = onClick || (path ? () => { window.location.href = path; } : undefined);
   return (
     <Card
       onClick={handleClick}
       className="p-4.5"
-      style={{ borderLeft: `4px solid ${color}`, ...style }}
-    >
+      style={{ borderLeft: `4px solid ${color}`, ...style }}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <div className="mb-1 text-[11px] font-semibold tracking-[0.5px] text-muted-foreground uppercase">
@@ -19,7 +18,7 @@ export default function StatCard({ label, value, icon: Icon, color = "#1B2A4A", 
         {Icon && (
           <div
             className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl"
-            style={{ background: `${color}15` }}
+            style={{ background: `color-mix(in oklab, ${color} 15%, transparent)` }}
           >
             <Icon size={24} color={color} />
           </div>

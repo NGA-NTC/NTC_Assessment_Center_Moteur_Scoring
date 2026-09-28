@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { Plus, Edit, Trash2, Settings, Save, ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { toast } from "sonner";
 import {
   listFeatures,
   createFeature,
@@ -9,27 +10,17 @@ import {
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
-import Card from "../components/ui/Card.jsx";
 import Badge from "../components/ui/Badge.jsx";
-import Alert from "../components/ui/Alert.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import ConfirmDialog from "../components/common/ConfirmDialog.jsx";
-import { EmptyState, LoadingState } from "../components/ui/States.jsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/Table.jsx";
+import ResponsiveDataTable from "../components/common/ResponsiveDataTable.jsx";
+import { TableSkeleton } from "../components/ui/States.jsx";
 
 export default function SuperAdminFeatures() {
   const [pages, setPages] = useState([]);
   const [features, setFeatures] = useState([]);
 
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingFeature, setEditingFeature] = useState(null);
   const [formData, setFormData] = useState({ id: "", name: "", description: "", page_id: "", category: "", is_system: false });
@@ -45,7 +36,7 @@ export default function SuperAdminFeatures() {
       setFeatures(features);
     } catch (e) {
       console.error("Erreur chargement fonctionnalités:", e);
-      setMessage({ type: "error", text: "Impossible de charger les données." });
+      toast.error("Impossible de charger les données.");
     } finally {
       setLoading(false);
     }
@@ -61,17 +52,17 @@ export default function SuperAdminFeatures() {
     try {
       if (editingFeature) {
         await updateFeature(editingFeature.id, { name: formData.name, description: formData.description, page_id: formData.page_id, category: formData.category });
-        setMessage({ type: "success", text: "Fonctionnalité mise à jour." });
+        toast.success("Fonctionnalité mise à jour.");
       } else {
         await createFeature({ id: formData.id, name: formData.name, description: formData.description, page_id: formData.page_id, category: formData.category });
-        setMessage({ type: "success", text: "Fonctionnalité créée." });
+        toast.success("Fonctionnalité créée.");
       }
       setShowModal(false);
       setEditingFeature(null);
       setFormData({ id: "", name: "", description: "", page_id: "", category: "", is_system: false });
       fetchData();
     } catch (e) {
-      setMessage({ type: "error", text: e.message || "Erreur lors de la sauvegarde." });
+      toast.error(e.message || "Erreur lors de la sauvegarde.");
     }
   };
 
@@ -79,17 +70,17 @@ export default function SuperAdminFeatures() {
     if (!deleteTarget) return;
     if (deleteTarget.is_system) {
       setDeleteTarget(null);
-      setMessage({ type: "error", text: "Impossible de supprimer une fonctionnalité système." });
+      toast.error("Impossible de supprimer une fonctionnalité système.");
       return;
     }
     setDeleteBusy(true);
     try {
       await deleteFeature(deleteTarget.id);
-      setMessage({ type: "success", text: "Fonctionnalité supprimée." });
+      toast.success("Fonctionnalité supprimée.");
       setDeleteTarget(null);
       fetchData();
     } catch {
-      setMessage({ type: "error", text: "Erreur lors de la suppression." });
+      toast.error("Erreur lors de la suppression.");
     } finally {
       setDeleteBusy(false);
     }
@@ -126,39 +117,65 @@ export default function SuperAdminFeatures() {
     return grouped;
   }, [features]);
 
+  const featureActions = (feature) => (
+    <div className="flex flex-wrap gap-2">
+      <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openEditModal(feature); }}>
+        <Edit size={14} /> Modifier
+      </Button>
+      {!feature.is_system && (
+        <Button size="sm" variant="outlineDark" className="border-warning text-warning" onClick={(e) => { e.stopPropagation(); setDeleteTarget(feature); }}>
+          <Trash2 size={14} /> Supprimer
+        </Button>
+      )}
+    </div>
+  );
+
   const FEATURE_COLUMNS = [
-    "Fonctionnalité",
-    "Description",
-    "Catégorie",
-    "Type",
-    "Actions",
+    { key: "name", label: "Fonctionnalité" },
+    { key: "description", label: "Description" },
+    { key: "category", label: "Catégorie" },
+    { key: "type", label: "Type" },
+    { key: "actions", label: "Actions" },
   ];
+
+  const renderFeatureCell = (feature, col) => {
+    switch (col.key) {
+      case "name":
+        return <span className="font-medium text-foreground">{feature.name}</span>;
+      case "description":
+        return <span className="block max-w-[300px] truncate text-muted-foreground">{feature.description || "—"}</span>;
+      case "category":
+        return <span className="text-[11px] text-muted-foreground">{feature.category || "—"}</span>;
+      case "type":
+        return feature.is_system ? <Badge tone="warning">Système</Badge> : <Badge tone="success">Personnalisée</Badge>;
+      case "actions":
+        return featureActions(feature);
+      default:
+        return null;
+    }
+  };
 
   return (
     <div>
       <PageTitle
         title="Fonctionnalités"
         subtitle={loading ? "Chargement…" : `${features.length} fonctionnalité${features.length > 1 ? "s" : ""} définie${features.length > 1 ? "s" : ""}`}
-        action={<Button onClick={openCreateModal}><Plus size={16} /> Nouvelle fonctionnalité</Button>}
+        action={<Button onClick={() => openCreateModal()}><Plus size={16} /> Nouvelle fonctionnalité</Button>}
       />
 
-      {message && (
-        <Alert type={message.type === "success" ? "success" : "error"}>
-          {message.text}
-        </Alert>
-      )}
-
-      <Card className="overflow-hidden">
-        {loading ? (
-          <LoadingState minHeight={300} />
-        ) : pages.length === 0 ? (
-          <EmptyState
-            icon={Settings}
-            title="Aucune page définie"
-            description="Créez d'abord des pages dans la section « Pages »."
-          />
+      {loading ? (
+        <TableSkeleton columnCount={5} minHeight={300} />
+      ) : (
+        pages.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card">
+            <div className="p-12 text-center text-muted-foreground">
+              <Settings size={48} className="mx-auto mb-4 opacity-30" />
+              <div className="text-sm font-semibold text-foreground">Aucune page définie</div>
+              <div className="mt-1 text-[12.5px]">Créez d'abord des pages dans la section « Pages ».</div>
+            </div>
+          </div>
         ) : (
-          <div>
+          <div className="rounded-xl border border-border bg-card shadow-card">
             {pages.map(page => {
               const pageFeats = featuresByPage[page.id] || [];
               const isExpanded = expandedPages[page.id] !== false;
@@ -167,7 +184,7 @@ export default function SuperAdminFeatures() {
                   <button
                     onClick={() => togglePageExpanded(page.id)}
                     aria-expanded={isExpanded}
-                    className="flex w-full cursor-pointer items-center justify-between gap-3 border-none bg-cream px-6 py-4 text-left font-sans text-[14px] font-semibold text-foreground transition-colors hover:bg-cream"
+                    className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-t-xl border-none bg-cream px-6 py-4 text-left font-sans text-[14px] font-semibold text-foreground transition-colors hover:bg-cream focus-visible:outline focus-visible:outline-2 focus-visible:outline-ring"
                   >
                     <div className="flex min-w-0 items-center gap-2.5">
                       <FileText size={20} className="shrink-0 text-navy" />
@@ -193,41 +210,14 @@ export default function SuperAdminFeatures() {
                           </Button>
                         </div>
                       ) : (
-                        <Table>
-                          <TableHeader>
-                            <TableRow className="border-b border-border hover:bg-transparent">
-                              {FEATURE_COLUMNS.map((col) => (
-                                <TableHead key={col} className="px-3 py-2 text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase first:pl-3 last:pr-3">
-                                  {col}
-                                </TableHead>
-                              ))}
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {pageFeats.map(feature => (
-                              <TableRow key={feature.id} className="border-b border-border">
-                                <TableCell className="px-3 py-2.5 font-medium text-foreground">{feature.name}</TableCell>
-                                <TableCell className="max-w-[300px] truncate px-3 py-2.5 text-muted-foreground">{feature.description || "—"}</TableCell>
-                                <TableCell className="px-3 py-2.5 text-[11px] text-muted-foreground">{feature.category || "—"}</TableCell>
-                                <TableCell className="px-3 py-2.5">
-                                  {feature.is_system ? <Badge tone="warning">Système</Badge> : <Badge tone="success">Personnalisée</Badge>}
-                                </TableCell>
-                                <TableCell className="px-3 py-2.5">
-                                  <div className="flex gap-2">
-                                    <Button size="sm" variant="outline" onClick={() => openEditModal(feature)}>
-                                      <Edit size={14} /> Modifier
-                                    </Button>
-                                    {!feature.is_system && (
-                                      <Button size="sm" variant="outlineDark" className="border-warning text-warning" onClick={() => setDeleteTarget(feature)}>
-                                        <Trash2 size={14} /> Supprimer
-                                      </Button>
-                                    )}
-                                  </div>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                        <ResponsiveDataTable
+                          columns={FEATURE_COLUMNS}
+                          rows={pageFeats}
+                          keyFor={(f) => f.id}
+                          renderCell={renderFeatureCell}
+                          loading={false}
+                          actionsSlot={featureActions}
+                        />
                       )}
                     </div>
                   )}
@@ -235,8 +225,8 @@ export default function SuperAdminFeatures() {
               );
             })}
           </div>
-        )}
-      </Card>
+        )
+      )}
 
       <Modal
         open={showModal}

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Plus, Edit, Trash2, Check, Lock } from "lucide-react";
+import { toast } from "sonner";
 import {
   listRoles,
   createRole,
@@ -9,27 +10,17 @@ import {
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Field from "../components/ui/Field.jsx";
-import Card from "../components/ui/Card.jsx";
 import Badge from "../components/ui/Badge.jsx";
-import Alert from "../components/ui/Alert.jsx";
 import Modal from "../components/ui/Modal.jsx";
 import ConfirmDialog from "../components/common/ConfirmDialog.jsx";
-import { EmptyState, LoadingState } from "../components/ui/States.jsx";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../components/ui/Table.jsx";
+import CheckboxField from "../components/common/CheckboxField.jsx";
+import ResponsiveDataTable from "../components/common/ResponsiveDataTable.jsx";
 
 const EMPTY_FORM = { id: "", name: "", description: "", is_assignable: false, parent_id: "" };
 
 export default function SuperAdminRoles() {
   const [roles, setRoles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [formData, setFormData] = useState(EMPTY_FORM);
@@ -42,7 +33,7 @@ export default function SuperAdminRoles() {
       setRoles(await listRoles());
     } catch (e) {
       console.error("Erreur chargement rôles:", e);
-      setMessage({ type: "error", text: "Impossible de charger les rôles." });
+      toast.error("Impossible de charger les rôles.");
     } finally {
       setLoading(false);
     }
@@ -68,7 +59,7 @@ export default function SuperAdminRoles() {
               parent_id: formData.parent_id || null,
             };
         await updateRole(editingRole.id, patch);
-        setMessage({ type: "success", text: "Rôle mis à jour." });
+        toast.success("Rôle mis à jour.");
       } else {
         await createRole({
           id: formData.id,
@@ -77,14 +68,14 @@ export default function SuperAdminRoles() {
           is_assignable: formData.is_assignable,
           parent_id: formData.parent_id || null,
         });
-        setMessage({ type: "success", text: "Rôle créé." });
+        toast.success("Rôle créé.");
       }
       setShowModal(false);
       setEditingRole(null);
       setFormData(EMPTY_FORM);
       fetchRoles();
     } catch (e) {
-      setMessage({ type: "error", text: e.message || "Erreur lors de la sauvegarde." });
+      toast.error(e.message || "Erreur lors de la sauvegarde.");
     }
   };
 
@@ -93,11 +84,11 @@ export default function SuperAdminRoles() {
     setDeleteBusy(true);
     try {
       await deleteRole(deleteTarget.id);
-      setMessage({ type: "success", text: "Rôle supprimé." });
+      toast.success("Rôle supprimé.");
       setDeleteTarget(null);
       fetchRoles();
     } catch (e) {
-      setMessage({ type: "error", text: e.message || "Erreur lors de la suppression." });
+      toast.error(e.message || "Erreur lors de la suppression.");
     } finally {
       setDeleteBusy(false);
     }
@@ -127,6 +118,56 @@ export default function SuperAdminRoles() {
     setFormData(EMPTY_FORM);
   };
 
+  const roleActions = (role) => (
+    <div className="flex flex-wrap gap-2">
+      <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); openEditModal(role); }}>
+        <Edit size={14} /> Modifier
+      </Button>
+      {!isSystemRole(role) && (
+        <Button size="sm" variant="outlineDark" className="border-warning text-warning" onClick={(e) => { e.stopPropagation(); setDeleteTarget(role); }}>
+          <Trash2 size={14} /> Supprimer
+        </Button>
+      )}
+    </div>
+  );
+
+  const columns = [
+    { key: "id", label: "ID" },
+    { key: "name", label: "Nom" },
+    { key: "assignable", label: "Assignable" },
+    { key: "parent", label: "Parent" },
+    { key: "description", label: "Description" },
+    { key: "actions", label: "Actions" },
+  ];
+
+  const renderCell = (role, col) => {
+    switch (col.key) {
+      case "id":
+        return <span className="font-mono text-[12px] text-muted-foreground">{role.id}</span>;
+      case "name":
+        return (
+          <div className="flex items-center gap-2 font-semibold text-foreground">
+            {role.name}
+            {isSystemRole(role) && (
+              <Badge tone="system">
+                <Lock size={9} className="inline-block -translate-y-px" /> SYSTEM
+              </Badge>
+            )}
+          </div>
+        );
+      case "assignable":
+        return <span className="text-muted-foreground">{role.is_assignable ? "Oui" : "Non"}</span>;
+      case "parent":
+        return <span className="font-mono text-[12px] text-muted-foreground">{role.parent_id || "—"}</span>;
+      case "description":
+        return <span className="block max-w-[300px] truncate text-muted-foreground">{role.description || "—"}</span>;
+      case "actions":
+        return roleActions(role);
+      default:
+        return null;
+    }
+  };
+
   const parentOptions = roles.filter((r) => !editingRole || r.id !== editingRole.id);
 
   return (
@@ -137,64 +178,16 @@ export default function SuperAdminRoles() {
         action={<Button onClick={openCreateModal}><Plus size={16} /> Nouveau rôle</Button>}
       />
 
-      {message && (
-        <Alert type={message.type === "success" ? "success" : "error"}>
-          {message.text}
-        </Alert>
-      )}
-
-      <Card className="overflow-hidden">
-        {loading ? (
-          <LoadingState minHeight={300} />
-        ) : roles.length === 0 ? (
-          <EmptyState title="Aucun rôle configuré" description="Créez votre premier rôle avec « Nouveau rôle »." />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="border-b border-border bg-cream hover:bg-cream">
-                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">ID</TableHead>
-                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Nom</TableHead>
-                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Assignable</TableHead>
-                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Parent</TableHead>
-                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Description</TableHead>
-                <TableHead className="bg-cream px-4 py-3 text-[13px] font-semibold text-foreground">Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {roles.map((role) => (
-                <TableRow key={role.id} className="border-b border-border">
-                  <TableCell className="px-4 py-3 font-mono text-[12px] text-muted-foreground">{role.id}</TableCell>
-                  <TableCell className="px-4 py-3">
-                    <div className="flex items-center gap-2 font-semibold text-foreground">
-                      {role.name}
-                      {isSystemRole(role) && (
-                        <Badge tone="system">
-                          <Lock size={9} className="inline-block -translate-y-px" /> SYSTEM
-                        </Badge>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="px-4 py-3 text-muted-foreground">{role.is_assignable ? "Oui" : "Non"}</TableCell>
-                  <TableCell className="px-4 py-3 font-mono text-[12px] text-muted-foreground">{role.parent_id || "—"}</TableCell>
-                  <TableCell className="max-w-[300px] truncate px-4 py-3 text-muted-foreground">{role.description || "—"}</TableCell>
-                  <TableCell className="px-4 py-3">
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline" onClick={() => openEditModal(role)}>
-                        <Edit size={14} /> Modifier
-                      </Button>
-                      {!isSystemRole(role) && (
-                        <Button size="sm" variant="outlineDark" className="border-warning text-warning" onClick={() => setDeleteTarget(role)}>
-                          <Trash2 size={14} /> Supprimer
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </Card>
+      <ResponsiveDataTable
+        columns={columns}
+        rows={roles}
+        keyFor={(r) => r.id}
+        renderCell={renderCell}
+        loading={loading}
+        emptyTitle="Aucun rôle configuré"
+        emptyDescription="Créez votre premier rôle avec « Nouveau rôle »."
+        actionsSlot={roleActions}
+      />
 
       <Modal
         open={showModal}
@@ -222,18 +215,13 @@ export default function SuperAdminRoles() {
             <Field label="Description" type="textarea" value={formData.description} onChange={(e) => setFormData((f) => ({ ...f, description: e.target.value }))} rows={3} />
             {!isSystemRole(editingRole) && (
               <>
-                <label className="mb-4 flex items-start gap-2.5 pt-1 text-[14px] text-foreground">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_assignable}
-                    onChange={(e) => setFormData((f) => ({ ...f, is_assignable: e.target.checked }))}
-                    className="mt-0.5 h-[18px] w-[18px] cursor-pointer accent-gold"
-                  />
-                  <span>
-                    Rôle assignable
-                    <span className="block text-[12px] font-normal text-muted-foreground">Apparaît dans l'interface Utilisateurs / Comptes</span>
-                  </span>
-                </label>
+                <CheckboxField
+                  className="mb-4 pt-1 text-[14px]"
+                  checked={formData.is_assignable}
+                  onCheckedChange={(checked) => setFormData((f) => ({ ...f, is_assignable: checked }))}
+                  label="Rôle assignable"
+                  description="Apparaît dans l'interface Utilisateurs / Comptes"
+                />
                 <Field label="Rôle parent (optionnel)" type="select" value={formData.parent_id} onChange={(e) => setFormData((f) => ({ ...f, parent_id: e.target.value }))}>
                   <option value="">— Aucun —</option>
                   {parentOptions.map((r) => (

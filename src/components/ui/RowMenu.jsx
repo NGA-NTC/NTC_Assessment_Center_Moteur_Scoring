@@ -15,7 +15,8 @@ export default function RowMenu({ items }) {
       trigger={({ open }) => (
         <button
           type="button"
-          aria-label="Options"
+          aria-label="Actions"
+          aria-haspopup="menu"
           aria-expanded={open}
           onClick={(e) => {
             prevent(e);

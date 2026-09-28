@@ -5,6 +5,7 @@ import { userActions } from "../services/auth/users/actionAccess.js";
 import Button from "../components/ui/Button.jsx";
 import Badge from "../components/ui/Badge.jsx";
 import Card from "../components/ui/Card.jsx";
+import CheckboxField from "../components/common/CheckboxField.jsx";
 
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "muted", suspended: "warning" };
@@ -74,7 +75,9 @@ export default function AdminUserDetail({
   return (
     <div className="flex flex-col">
       <button
+        type="button"
         onClick={onClose}
+        aria-label="Retour à la liste"
         className="mb-1 inline-flex w-fit cursor-pointer items-center gap-1.5 border-none bg-transparent p-0 font-sans text-[13px] text-muted-foreground"
       >
         <ChevronLeft size={16} /> Retour à la liste
@@ -134,22 +137,21 @@ export default function AdminUserDetail({
                   const has = activeRoles.includes(r);
                   const disabled = has ? !revocable : !addable;
                   return (
-                    <label
+                    <CheckboxField
                       key={r}
-                      className="flex items-center gap-2 text-[13px]"
-                      style={{ cursor: disabled ? "not-allowed" : "pointer" }}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={has}
-                        onChange={() => handleRoleToggle(r)}
-                        disabled={disabled}
-                        title={disabled ? (has ? "Retrait réservé à un acteur disposant de users.change_role" : "Rôle non assignable par vos rôles actuels") : undefined}
-                        className="h-4 w-4 accent-navy"
-                      />
-                      <span className={has ? "font-semibold" : "font-normal"}>{name}</span>
-                      {isSystem && <span className="text-[11px] text-muted-foreground">· rôle système</span>}
-                    </label>
+                      id={`role-${r}`}
+                      checked={has}
+                      onCheckedChange={() => handleRoleToggle(r)}
+                      disabled={disabled}
+                      title={disabled ? (has ? "Retrait réservé à un acteur disposant de users.change_role" : "Rôle non assignable par vos rôles actuels") : undefined}
+                      labelClassName={has ? "font-semibold" : "font-normal"}
+                      label={
+                        <>
+                          {name}
+                          {isSystem && <span className="ml-1 text-[11px] text-muted-foreground">· rôle système</span>}
+                        </>
+                      }
+                    />
                   );
                 })}
               </div>

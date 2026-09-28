@@ -20,7 +20,8 @@
   --breakpoint-2xl: 1536px;
 
   --font-sans: 'IBM Plex Sans', system-ui, sans-serif;
-  --font-serif: 'Fraunces', serif;
+  /* --font-serif : source unique = --ntc-font-serif (styles/tokens.css),
+     exposée plus bas via l'alias @theme inline. */
 
   --shadow-card: var(--ntc-shadow-card);
   --shadow-menu: var(--ntc-shadow-menu);
@@ -98,7 +99,7 @@
   --font-sans: var(--ntc-font-sans);
   --font-serif: var(--ntc-font-serif);
 
-  --radius-xs: var(--radius-sm);
+  --radius-xs: var(--radius-xs);
   --radius-sm: var(--radius-sm);
   --radius-md: var(--radius-md);
   --radius-lg: var(--radius-lg);
@@ -190,15 +191,6 @@ textarea:focus-visible,
     flex-wrap: wrap;
   }
 
-  .filter-dropdown > button {
-    min-height: 44px;
-  }
-
-  .view-toggle button {
-    min-height: 40px;
-    padding: 9px 10px;
-  }
-
   .admin-list-row {
     flex-wrap: wrap;
     align-items: flex-start !important;
@@ -218,37 +210,6 @@ textarea:focus-visible,
     width: 100%;
     justify-content: flex-start;
     flex-wrap: wrap;
-  }
-
-  .intensity-toggle {
-    flex-direction: column;
-    align-items: stretch !important;
-    gap: 5px !important;
-  }
-
-  .intensity-toggle__label {
-    width: auto !important;
-  }
-
-  .intensity-toggle__options {
-    width: 100%;
-  }
-
-  .update-modal-overlay {
-    align-items: flex-start !important;
-    overflow-y: auto;
-    padding: 14px !important;
-  }
-
-  .update-modal-overlay > div {
-    max-height: calc(100dvh - 28px);
-    overflow-y: auto;
-  }
-
-  .filter-dropdown__panel {
-    left: auto !important;
-    right: 0;
-    width: min(94vw, 320px);
   }
 }
 

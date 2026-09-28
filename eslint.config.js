@@ -18,4 +18,11 @@ export default defineConfig([
       parserOptions: { ecmaFeatures: { jsx: true } },
     },
   },
+  {
+    // Scripts de test manuels Supabase : exécutés hors bundle applicatif.
+    files: ['tests/**/*.js'],
+    rules: {
+      'no-unused-vars': 'off',
+    },
+  },
 ])

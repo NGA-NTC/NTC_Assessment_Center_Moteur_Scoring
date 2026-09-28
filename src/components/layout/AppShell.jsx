@@ -1,11 +1,14 @@
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
+import { Settings } from "lucide-react";
 import {
   SidebarProvider,
   SidebarInset,
   SidebarTrigger,
 } from "../ui/Sidebar.jsx";
-import UserAvatar from "./UserAvatar.jsx";
+import ThemeToggle from "./ThemeToggle.jsx";
 import useFocusReset from "../../hooks/ui/useFocusReset.js";
+import { Button } from "../ui/primitives/button.jsx";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../ui/primitives/tooltip.jsx";
 import { cn } from "@/lib/utils";
 
 export default function AppShell({
@@ -14,8 +17,6 @@ export default function AppShell({
   maxWidth = 900,
   header = true,
 }) {
-  const navigate = useNavigate();
-
   useFocusReset();
 
   return (
@@ -28,8 +29,26 @@ export default function AppShell({
             <span className="hidden text-[15px] font-semibold text-foreground sm:block">
               NTC Assessment
             </span>
-            <div className="ml-auto flex items-center gap-3">
-              <UserAvatar onNavigate={navigate} />
+            <div className="ml-auto flex items-center gap-2">
+              <ThemeToggle />
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="icon"
+                      aria-label="Paramètres du compte"
+                      className="size-9 border-border bg-card text-muted-foreground shadow-none hover:text-foreground"
+                    >
+                      <Link to="/compte">
+                        <Settings />
+                      </Link>
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Paramètres du compte</TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </header>
         )}

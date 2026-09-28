@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Save, AlertCircle, Shield, Network } from "lucide-react";
+import { toast } from "sonner";
 import Card from "../ui/Card.jsx";
 import Button from "../ui/Button.jsx";
-import Alert from "../ui/Alert.jsx";
-import { EmptyState, LoadingState } from "../ui/States.jsx";
+import { EmptyState, TableSkeleton } from "../ui/States.jsx";
 import { listRoles } from "../../services/rbac/roles/listRoles.js";
 import { listRoleAssignability, setRoleAssignability } from "../../services/rbac/roleAssignability/index.js";
 import { useEffectiveAuthority } from "../../hooks/auth/useEffectiveAuthority.js";
+import CheckboxField from "../common/CheckboxField.jsx";
+import useMediaQuery from "../../hooks/ui/useMediaQuery.js";
+import { cn } from "@/lib/utils";
 
 const edgeKey = (assigner, assignable) => `${assigner}|${assignable}`;
 
@@ -19,11 +22,10 @@ export default function RoleAssignabilityMatrix() {
   const [baseEdges, setBaseEdges] = useState(() => new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState(null);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   const load = useCallback(() => {
     setLoading(true);
-    setMessage(null);
 
     Promise.resolve()
       .then(() => Promise.all([listRoles(), listRoleAssignability()]))
@@ -33,7 +35,7 @@ export default function RoleAssignabilityMatrix() {
         setEdges(next);
         setBaseEdges(new Set(next));
       })
-      .catch((err) => setMessage({ type: "error", text: err.message }))
+      .catch((err) => toast.error(err.message))
       .finally(() => setLoading(false));
   }, []);
 
@@ -63,7 +65,6 @@ export default function RoleAssignabilityMatrix() {
 
   const toggle = (assignerId, assignableId) => {
     if (assignerId === assignableId) return;
-    setMessage(null);
     setEdges((prev) => {
       const next = new Set(prev);
       const key = edgeKey(assignerId, assignableId);
@@ -75,7 +76,6 @@ export default function RoleAssignabilityMatrix() {
 
   const reset = () => {
     setEdges(new Set(baseEdges));
-    setMessage(null);
   };
 
   const save = async () => {
@@ -92,7 +92,6 @@ export default function RoleAssignabilityMatrix() {
     if (changes.length === 0) return;
 
     setSaving(true);
-    setMessage(null);
     try {
       for (const change of changes) {
         await setRoleAssignability(change.a, change.b, change.enable);
@@ -115,9 +114,9 @@ export default function RoleAssignabilityMatrix() {
         });
         return next;
       });
-      setMessage({ type: "success", text: `${changes.length} relation(s) d'assignabilité mise(s) à jour.` });
+      toast.success(`${changes.length} relation(s) d'assignabilité mise(s) à jour.`);
     } catch (err) {
-      setMessage({ type: "error", text: err.message });
+      toast.error(err.message);
     } finally {
       setSaving(false);
     }
@@ -140,11 +139,112 @@ export default function RoleAssignabilityMatrix() {
     );
   }
 
+  const renderDesktopTable = () => (
+    <div className="overflow-x-auto">
+      <table className="w-full border-separate border-spacing-0" style={{ minWidth: 480 }}>
+        <thead>
+          <tr>
+            <th className="min-w-[180px] border-b border-border bg-muted px-3 py-2.5 text-left align-middle text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase">
+              Rôle assigné à un utilisateur
+            </th>
+            {roles.map((b) => (
+              <th
+                key={b.id}
+                title={b.id}
+                className="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap border-b border-border bg-muted px-1.5 py-2.5 text-center align-middle text-[12px] font-bold text-primary"
+              >
+                {b.name}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {roles.map((a) => (
+            <tr key={a.id}>
+              <td
+                className="max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap border-b border-border px-3 py-2 text-[13px] font-medium text-foreground"
+                title={a.id}
+              >
+                {a.name}
+              </td>
+              {roles.map((b) => {
+                const isSelf = a.id === b.id;
+                const checked = edges.has(edgeKey(a.id, b.id));
+                return (
+                  <td
+                    key={b.id}
+                    className={
+                      "border-b border-border px-1.5 py-2 text-center align-middle " +
+                      (isSelf ? "bg-neutral-soft" : "bg-card")
+                    }
+                  >
+                    {isSelf ? (
+                      <span
+                        className="text-[12px] text-muted-foreground"
+                        title="Un rôle ne peut pas s'assigner lui-même"
+                      >
+                        —
+                      </span>
+                    ) : (
+                      <CheckboxField
+                        ariaLabel={`${a.name} peut être attribué à : ${b.name}`}
+                        checked={checked}
+                        title={`${a.name} peut être attribué : ${checked ? "oui" : "non"}`}
+                        onCheckedChange={() => toggle(a.id, b.id)}
+                      />
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+
+  const renderMobileCards = () => (
+    <div className="flex flex-col gap-3">
+      {roles.map((a) => (
+        <Card key={a.id} className="p-4">
+          <div className="mb-3 flex min-w-0 items-center justify-between gap-3 border-b border-border pb-2.5">
+            <span className="truncate text-[14px] font-semibold text-foreground" title={a.id}>{a.name}</span>
+            <span className="shrink-0 text-[11px] font-semibold uppercase tracking-[0.5px] text-muted-foreground">
+              Peut être attribué à
+            </span>
+          </div>
+          <div className="flex flex-col gap-1">
+            {roles.map((b) => {
+              const isSelf = a.id === b.id;
+              const checked = edges.has(edgeKey(a.id, b.id));
+              return (
+                <div key={b.id} className="flex items-baseline justify-between gap-3 py-1">
+                  <span className="min-w-0 truncate text-[12.5px] text-foreground" title={b.id}>{b.name}</span>
+                  {isSelf ? (
+                    <span className="shrink-0 text-[12px] text-muted-foreground">—</span>
+                  ) : (
+                    <CheckboxField
+                      ariaLabel={`${a.name} peut être attribué à : ${b.name}`}
+                      checked={checked}
+                      title={`${a.name} peut être attribué : ${checked ? "oui" : "non"}`}
+                      onCheckedChange={() => toggle(a.id, b.id)}
+                      className={cn("shrink-0 border-0 bg-transparent p-0")}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </Card>
+      ))}
+    </div>
+  );
+
   return (
     <Card className="overflow-hidden">
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-cream px-6 py-5">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background px-6 py-5">
         <div className="flex items-center gap-3">
-          <Network size={22} className="shrink-0 text-gold" />
+          <Network size={22} className="shrink-0 text-secondary" />
           <div>
             <div className="text-[16px] font-semibold text-foreground">Assignabilité des rôles</div>
             <div className="mt-0.5 max-w-[620px] text-[12.5px] text-muted-foreground">
@@ -152,89 +252,24 @@ export default function RoleAssignabilityMatrix() {
             </div>
           </div>
         </div>
-        <Shield size={20} className="shrink-0 text-gold" />
+        <Shield size={20} className="shrink-0 text-secondary" />
       </div>
-
-      {message && (
-        <Alert type={message.type === "success" ? "success" : "error"} className="mx-6 mt-4">
-          {message.text}
-        </Alert>
-      )}
 
       <div className="p-6">
         {loading ? (
-          <LoadingState minHeight={160} />
+          <TableSkeleton columnCount={5} minHeight={160} />
         ) : roles.length === 0 ? (
           <EmptyState icon={AlertCircle} title="Aucun rôle défini" description="Aucun rôle n'est configuré dans le système." />
+        ) : isDesktop ? (
+          renderDesktopTable()
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full border-separate border-spacing-0" style={{ minWidth: 480 }}>
-              <thead>
-                <tr>
-                  <th className="min-w-[180px] border-b border-border bg-line-soft px-3 py-2.5 text-left align-middle text-[11px] font-bold tracking-[0.5px] text-muted-foreground uppercase">
-                    Rôle assigné à un utilisateur
-                  </th>
-                  {roles.map((b) => (
-                    <th
-                      key={b.id}
-                      title={b.id}
-                      className="max-w-[120px] overflow-hidden text-ellipsis whitespace-nowrap border-b border-border bg-line-soft px-1.5 py-2.5 text-center align-middle text-[12px] font-bold text-navy"
-                    >
-                      {b.name}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {roles.map((a) => (
-                  <tr key={a.id}>
-                    <td
-                      className="max-w-[220px] overflow-hidden text-ellipsis whitespace-nowrap border-b border-border px-3 py-2 text-[13px] font-medium text-foreground"
-                      title={a.id}
-                    >
-                      {a.name}
-                    </td>
-                    {roles.map((b) => {
-                      const isSelf = a.id === b.id;
-                      const checked = edges.has(edgeKey(a.id, b.id));
-                      return (
-                        <td
-                          key={b.id}
-                          className={
-                            "border-b border-border px-1.5 py-2 text-center align-middle " +
-                            (isSelf ? "bg-neutral-soft" : "bg-surface")
-                          }
-                        >
-                          {isSelf ? (
-                            <span
-                              className="text-[12px] text-muted-foreground"
-                              title="Un rôle ne peut pas s'assigner lui-même"
-                            >
-                              —
-                            </span>
-                          ) : (
-                            <input
-                              type="checkbox"
-                              checked={checked}
-                              onChange={() => toggle(a.id, b.id)}
-                              title={`${a.name} peut être attribué : ${checked ? "oui" : "non"}`}
-                              className="h-4 w-4 cursor-pointer accent-gold"
-                            />
-                          )}
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          renderMobileCards()
         )}
       </div>
 
-      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border bg-cream px-6 py-4">
+      <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border bg-background px-6 py-4">
         {dirtyCount > 0 ? (
-          <span className="text-[12px] font-semibold text-navy">
+          <span className="text-[12px] font-semibold text-primary">
             {dirtyCount} modification(s) en attente
           </span>
         ) : (

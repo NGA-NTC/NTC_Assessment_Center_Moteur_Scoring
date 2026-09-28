@@ -1,15 +1,18 @@
-import { B7_RUBRIC, BATTERIES, DIM } from "../../data/index.js";
+import { B7_RUBRIC, BATTERIES as STATIC_BATTERIES, DIM } from "../../data/index.js";
 import { accountProgress } from "../../lib/scoring.js";
-import { GOLD, INK, LINE, MUTED, NAVY, SERIF } from "../../lib/theme.js";
 import QuestionCard from "./QuestionCard.jsx";
 import InfoCallout from "./InfoCallout.jsx";
 
 const B7_DIMS = ["NST", "PRO", "PRI", "GCH", "VS"];
 const B8_OPTS = [["none", "Non obs."], ["leger", "Léger"], ["modere", "Modéré"], ["fort", "Fort"]];
 
+// S9-2 : les questions affichées en relecture proviennent de la MÊME source
+// que le questionnaire candidat (loadBatteries() → assessment_questions, ou
+// repli statique). La prop `batteries` est cette source chargée ; le statique
+// n'est qu'un repli si l'appelant n'en fournit pas (compat ascendante).
 function TextBlock({ value, placeholder }) {
   return (
-    <div style={{ minHeight: 50, background: "#FAF8F2", border: `1px dashed ${LINE}`, borderRadius: 8, padding: 10, fontSize: 13.5, lineHeight: 1.5, whiteSpace: "pre-wrap", color: value ? INK : MUTED }}>
+    <div style={{ minHeight: 50, background: "var(--muted)", border: "1px dashed var(--border)", borderRadius: 8, padding: 10, fontSize: 13.5, lineHeight: 1.5, whiteSpace: "pre-wrap", color: value ? "var(--foreground)" : "var(--muted-foreground)" }}>
       {value || placeholder || "Non renseigné"}
     </div>
   );
@@ -17,9 +20,10 @@ function TextBlock({ value, placeholder }) {
 
 function ReadonlyOption({ letter, text, selected }) {
   return (
-    <div style={{ width: "100%", display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 13px", marginBottom: 6, borderRadius: 8, border: selected ? `1.5px solid ${NAVY}` : `1.5px solid ${LINE}`, background: selected ? NAVY : "#fff", color: selected ? "#fff" : INK, fontSize: 13.5, lineHeight: 1.45 }}>
+    <div style={{ width: "100%", display: "flex", gap: 10, alignItems: "flex-start", padding: "10px 13px", marginBottom: 6, borderRadius: 8, border: selected ? "1.5px solid var(--primary)" : "1.5px solid var(--border)", background: selected ? "var(--primary)" : "var(--card)", color: selected ? "var(--primary-foreground)" : "var(--foreground)", fontSize: 13.5, lineHeight: 1.45 }}>
       <span style={{ fontWeight: 700, fontSize: 12.5, opacity: selected ? 1 : 0.55, flexShrink: 0, marginTop: 1 }}>{letter}</span>
       <span>{text}</span>
+      <span className="sr-only">{selected ? "Option sélectionnée" : "Option non sélectionnée"}</span>
     </div>
   );
 }
@@ -34,7 +38,7 @@ function McqReview({ battery, responses }) {
           {["A", "B", "C", "D"].map((L) => (
             <ReadonlyOption key={L} letter={L} text={it.o[L]} selected={responses.mcq[it.id] === L} />
           ))}
-          {!responses.mcq[it.id] && <div style={{ fontSize: 12, color: MUTED }}>Aucune réponse sélectionnée.</div>}
+          {!responses.mcq[it.id] && <div style={{ fontSize: 12, color: "var(--muted-foreground)" }}>Aucune réponse sélectionnée.</div>}
         </>
       )}
     </QuestionCard>
@@ -58,14 +62,14 @@ function B7Review({ battery, responses }) {
                 <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{DIM[dim].name}</div>
                 <div style={{ display: "flex", gap: 5 }}>
                   {[1, 2, 3, 4].map((n) => (
-                    <div key={n} title={B7_RUBRIC[dim][n - 1]} style={{ flex: 1, padding: "6px 0", borderRadius: 6, fontSize: 12.5, fontWeight: 600, textAlign: "center", border: v === n ? `1.5px solid ${GOLD}` : `1px solid ${LINE}`, background: v === n ? GOLD : "#fff", color: v === n ? NAVY : MUTED }}>{n}</div>
+                    <div key={n} title={B7_RUBRIC[dim][n - 1]} style={{ flex: 1, padding: "6px 0", borderRadius: 6, fontSize: 12.5, fontWeight: 600, textAlign: "center", border: v === n ? "1.5px solid var(--secondary)" : "1px solid var(--border)", background: v === n ? "var(--secondary)" : "var(--card)", color: v === n ? "var(--primary)" : "var(--muted-foreground)" }}>{n}{v === n && <span className="sr-only"> — note attribuée</span>}</div>
                   ))}
                 </div>
               </div>
             );
           })}
         </div>
-        {!hasScore && <div style={{ fontSize: 12, color: MUTED }}>Aucune note attribuée.</div>}
+        {!hasScore && <div style={{ fontSize: 12, color: "var(--muted-foreground)" }}>Aucune note attribuée.</div>}
       </QuestionCard>
     );
   });
@@ -84,37 +88,42 @@ function B8Review({ battery, responses }) {
           {it.watch.map((dimKey) => {
             const v = row[dimKey];
             return (
-              <div key={dimKey} className="intensity-toggle" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-                <div className="intensity-toggle__label" style={{ fontSize: 12, width: 150, flexShrink: 0 }}>{DIM[dimKey]?.name}</div>
-                <div className="intensity-toggle__options" style={{ display: "flex", gap: 4, flex: 1 }}>
+              <div key={dimKey} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                <div style={{ fontSize: 12, width: 150, flexShrink: 0 }}>{DIM[dimKey]?.name}</div>
+                <div style={{ display: "flex", gap: 4, flex: 1 }}>
                   {B8_OPTS.map(([k, label]) => (
-                    <div key={k} style={{ flex: 1, padding: "5px 0", borderRadius: 6, fontSize: 11, textAlign: "center", border: v === k ? `1.5px solid ${NAVY}` : `1px solid ${LINE}`, background: v === k ? NAVY : "#fff", color: v === k ? "#fff" : MUTED, fontWeight: v === k ? 600 : 400 }}>{label}</div>
+                    <div key={k} style={{ flex: 1, padding: "5px 0", borderRadius: 6, fontSize: 11, textAlign: "center", border: v === k ? "1.5px solid var(--primary)" : "1.5px solid var(--border)", background: v === k ? "var(--primary)" : "var(--card)", color: v === k ? "var(--primary-foreground)" : "var(--muted-foreground)", fontWeight: v === k ? 600 : 400 }}>{label}{v === k && <span className="sr-only"> — intensité sélectionnée</span>}</div>
                   ))}
                 </div>
               </div>
             );
           })}
         </div>
-        {!hasIntensity && <div style={{ fontSize: 12, color: MUTED }}>Aucune intensité observée.</div>}
+        {!hasIntensity && <div style={{ fontSize: 12, color: "var(--muted-foreground)" }}>Aucune intensité observée.</div>}
       </QuestionCard>
     );
   });
 }
 
-export default function ResponsesReview({ responses, batteryId }) {
+export default function ResponsesReview({ responses, batteryId, batteries }) {
   const { answered } = accountProgress(responses);
-  const batteries = batteryId ? BATTERIES.filter((b) => b.id === batteryId) : BATTERIES;
-  const hasResponses = answered > 0;
+  // Source des questions : prop chargée (Supabase/fallback) sinon statique.
+  const batteryList = Array.isArray(batteries) && batteries.length > 0 ? batteries : STATIC_BATTERIES;
+  const shown = batteryId ? batteryList.filter((b) => b.id === batteryId) : batteryList;
 
   return (
     <div>
       <InfoCallout>Relecture des réponses telles qu'affichées durant le test (lecture seule).</InfoCallout>
-      {!hasResponses && <div style={{ padding: 24, textAlign: "center", color: MUTED, fontSize: 13 }}>Aucune réponse enregistrée.</div>}
-      {hasResponses && batteries.map((b) => (
+      {answered === 0 && (
+        <div style={{ padding: 24, textAlign: "center", color: "var(--muted-foreground)", fontSize: 13 }}>
+          Aucune réponse enregistrée pour ce candidat — toutes les questions apparaissent comme non répondues.
+        </div>
+      )}
+      {shown.map((b) => (
         <div key={b.id} style={{ marginBottom: 26 }}>
-          <div style={{ fontFamily: SERIF, fontSize: 16.5, fontWeight: 600, color: NAVY, marginBottom: 10, display: "flex", gap: 8, alignItems: "baseline" }}>
+          <div style={{ fontFamily: "var(--ntc-font-serif)", fontSize: 16.5, fontWeight: 600, color: "var(--primary)", marginBottom: 10, display: "flex", gap: 8, alignItems: "baseline" }}>
             Batterie {b.id}
-            <span style={{ fontSize: 12, color: MUTED }}>· {b.name}</span>
+            <span style={{ fontSize: 12, color: "var(--muted-foreground)" }}>· {b.name}</span>
           </div>
           {b.type === "correct" || b.type === "weighted" ? (
             <McqReview battery={b} responses={responses} />

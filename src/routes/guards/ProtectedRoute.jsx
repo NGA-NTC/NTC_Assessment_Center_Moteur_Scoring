@@ -1,16 +1,13 @@
 import { Navigate, useLocation } from "react-router-dom";
-import { useAdminAuth } from "../../context/AdminAuthContext.jsx";
+import { useAdminAuth } from "../../context/admin-auth-hooks.js";
+import { LoadingState } from "../../components/ui/States.jsx";
 
 export default function ProtectedRoute({ children }) {
   const { isAuthenticated, loading } = useAdminAuth();
   const location = useLocation();
 
   if (loading) {
-    return (
-      <div style={{ minHeight: "100svh", display: "flex", alignItems: "center", justifyContent: "center", background: "#F7F4EC" }}>
-        <div style={{ fontSize: 14, color: "#8A8578" }}>Chargement…</div>
-      </div>
-    );
+    return <LoadingState minHeight={480} label="Vérification de la session…" />;
   }
 
   if (!isAuthenticated) {

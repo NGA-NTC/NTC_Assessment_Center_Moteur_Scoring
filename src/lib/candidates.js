@@ -23,9 +23,12 @@ export function computeCandidateScoring(responses) {
   return { axes, roles: computeRoleFit(dims, axes) };
 }
 
-export function buildCandidates({ accounts = [], staticImports = [], runtimeImports = [], hiddenStatic = [] }) {
+export function buildCandidates({ supabaseCandidates = [], accounts = [], staticImports = [], runtimeImports = [], hiddenStatic = [] }) {
   const hidden = new Set(hiddenStatic);
   return [
+    // Candidats plateforme (profils + tentatives Supabase) — déjà façonnés
+    // par l'appelant (P3-S8). Pass-through : aucune logique ici.
+    ...supabaseCandidates,
     ...accounts.map((a) => ({
       kind: "acct",
       id: "acct:" + a.email,

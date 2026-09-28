@@ -11,10 +11,10 @@ export default function ProgressCircle({ done, total, size = 34, color = "var(--
       style={{ width: size, height: size, borderRadius: "50%" }}
     >
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" className="stroke-line" strokeWidth="3" />
+        <circle cx={size / 2} cy={size / 2} r={radius} fill="none" className="stroke-border" strokeWidth="3" />
         <circle
           cx={size / 2} cy={size / 2} r={radius} fill="none"
-          className={cn(complete && "stroke-gold")}
+          className={cn(complete && "stroke-secondary")}
           strokeWidth="3"
           strokeDasharray={`${circumference}`}
           strokeDashoffset={`${circumference * (1 - pct)}`}

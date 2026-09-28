@@ -1,5 +1,16 @@
-import Modal from "../ui/Modal.jsx";
-import Button from "../ui/Button.jsx";
+import { Loader2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/primitives/alert-dialog.jsx";
+import { buttonVariants } from "../ui/primitives/button-variants.js";
+import { cn } from "@/lib/utils";
 
 export default function ConfirmDialog({
   open,
@@ -14,16 +25,30 @@ export default function ConfirmDialog({
   maxWidth = 440,
 }) {
   return (
-    <Modal open={open} onClose={loading ? undefined : onCancel} title={title} maxWidth={maxWidth}>
-      <div className="text-[13.5px] leading-[1.6] text-[#5c594d]">{description}</div>
-      <div className="mt-6 flex justify-end gap-3">
-        <Button type="button" variant="ghost" onClick={onCancel} disabled={loading}>
-          {cancelLabel}
-        </Button>
-        <Button type="button" variant={danger ? "danger" : "primary"} onClick={onConfirm} loading={loading}>
-          {confirmLabel}
-        </Button>
-      </div>
-    </Modal>
+    <AlertDialog open={open} onOpenChange={(next) => { if (!next && !loading) onCancel(); }}>
+      <AlertDialogContent style={{ maxWidth }}>
+        <AlertDialogHeader>
+          <AlertDialogTitle>{title}</AlertDialogTitle>
+          {description && <AlertDialogDescription>{description}</AlertDialogDescription>}
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel
+            className={cn(buttonVariants({ variant: "outline" }))}
+            disabled={loading}
+            onClick={onCancel}
+          >
+            {cancelLabel}
+          </AlertDialogCancel>
+          <AlertDialogAction
+            className={cn(buttonVariants({ variant: danger ? "destructive" : "default" }))}
+            disabled={loading}
+            onClick={(e) => { e.preventDefault(); onConfirm(); }}
+          >
+            {loading && <Loader2 className="size-4 animate-spin" />}
+            {confirmLabel}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

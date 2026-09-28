@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { ChevronDown, LogOut, User, Settings, Shield, Play } from "lucide-react";
-import { useUserAuth } from "../../context/UserAuthContext.jsx";
+import { useUserAuth } from "../../context/user-auth-hooks.js";
 import DropdownMenu from "../ui/DropdownMenu.jsx";
 import { cn } from "@/lib/utils";
 
@@ -26,9 +26,8 @@ function getSpaceInfo(roles, hasRole) {
   return { label: "Espace", path: "/", icon: Shield };
 }
 
-export default function UserAvatar({ onNavigate, variant = "responsive" }) {
-  const { user, profile, roles, isAdmin, logout, hasRole } = useUserAuth();
-  const isSidebar = variant === "sidebar";
+export default function UserAvatar({ onNavigate }) {
+  const { user, profile, roles, logout, hasRole } = useUserAuth();
 
   const initials = useMemo(
     () =>
@@ -64,13 +63,13 @@ export default function UserAvatar({ onNavigate, variant = "responsive" }) {
       onClick: () => onNavigate?.("/modifier-mot-de-passe"),
     },
     {
-      icon: <SpaceIcon size={16} className="text-gold" />,
+      icon: <SpaceIcon size={16} className="text-secondary" />,
       label: spaceInfo.label,
       onClick: () => onNavigate?.(spaceInfo.path),
-      className: "font-semibold text-gold data-[highlighted]:text-gold focus:text-gold",
+      className: "font-semibold text-secondary data-[highlighted]:text-secondary focus:text-secondary",
     },
     {
-      icon: <Play size={16} className="text-navy" />,
+      icon: <Play size={16} className="text-primary" />,
       label: "Passer le test",
       onClick: () => onNavigate?.("/test"),
     },
@@ -82,7 +81,7 @@ export default function UserAvatar({ onNavigate, variant = "responsive" }) {
         onNavigate?.("/connexion");
       },
       className:
-        "border-t border-line pt-1 mt-1 font-semibold text-warning data-[highlighted]:bg-warning-soft data-[highlighted]:text-warning focus:text-warning",
+        "border-t border-border pt-1 mt-1 font-semibold text-warning data-[highlighted]:bg-warning-soft data-[highlighted]:text-warning focus:text-warning",
     },
   ];
 
@@ -90,67 +89,29 @@ export default function UserAvatar({ onNavigate, variant = "responsive" }) {
     <DropdownMenu
       items={items}
       align="right"
-      side={isSidebar ? "top" : "bottom"}
+      side="top"
       width={240}
       header={<span>Compte</span>}
-      className={isSidebar ? "w-full" : undefined}
+      className="w-full"
       trigger={({ open }) => (
         <button
           type="button"
           aria-haspopup="menu"
           aria-expanded={open}
           className={cn(
-            "flex w-full cursor-pointer items-center gap-2.5 bg-transparent font-sans",
-            isSidebar
-              ? "rounded-lg border border-transparent px-3 py-2.5 text-left text-sidebar-foreground hover:bg-sidebar-accent"
-              : "w-auto rounded-md border border-border bg-card px-2.5 py-1.5 text-foreground"
+            "flex w-full cursor-pointer items-center gap-2.5 rounded-lg border border-transparent bg-transparent px-3 py-2.5 text-left font-sans text-sidebar-foreground transition-colors hover:bg-sidebar-accent",
+            open && "bg-sidebar-accent"
           )}
         >
-<div
-        className={cn(
-          "flex shrink-0 items-center justify-center rounded-full font-bold",
-          isSidebar ? "h-9 w-9 text-[13px]" : "h-8 w-8 text-xs",
-          isSidebar
-            ? "bg-sidebar-primary text-sidebar-primary-foreground"
-            : isAdmin
-              ? "bg-gradient-to-br from-primary to-secondary"
-              : "bg-primary text-primary-foreground"
-        )}
-      >
-        {initials}
-      </div>
-      <div
-        className={cn(
-          "flex min-w-0 flex-col",
-          isSidebar ? "flex-1" : ""
-        )}
-      >
-        <span
-          className={cn(
-            "truncate font-semibold",
-            isSidebar ? "text-[13px] text-sidebar-foreground" : "text-[12.5px] text-foreground"
-          )}
-        >
-          {displayName}
-        </span>
-        <span
-          className={cn(
-            isSidebar
-              ? "text-[11.5px] text-muted-foreground"
-              : "text-[10.5px] text-muted-foreground"
-          )}
-        >
-          {roleDisplayName}
-        </span>
-      </div>
-      <ChevronDown
-        size={isSidebar ? 16 : 14}
-        className={cn(
-          "shrink-0",
-          isSidebar ? "text-muted-foreground" : "text-muted-foreground"
-        )}
-      />
-    </button>
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-sidebar-primary text-[13px] font-bold text-sidebar-primary-foreground">
+            {initials}
+          </div>
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-[13px] font-semibold text-sidebar-foreground">{displayName}</span>
+            <span className="text-[11.5px] text-muted-foreground">{roleDisplayName}</span>
+          </div>
+          <ChevronDown size={16} className="shrink-0 text-muted-foreground" />
+        </button>
       )}
     />
   );

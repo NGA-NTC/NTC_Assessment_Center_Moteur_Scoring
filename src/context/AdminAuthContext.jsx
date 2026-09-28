@@ -1,7 +1,6 @@
-import { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { supabase } from "../lib/supabaseClient.js";
-
-const AdminAuthContext = createContext(null);
+import { AdminAuthContext } from "./admin-auth-context.js";
 
 export function AdminAuthProvider({ children }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -11,13 +10,14 @@ export function AdminAuthProvider({ children }) {
   const checkAdmin = useCallback(async (session) => {
     if (!session?.user) return false;
     try {
-      const { data, error } = await supabase
+      const { data } = await supabase
         .from("user_roles")
-        .select("role_id")
-        .eq("user_id", session.user.id)
-        .in("role_id", ["admin", "super_admin"])
-        .single();
-      return !error && !!data;
+        .select("role_id, roles(name)")
+        .eq("user_id", session.user.id);
+      const roleNames = (data ?? []).map((r) => r.roles?.name).filter(Boolean);
+      const isAdminRole = roleNames.includes("Administrateur") || roleNames.includes("Super Administrateur");
+      setAdminUser(isAdminRole ? { id: session.user.id, email: session.user.email, roles: roleNames } : null);
+      return isAdminRole;
     } catch {
       return false;
     }
@@ -25,43 +25,50 @@ export function AdminAuthProvider({ children }) {
 
   useEffect(() => {
     let mounted = true;
-
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data }) => {
       if (!mounted) return;
-      const admin = await checkAdmin(session);
-      setIsAuthenticated(admin);
-      setAdminUser(admin ? session.user : null);
+      const session = data.session ?? null;
+      if (session) {
+        const ok = await checkAdmin(session);
+        setIsAuthenticated(ok);
+      }
       setLoading(false);
     });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_event, nextSession) => {
       if (!mounted) return;
-      const admin = await checkAdmin(session);
-      setIsAuthenticated(admin);
-      setAdminUser(admin ? session.user : null);
+      if (nextSession) {
+        const ok = await checkAdmin(nextSession);
+        setIsAuthenticated(ok);
+      } else {
+        setIsAuthenticated(false);
+        setAdminUser(null);
+      }
       setLoading(false);
     });
-
     return () => {
       mounted = false;
-      subscription.unsubscribe();
+      sub.subscription.unsubscribe();
     };
   }, [checkAdmin]);
 
   const login = useCallback(async (email, password) => {
     if (!email || !password) return { error: "Veuillez saisir votre email et votre mot de passe." };
-    const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password });
     if (error) return { error: error.message };
-    const admin = await checkAdmin(data.session);
-    if (!admin) {
+    const { data } = await supabase.auth.getSession();
+    const ok = await checkAdmin(data.session);
+    if (!ok) {
       await supabase.auth.signOut();
       return { error: "Accès réservé aux administrateurs." };
     }
+    setIsAuthenticated(true);
     return { ok: true };
   }, [checkAdmin]);
 
   const logout = useCallback(async () => {
     await supabase.auth.signOut();
+    setIsAuthenticated(false);
+    setAdminUser(null);
   }, []);
 
   const value = useMemo(() => ({
@@ -73,10 +80,4 @@ export function AdminAuthProvider({ children }) {
   }), [isAuthenticated, adminUser, loading, login, logout]);
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;
-}
-
-export function useAdminAuth() {
-  const ctx = useContext(AdminAuthContext);
-  if (!ctx) throw new Error("useAdminAuth doit être utilisé dans un AdminAuthProvider");
-  return ctx;
 }

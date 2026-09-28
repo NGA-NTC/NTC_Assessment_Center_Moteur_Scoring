@@ -1,21 +1,32 @@
 import { DIM } from "../../data/index.js";
-import { LINE, MUTED, NAVY } from "../../lib/theme.js";
+import { ToggleGroup, ToggleGroupItem } from "../ui/primitives/toggle-group.jsx";
 
 const OPTS = [["none", "Non obs."], ["leger", "Léger"], ["modere", "Modéré"], ["fort", "Fort"]];
 
 export default function IntensityToggle({ dimKey, value, onChange }) {
   return (
-    <div className="intensity-toggle" style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-      <div className="intensity-toggle__label" style={{ fontSize: 12, width: 150, flexShrink: 0 }}>{DIM[dimKey]?.name}</div>
-      <div className="intensity-toggle__options" style={{ display: "flex", gap: 4, flex: 1 }}>
-        {OPTS.map(([k, label]) => (
-          <button key={k} onClick={() => onChange(k)} type="button" style={{
-            flex: 1, padding: "5px 0", borderRadius: 6, fontSize: 11, cursor: "pointer", fontFamily: "inherit",
-            border: value === k ? `1.5px solid ${NAVY}` : `1px solid ${LINE}`,
-            background: value === k ? NAVY : "#fff", color: value === k ? "#fff" : MUTED, fontWeight: value === k ? 600 : 400,
-          }}>{label}</button>
-        ))}
+    <div className="mb-1.5 flex items-center gap-2">
+      <div className="w-[150px] shrink-0 text-[12px]">
+        <span id={`intensity-label-${dimKey}`}>{DIM[dimKey]?.name}</span>
       </div>
+      <ToggleGroup
+        type="single"
+        size="sm"
+        value={value ?? ""}
+        onValueChange={(v) => { if (v) onChange(v); }}
+        aria-labelledby={`intensity-label-${dimKey}`}
+        className="flex-1 gap-1"
+      >
+        {OPTS.map(([k, label]) => (
+          <ToggleGroupItem
+            key={k}
+            value={k}
+            className="h-auto flex-1 rounded-md border border-border bg-card px-0 py-[5px] text-[11px] font-normal text-muted-foreground hover:bg-card hover:text-muted-foreground data-[state=on]:border-primary data-[state=on]:bg-primary data-[state=on]:font-semibold data-[state=on]:text-primary-foreground data-[state=on]:hover:bg-primary"
+          >
+            {label}
+          </ToggleGroupItem>
+        ))}
+      </ToggleGroup>
     </div>
   );
 }

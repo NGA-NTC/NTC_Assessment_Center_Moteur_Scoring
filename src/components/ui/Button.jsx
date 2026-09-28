@@ -6,7 +6,7 @@ const VARIANT_MAP = {
   primary: "default",
   gold: "secondary",
   ghost: "ghost",
-  outline: "outlineSidebar",
+  outline: "outline",
   danger: "destructive",
   outlineDark: "outlineDark",
 };

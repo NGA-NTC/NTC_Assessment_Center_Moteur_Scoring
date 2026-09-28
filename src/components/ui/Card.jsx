@@ -8,7 +8,7 @@ export default function Card({ children, onClick, style, variant = "default", cl
       onClick={onClick}
       className={cn(
         "block gap-0 p-0",
-        variant === "flat" ? "bg-background shadow-none" : "bg-surface shadow-card",
+        variant === "flat" ? "bg-background shadow-none" : "bg-card shadow-card",
         onClick && "ntc-card-interactive",
         className
       )}

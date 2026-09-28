@@ -89,7 +89,11 @@ Deno.serve(async (req: Request) => {
     const targetEmail = targetUser.user.email ?? '';
 
     // Generate password reset link
-    const redirectTo = `${new URL(req.url).origin}/reinitialiser-mot-de-passe`;
+    // PUBLIC_SITE_URL : URL publique de l'application (ex. https://...vercel.app),
+    // configurable dans le dashboard Supabase (Edge Functions → Secrets). Sans elle,
+    // repli sur l'origine de la fonction (domaine Supabase) — comportement historique.
+    const siteUrl = (Deno.env.get('PUBLIC_SITE_URL') || '').trim().replace(/\/+$/, '');
+    const redirectTo = `${siteUrl || new URL(req.url).origin}/reinitialiser-mot-de-passe`;
     const { error: linkError } = await supabaseAdmin.auth.admin.generateLink({
       type: 'recovery',
       email: targetEmail,

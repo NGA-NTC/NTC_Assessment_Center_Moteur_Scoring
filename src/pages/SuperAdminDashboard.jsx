@@ -1,46 +1,45 @@
 import { useState, useEffect, useMemo } from "react";
 import { Users, Shield, Key, FileText, Settings, BarChart2, ChevronRight, Activity } from "lucide-react";
-import { useUserAuth } from "../context/UserAuthContext.jsx";
+import { useUserAuth } from "../context/user-auth-hooks.js";
 import { getSuperAdminStats } from "../services/dashboard/index.js";
 import { listAccounts, listImported, listHiddenStaticFiles } from "../lib/storage.js";
 import { listImportedResults } from "../lib/imported.js";
 import { buildCandidates } from "../lib/candidates.js";
-import { NAVY, colors } from "../lib/theme.js";
 import PageTitle from "../components/ui/PageTitle.jsx";
 import Card from "../components/ui/Card.jsx";
 import Avatar from "../components/ui/Avatar.jsx";
 import StatCard from "../components/common/StatCard.jsx";
-import { LoadingState, EmptyState } from "../components/ui/States.jsx";
+import { RowListSkeleton, StatGridSkeleton, EmptyState } from "../components/ui/States.jsx";
 
 const STAT_CARDS = [
-  { key: "users", label: "Utilisateurs totaux", icon: Users, color: NAVY, path: "/super-admin/comptes" },
-  { key: "roles", label: "Rôles configurés", icon: Shield, color: colors.info2, path: "/super-admin/roles" },
-  { key: "access", label: "Règles d'accès", icon: Key, color: colors.info3, path: "/super-admin/acces" },
-  { key: "pages", label: "Pages gérées", icon: FileText, color: colors.info4, path: "/super-admin/pages" },
-  { key: "features", label: "Fonctionnalités", icon: Settings, color: colors.info, path: "/super-admin/fonctionnalites" },
-  { key: "results", label: "Module Résultats", icon: BarChart2, color: colors.info5, path: "/admin" },
+  { key: "users", label: "Utilisateurs totaux", icon: Users, color: "var(--primary)", path: "/super-admin/comptes" },
+  { key: "roles", label: "Rôles configurés", icon: Shield, color: "var(--chart-2)", path: "/super-admin/roles" },
+  { key: "access", label: "Règles d'accès", icon: Key, color: "var(--chart-3)", path: "/super-admin/acces" },
+  { key: "pages", label: "Pages gérées", icon: FileText, color: "var(--chart-5)", path: "/super-admin/pages" },
+  { key: "features", label: "Fonctionnalités", icon: Settings, color: "var(--chart-1)", path: "/super-admin/fonctionnalites" },
+  { key: "results", label: "Module Résultats", icon: BarChart2, color: "var(--chart-4)", path: "/admin" },
 ];
 
 const QUICK_ACTIONS = [
-  { label: "Gérer les comptes", description: "Voir, modifier, suspendre les utilisateurs", icon: Users, color: NAVY, path: "/super-admin/comptes" },
-  { label: "Configurer les rôles", description: "Créer, modifier, supprimer les rôles", icon: Shield, color: colors.info2, path: "/super-admin/roles" },
-  { label: "Définir les accès", description: "Pages et fonctionnalités par rôle", icon: Key, color: colors.info3, path: "/super-admin/acces" },
-  { label: "Gérer les pages", description: "Pages accessibles de la plateforme", icon: FileText, color: colors.info4, path: "/super-admin/pages" },
-  { label: "Gérer les fonctionnalités", description: "Actions disponibles par page/rôle", icon: Settings, color: colors.info, path: "/super-admin/fonctionnalites" },
-  { label: "Accéder aux résultats", description: "Module d'administration des résultats", icon: BarChart2, color: colors.info5, path: "/admin" },
+  { label: "Gérer les comptes", description: "Voir, modifier, suspendre les utilisateurs", icon: Users, color: "var(--primary)", path: "/super-admin/comptes" },
+  { label: "Configurer les rôles", description: "Créer, modifier, supprimer les rôles", icon: Shield, color: "var(--chart-2)", path: "/super-admin/roles" },
+  { label: "Définir les accès", description: "Pages et fonctionnalités par rôle", icon: Key, color: "var(--chart-3)", path: "/super-admin/acces" },
+  { label: "Gérer les pages", description: "Pages accessibles de la plateforme", icon: FileText, color: "var(--chart-5)", path: "/super-admin/pages" },
+  { label: "Gérer les fonctionnalités", description: "Actions disponibles par page/rôle", icon: Settings, color: "var(--chart-1)", path: "/super-admin/fonctionnalites" },
+  { label: "Accéder aux résultats", description: "Module d'administration des résultats", icon: BarChart2, color: "var(--chart-4)", path: "/admin" },
 ];
 
 function QuickAction({ label, description, icon: Icon, color, path }) {
   return (
     <div
       onClick={() => { window.location.href = path; }}
-      className="flex w-full cursor-pointer items-center gap-3.5 border border-border bg-surface p-4 transition-[border-color,box-shadow,transform] duration-150"
+      className="flex w-full cursor-pointer items-center gap-3.5 border border-border bg-card p-4 transition-[border-color,box-shadow,transform] duration-150"
       onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; }}
       onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; }}
     >
       <div
         className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl"
-        style={{ background: `${color}15` }}
+        style={{ background: `color-mix(in oklab, ${color} 15%, transparent)` }}
       >
         <Icon size={20} color={color} />
       </div>
@@ -62,7 +61,7 @@ function getRoleDisplayName(roles) {
 function CardSection({ title, action, children }) {
   return (
     <Card className="overflow-hidden">
-      <div className="flex items-center justify-between gap-3 border-b border-border bg-cream px-6 py-[18px]">
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-background px-6 py-[18px]">
         <div className="font-serif text-[16px] font-semibold text-foreground">{title}</div>
         {action}
       </div>
@@ -114,18 +113,22 @@ export default function SuperAdminDashboard() {
         subtitle={`${displayName} · ${roleDisplayName}`}
       />
 
-      <div className="mb-7 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
-        {STAT_CARDS.map((item) => (
-          <StatCard
-            key={item.key}
-            label={item.label}
-            value={stats[item.key] ?? (loading ? "—" : 0)}
-            icon={item.icon}
-            color={item.color}
-            path={item.path}
-          />
-        ))}
-      </div>
+      {loading ? (
+        <StatGridSkeleton count={STAT_CARDS.length} />
+      ) : (
+        <div className="mb-7 grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-4">
+          {STAT_CARDS.map((item) => (
+            <StatCard
+              key={item.key}
+              label={item.label}
+              value={stats[item.key] ?? 0}
+              icon={item.icon}
+              color={item.color}
+              path={item.path}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="grid grid-cols-[repeat(auto-fit,minmax(min(100%,380px),1fr))] gap-5">
         <CardSection title="Accès rapides">
@@ -141,7 +144,7 @@ export default function SuperAdminDashboard() {
           action={<Activity size={16} className="text-muted-foreground" />}
         >
           {loading ? (
-            <LoadingState minHeight={200} label="Chargement de l'activité…" />
+            <RowListSkeleton count={4} />
           ) : recentActivity.length === 0 ? (
             <EmptyState title="Aucune activité récente" description="Les nouveaux comptes créer récemment apparaîtront ici." />
           ) : (
@@ -149,7 +152,7 @@ export default function SuperAdminDashboard() {
               {recentActivity.map((u) => (
                 <div
                   key={u.id}
-                  className="flex items-center gap-3 rounded-md border border-border bg-line-soft p-3"
+                  className="flex items-center gap-3 rounded-md border border-border bg-muted p-3"
                 >
                   <Avatar
                     name={`${u.first_name || ""} ${u.last_name || ""}`.trim()}

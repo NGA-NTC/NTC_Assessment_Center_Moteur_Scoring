@@ -1,1 +1,0 @@
-export { Skeleton } from "./primitives/skeleton.jsx";

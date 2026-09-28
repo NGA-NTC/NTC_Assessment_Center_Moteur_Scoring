@@ -15,7 +15,6 @@ const buttonVariants = cva(
         link: "text-primary underline-offset-4 hover:underline",
         // Variants NTC (miroir de l'existant : Button.jsx)
         outlineDark: "border border-border bg-surface text-navy shadow-xs hover:bg-navy/[0.06]",
-        outlineSidebar: "border border-white/20 bg-white/5 text-white hover:bg-white/10",
       },
       size: {
         default: "h-11 px-5 py-2 has-[>svg]:px-3",

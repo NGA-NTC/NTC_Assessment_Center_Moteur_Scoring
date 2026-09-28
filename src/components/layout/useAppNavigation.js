@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from "react-router-dom";
-import { useUserAuth } from "../../context/UserAuthContext.jsx";
+import { useUserAuth } from "../../context/user-auth-hooks.js";
 import { useEffectiveAuthority } from "../../hooks/auth/useEffectiveAuthority.js";
 import {
   buildNavigation,

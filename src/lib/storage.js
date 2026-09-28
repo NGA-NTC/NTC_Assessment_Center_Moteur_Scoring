@@ -21,13 +21,24 @@ export function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test((email || "").trim());
 }
 
+// Le mot de passe n'est jamais persisté en localStorage (les comptes locaux ne
+// servent qu'à afficher les réponses ; l'authentification passe par Supabase).
+function stripSecret(record) {
+  if (record && typeof record === "object") {
+    const clone = { ...record };
+    delete clone.password;
+    return clone;
+  }
+  return record;
+}
+
 export async function listAccounts() {
   const raw = await storeGet(USERS_KEY);
   if (!raw) return [];
-  try { return JSON.parse(raw); } catch { return []; }
+  try { return JSON.parse(raw).map(stripSecret); } catch { return []; }
 }
 
-export async function createAccount(email, password, responses) {
+export async function createAccount(email, responses) {
   const normalized = (email || "").trim().toLowerCase();
   const users = await listAccounts();
   if (users.some((u) => u.email === normalized)) return { error: "Un compte existe déjà avec cet email." };
@@ -35,7 +46,6 @@ export async function createAccount(email, password, responses) {
   const raw = responses && typeof responses === "object" ? responses : {};
   const account = {
     email: normalized,
-    password,
     createdAt: now,
     updatedAt: now,
     responses: { mcq: raw.mcq || {}, b7: raw.b7 || {}, b8: raw.b8 || {} },
@@ -45,12 +55,10 @@ export async function createAccount(email, password, responses) {
   return { account };
 }
 
-export async function findAccount(email, password) {
+export async function findAccount(email) {
   const normalized = (email || "").trim().toLowerCase();
   const users = await listAccounts();
-  const match = users.find((u) => u.email === normalized);
-  if (!match || match.password !== (password || "")) return null;
-  return match;
+  return users.find((u) => u.email === normalized) || null;
 }
 
 export async function loadAccountResponses(email) {
@@ -67,7 +75,7 @@ export async function saveAccountResponses(email, responses) {
   if (!match) return false;
   match.responses = responses;
   match.updatedAt = new Date().toISOString();
-  await storeSet(USERS_KEY, JSON.stringify(users));
+  await storeSet(USERS_KEY, JSON.stringify(users.map(stripSecret)));
   return true;
 }
 
@@ -135,12 +143,35 @@ export async function updateAccountResponses(email, responses) {
   return saveAccountResponses(email, responses);
 }
 
+// Miroir local minimal d'un compte Supabase, nécessaire à l'autosave du
+// questionnaire et à l'affichage dans Résultats (les réponses candidat sont
+// persistées localement par design — aucune table Supabase de réponses).
+// Idempotent : ne crée pas de doublon, ne modifie jamais un compte existant.
+// `responses` n'est utilisé qu'à la création (pré-remplissage depuis un import).
+export async function ensureLocalAccount(email, responses = null) {
+  const normalized = String(email || "").trim().toLowerCase();
+  if (!normalized) return false;
+  const users = await listAccounts();
+  if (users.some((u) => u.email === normalized)) return true;
+  const now = new Date().toISOString();
+  users.push({
+    email: normalized,
+    createdAt: now,
+    updatedAt: now,
+    responses: responses && typeof responses === "object"
+      ? { mcq: responses.mcq || {}, b7: responses.b7 || {}, b8: responses.b8 || {} }
+      : { mcq: {}, b7: {}, b8: {} },
+  });
+  await storeSet(USERS_KEY, JSON.stringify(users.map(stripSecret)));
+  return true;
+}
+
 export async function deleteAccount(email) {
   const normalized = String(email || "").trim().toLowerCase();
   const users = await listAccounts();
   const next = users.filter((u) => u.email !== normalized);
   if (next.length === users.length) return false;
-  await storeSet(USERS_KEY, JSON.stringify(next));
+  await storeSet(USERS_KEY, JSON.stringify(next.map(stripSecret)));
   return true;
 }
 

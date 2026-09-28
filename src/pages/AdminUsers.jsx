@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { MoreHorizontal } from "lucide-react";
-import { useAdminAuth } from "../context/AdminAuthContext.jsx";
+import { toast } from "sonner";
+import { useAdminAuth } from "../context/admin-auth-hooks.js";
 import { useEffectiveAuthority } from "../hooks/auth/useEffectiveAuthority.js";
 import {
   listUsers,
@@ -17,18 +18,22 @@ import PageTitle from "../components/ui/PageTitle.jsx";
 import Button from "../components/ui/Button.jsx";
 import Avatar from "../components/ui/Avatar.jsx";
 import Badge from "../components/ui/Badge.jsx";
-import Alert from "../components/ui/Alert.jsx";
 import StatusBadge from "../components/common/StatusBadge.jsx";
 import SearchInput from "../components/common/SearchInput.jsx";
+import FilterSelect from "../components/common/FilterSelect.jsx";
 import ConfirmDialog from "../components/common/ConfirmDialog.jsx";
-import { LoadingState } from "../components/ui/States.jsx";
+import { LoadingState, RowListSkeleton } from "../components/ui/States.jsx";
 import AdminUserDetail from "./AdminUserDetail.jsx";
 
 const STATUS_LABELS = { active: "Actif", inactive: "Inactif", suspended: "Suspendu" };
 const STATUS_TONES = { active: "success", inactive: "neutral", suspended: "warning" };
 
-const FILTER_SELECT_CLASS =
-  "h-11 min-w-[160px] cursor-pointer rounded-sm border border-border bg-surface px-3 font-sans text-[13px] text-foreground outline-none";
+const STATUS_OPTIONS = [
+  { value: "all", label: "Tous les statuts" },
+  { value: "active", label: "Actif" },
+  { value: "inactive", label: "Inactif" },
+  { value: "suspended", label: "Suspendu" },
+];
 
 export default function AdminUsers() {
   const { loading: adminLoading } = useAdminAuth();
@@ -41,7 +46,6 @@ export default function AdminUsers() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [roleFilter, setRoleFilter] = useState("all");
   const [selectedUser, setSelectedUser] = useState(null);
-  const [message, setMessage] = useState(null);
   const [confirmUser, setConfirmUser] = useState(null);
   const [confirmBusy, setConfirmBusy] = useState(false);
 
@@ -57,7 +61,7 @@ export default function AdminUsers() {
       setRoles(roleData);
     } catch (e) {
       console.error("Erreur chargement utilisateurs:", e);
-      setMessage({ type: "error", text: "Impossible de charger les utilisateurs." });
+      toast.error("Impossible de charger les utilisateurs.");
     } finally {
       setLoading(false);
     }
@@ -97,10 +101,10 @@ export default function AdminUsers() {
     try {
       await updateUserActive(confirmUser.id, newStatus !== "inactive");
       setUsers((prev) => prev.map((u) => u.id === confirmUser.id ? { ...u, status: newStatus } : u));
-      setMessage({ type: "success", text: "Statut mis à jour." });
+      toast.success("Statut mis à jour.");
       setConfirmUser(null);
     } catch (e) {
-      setMessage({ type: "error", text: e instanceof Error ? e.message : "Erreur lors du changement de statut." });
+      toast.error(e instanceof Error ? e.message : "Erreur lors du changement de statut.");
     } finally {
       setConfirmBusy(false);
     }
@@ -115,9 +119,9 @@ export default function AdminUsers() {
         await removeRole(userId, roleId);
       }
       fetchUsers();
-      setMessage({ type: "success", text: `Rôle ${add ? "ajouté" : "retiré"}.` });
+      toast.success(`Rôle ${add ? "ajouté" : "retiré"}.`);
     } catch (e) {
-      setMessage({ type: "error", text: e instanceof Error ? e.message : "Erreur lors de la modification du rôle." });
+      toast.error(e instanceof Error ? e.message : "Erreur lors de la modification du rôle.");
     }
   };
 
@@ -142,40 +146,24 @@ export default function AdminUsers() {
           </Button>
         }
       />
-      {message && (
-        <Alert type={message.type} onDismiss={() => setMessage(null)}>
-          {message.text}
-        </Alert>
-      )}
-
       <div className="mb-5 rounded-xl border border-border bg-surface p-4 shadow-card">
         <div className="flex flex-wrap items-center gap-3">
           <div className="min-w-[240px] flex-1">
             <SearchInput value={search} onChange={setSearch} placeholder="Email, nom, prénom…" />
           </div>
           <div className="flex flex-wrap gap-2">
-            <select
+            <FilterSelect
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              aria-label="Filtrer par statut"
-              className={FILTER_SELECT_CLASS}
-            >
-              <option value="all">Tous les statuts</option>
-              <option value="active">Actif</option>
-              <option value="inactive">Inactif</option>
-              <option value="suspended">Suspendu</option>
-            </select>
-            <select
+              onValueChange={setStatusFilter}
+              options={STATUS_OPTIONS}
+              ariaLabel="Filtrer par statut"
+            />
+            <FilterSelect
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
-              aria-label="Filtrer par rôle"
-              className={FILTER_SELECT_CLASS}
-            >
-              <option value="all">Tous les rôles</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
+              onValueChange={setRoleFilter}
+              options={[{ value: "all", label: "Tous les rôles" }, ...roles.map((r) => ({ value: r.id, label: r.name }))]}
+              ariaLabel="Filtrer par rôle"
+            />
           </div>
         </div>
       </div>
@@ -194,6 +182,8 @@ export default function AdminUsers() {
         <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground">
           Vous n'avez pas la permission de consulter les utilisateurs (users.view requis).
         </div>
+      ) : loading && filteredUsers.length === 0 ? (
+        <RowListSkeleton count={6} />
       ) : filteredUsers.length === 0 ? (
         <div className="rounded-xl border border-border bg-surface p-10 text-center text-muted-foreground">
           Aucun utilisateur ne correspond aux critères.

@@ -1,7 +1,8 @@
+import * as React from "react";
 import { useId } from "react";
-import { ChevronDown } from "lucide-react";
 import { Input } from "./primitives/input.jsx";
 import { Textarea } from "./Textarea.jsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./primitives/select.jsx";
 import { cn } from "@/lib/utils";
 
 export default function Field({
@@ -23,7 +24,7 @@ export default function Field({
   const isTextarea = type === "textarea" || multiline;
 
   const controlCls = cn(
-    "h-11 w-full rounded-sm border bg-surface px-3 font-sans text-sm text-ink",
+    "h-11 w-full rounded-sm border bg-card px-3 font-sans text-sm text-foreground",
     error ? "border-destructive" : "border-border",
     icon && "pl-10",
     isTextarea ? "min-h-9 resize-y p-3" : "py-0",
@@ -32,8 +33,13 @@ export default function Field({
   );
 
   const labelNode = label ? (
-    <label htmlFor={fieldId} className="mb-1.5 block font-sans text-xs font-semibold text-navy">{label}</label>
+    <label htmlFor={fieldId} className="mb-1.5 block font-sans text-xs font-semibold text-primary">{label}</label>
   ) : null;
+
+  const selectValue = typeof inputProps.value === "string" || typeof inputProps.value === "number"
+    ? String(inputProps.value)
+    : inputProps.value;
+  const placeholder = inputProps.placeholder;
 
   return (
     <div className="mb-4">
@@ -47,20 +53,35 @@ export default function Field({
         {isSelect ? (
           <div>
             {labelNode}
-            <select
-              {...inputProps}
-              id={fieldId}
-              className={cn(controlCls, "cursor-pointer appearance-none")}
-              style={style}
-            >
-              {children}
-            </select>
-            {!right && (
-              <ChevronDown
-                size={14}
-                className="text-muted pointer-events-none absolute top-1/2 right-3 -translate-y-1/2"
-              />
-            )}
+            <Select value={selectValue} onValueChange={(v) => {
+              inputProps.onValueChange?.(v);
+              if (typeof inputProps.onChange === "function") inputProps.onChange({ target: { value: v } });
+            }}>
+              <SelectTrigger
+                id={fieldId}
+                className={cn(
+                  "w-full rounded-sm bg-card",
+                  error && "border-destructive aria-invalid:border-destructive",
+                  icon && "pl-10"
+                )}
+                style={style}
+                aria-invalid={error ? "true" : undefined}
+              >
+                <SelectValue placeholder={placeholder ?? "Sélectionner…"} />
+              </SelectTrigger>
+              <SelectContent>
+                {React.Children.map(children, (child) => {
+                  if (React.isValidElement(child) && child.type === "option") {
+                    return (
+                      <SelectItem key={child.props.value} value={String(child.props.value)}>
+                        {child.props.children}
+                      </SelectItem>
+                    );
+                  }
+                  return child;
+                })}
+              </SelectContent>
+            </Select>
           </div>
         ) : isTextarea ? (
           <Textarea {...inputProps} id={fieldId} rows={rows} className={controlCls} style={style} />

@@ -1,4 +1,3 @@
-import { LINE } from "../../lib/theme.js";
 import QuestionCard from "./QuestionCard.jsx";
 import RubricScorer from "./RubricScorer.jsx";
 import InfoCallout from "./InfoCallout.jsx";
@@ -17,7 +16,7 @@ export default function RubricBattery({ battery, responses, setResponses }) {
             placeholder="Réponse écrite du candidat…"
             value={responses.b7[it.id]?.text || ""}
             onChange={(e) => setResponses((r) => ({ ...r, b7: { ...r.b7, [it.id]: { ...r.b7[it.id], text: e.target.value } } }))}
-            style={{ width: "100%", minHeight: 80, border: `1px solid ${LINE}`, borderRadius: 8, padding: 10, fontSize: 13.5, fontFamily: "inherit", marginBottom: 14, resize: "vertical" }} />
+            style={{ width: "100%", minHeight: 80, border: "1px solid var(--border)", borderRadius: 8, padding: 10, fontSize: 13.5, fontFamily: "inherit", marginBottom: 14, resize: "vertical" }} />
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px,1fr))", gap: 12 }}>
             {DIMS.map((dim) => (
               <RubricScorer key={dim} dim={dim} value={responses.b7[it.id]?.[dim]}

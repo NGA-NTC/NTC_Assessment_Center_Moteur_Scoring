@@ -28,7 +28,7 @@ export default function SearchInput({
         autoFocus={autoFocus}
         aria-label={placeholder}
         className={cn(
-          "h-11 rounded-sm border-border bg-surface pl-[34px] pr-3 font-sans text-[13.5px] text-foreground",
+          "h-11 rounded-sm border-border bg-card pl-[34px] pr-3 font-sans text-[13.5px] text-foreground",
           isSmall && "h-9",
           className
         )}

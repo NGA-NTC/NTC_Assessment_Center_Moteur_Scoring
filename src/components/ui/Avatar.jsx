@@ -28,8 +28,8 @@ export default function Avatar({
     >
       <AvatarFallback
         className={cn(
-          "font-bold text-white select-none",
-          gradient ? "bg-gradient-to-br from-navy to-gold" : "bg-navy",
+          "font-bold text-primary-foreground select-none",
+          gradient ? "bg-gradient-to-br from-primary to-secondary" : "bg-primary",
           size >= 40 ? "text-sm" : "text-[13px]"
         )}
       >
